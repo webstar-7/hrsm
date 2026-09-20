@@ -1,0 +1,1258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PeopleDesk</title>
+<meta name="theme-color" content="#0E4142">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230E4142'/%3E%3Cpath d='M7 11h7l2 2.4h9V24H7z' fill='%23F0B429'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16262B; --muted:#5A6A6F; --line:#DCE3E5; --bg:#F3F6F6; --panel:#FFFFFF;
+  --spruce:#0E4142; --spruce-hi:#175759; --spruce-deep:#092C2D; --gold:#F0B429; --sage:#E4EFEC;
+  --ok:#1E7A4C; --ok-bg:#E1F2E8; --warn:#7F5400; --warn-bg:#FCEFC8; --bad:#A3392B; --bad-bg:#F9E2DE;
+  --neutral:#485A60; --neutral-bg:#E7ECED;
+  --font-body:'Figtree',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --font-display:'Bricolage Grotesque','Figtree',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--font-body)}
+h1,h2,h3{font-family:var(--font-display);margin:0;line-height:1.15;letter-spacing:-.01em;font-weight:700}
+h1{font-size:28px} h2{font-size:20px} h3{font-size:17px}
+p{margin:0}
+a{color:var(--spruce-hi);text-decoration:underline;text-underline-offset:2px}
+button,input,select,textarea{font:inherit;color:inherit}
+code{background:var(--neutral-bg);padding:1px 6px;border-radius:4px;font-size:.9em}
+:focus-visible{outline:2px solid var(--spruce-hi);outline-offset:2px}
+.muted{color:var(--muted)} .small{font-size:13px}
+[hidden]{display:none!important}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:8px 16px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);font-weight:600;cursor:pointer;text-decoration:none}
+.btn:hover{background:#F6F9F9;border-color:#C4CFD2}
+.btn.primary{background:var(--spruce);border-color:var(--spruce);color:#fff}
+.btn.primary:hover{background:var(--spruce-hi);border-color:var(--spruce-hi)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.ghost:hover{background:var(--neutral-bg)}
+.btn.danger{color:var(--bad)}
+.btn.sm{min-height:34px;padding:5px 12px;font-size:14px}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+.icon-btn{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:8px;border:0;background:transparent;color:var(--muted);cursor:pointer}
+.icon-btn:hover{background:var(--neutral-bg);color:var(--ink)}
+.icon-btn.danger:hover{background:var(--bad-bg);color:var(--bad)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+/* chips + avatars */
+.chip{display:inline-block;padding:2px 10px;border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap}
+.chip.ok{background:var(--ok-bg);color:var(--ok)} .chip.warn{background:var(--warn-bg);color:var(--warn)}
+.chip.bad{background:var(--bad-bg);color:var(--bad)} .chip.neutral{background:var(--neutral-bg);color:var(--neutral)}
+.avatar{--h:180;flex:none;display:inline-grid;place-items:center;width:36px;height:36px;border-radius:50%;background:hsl(var(--h) 38% 86%);color:hsl(var(--h) 48% 24%);font-weight:700;font-size:13px}
+.avatar.lg{width:64px;height:64px;font-size:22px;font-family:var(--font-display)}
+.who{display:flex;align-items:center;gap:12px}
+.who .name{font-weight:600;color:var(--ink);text-decoration:none}
+.who .name:hover{text-decoration:underline}
+
+/* panels + tables */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.panel.pad{padding:22px}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.panel-body{padding:20px}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:13px;font-weight:600;color:var(--muted);padding:10px 16px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px 16px;border-bottom:1px solid #EAEFF0;vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tbody tr[data-action]{cursor:pointer}
+tbody tr[data-action]:hover td{background:#F7FAFA}
+td.right,th.right{text-align:right}
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}
+.empty h3{color:var(--ink);margin-bottom:6px}
+.empty .btn{margin-top:14px}
+
+/* forms */
+.fld{display:grid;gap:6px;margin-bottom:14px}
+.fld>span{font-weight:600;font-size:14px}
+.fld input,.fld select,.fld textarea{width:100%;min-height:42px;padding:9px 12px;border:1px solid #C9D3D6;border-radius:8px;background:#fff}
+.fld textarea{min-height:84px;resize:vertical}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:2px solid var(--spruce-hi);outline-offset:0;border-color:var(--spruce-hi)}
+.fld input:disabled,.fld select:disabled{background:#F1F4F5;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+.help{font-size:13px;color:var(--muted)}
+.check{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.check input{width:18px;height:18px}
+.form-error{background:var(--bad-bg);color:var(--bad);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:14px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--line);align-items:center}
+.toolbar input,.toolbar select{min-height:38px;padding:6px 12px;border:1px solid #C9D3D6;border-radius:8px;background:#fff}
+.toolbar .search{flex:1 1 220px;min-width:180px}
+
+/* app shell */
+.shell{display:grid;grid-template-columns:264px 1fr;min-height:100vh}
+.side{background:var(--spruce);color:#D5E4E1;display:flex;flex-direction:column;padding:22px 16px;position:sticky;top:0;height:100vh}
+.side :focus-visible{outline-color:var(--gold)}
+.brand{display:flex;align-items:center;gap:10px;color:#fff;font-family:var(--font-display);font-weight:700;font-size:20px;padding:0 8px 18px}
+.orgbox{margin:0 0 16px;padding:10px 12px;border-radius:10px;background:var(--spruce-deep)}
+.orgbox .label{font-size:12px;color:#9DBBB6}
+.orgbox .oname{font-weight:600;color:#fff;overflow-wrap:anywhere}
+.orgbox select{width:100%;margin-top:6px;background:transparent;color:#fff;border:1px solid #2E6465;border-radius:6px;padding:5px 8px}
+.orgbox select option{color:#111}
+.nav{display:grid;gap:2px;flex:1;align-content:start}
+.navitem{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;color:#D5E4E1;background:transparent;border:0;text-align:left;cursor:pointer;font-weight:500;position:relative}
+.navitem:hover{background:var(--spruce-hi);color:#fff}
+.navitem[aria-current=page]{background:var(--spruce-hi);color:#fff;font-weight:600}
+.navitem[aria-current=page]::before{content:"";position:absolute;left:-16px;top:8px;bottom:8px;width:4px;border-radius:0 4px 4px 0;background:var(--gold)}
+.mecard{border-top:1px solid #23595A;padding-top:14px;display:flex;align-items:center;gap:10px}
+.mecard .avatar{background:#23595A;color:#fff}
+.mecard .who-txt{min-width:0;flex:1}
+.mecard .em{font-size:13px;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mecard .rl{font-size:12px;color:#9DBBB6}
+.mecard .icon-btn{color:#D5E4E1}
+.mecard .icon-btn:hover{background:var(--spruce-hi);color:#fff}
+.main{min-width:0}
+.mobilebar{display:none}
+.page{max-width:1120px;margin:0 auto;padding:32px 32px 64px}
+.pagehead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.pagehead .sub{color:var(--muted);margin-top:4px}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+
+/* dashboard */
+.stat-strip{display:grid;grid-template-columns:repeat(4,1fr)}
+.stat{padding:20px 22px;border-right:1px solid var(--line)}
+.stat:last-child{border-right:0}
+.stat b{display:block;font-family:var(--font-display);font-size:34px;line-height:1.1}
+.stat span{color:var(--muted);font-size:14px}
+.grid-main{display:grid;grid-template-columns:1.25fr 1fr;gap:20px;margin-top:20px}
+.bars{display:grid;gap:12px}
+.bar-row{display:grid;grid-template-columns:150px 1fr 32px;gap:12px;align-items:center;font-size:14px}
+.bar-row .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{height:10px;background:var(--sage);border-radius:99px;overflow:hidden}
+.bar-fill{height:100%;background:var(--spruce);border-radius:99px}
+.bar-row .n{text-align:right;font-weight:600}
+.attn{list-style:none;margin:0;padding:0;display:grid}
+.attn li{border-bottom:1px solid #EAEFF0}
+.attn li:last-child{border-bottom:0}
+.attn button{width:100%;display:flex;justify-content:space-between;gap:12px;align-items:center;text-align:left;background:none;border:0;padding:12px 0;cursor:pointer}
+.attn button:hover .an{text-decoration:underline}
+.meter{height:8px;border-radius:99px;background:var(--sage);overflow:hidden;margin:8px 0}
+.meter i{display:block;height:100%;background:var(--gold)}
+
+/* employee file (folder tabs) */
+.profile-head{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin:6px 0 20px}
+.profile-head .grow{flex:1;min-width:200px}
+.folder-tabs{display:flex;gap:4px;padding-left:16px;margin-bottom:-1px;position:relative;z-index:1;flex-wrap:wrap}
+.folder-tab{border:1px solid var(--line);border-bottom:1px solid var(--line);background:#E8EEEF;padding:10px 20px;border-radius:10px 10px 0 0;cursor:pointer;color:var(--muted);font-weight:600}
+.folder-tab:hover{color:var(--ink)}
+.folder-tab[aria-selected=true]{background:var(--panel);color:var(--ink);border-bottom-color:var(--panel);box-shadow:inset 0 3px 0 var(--gold)}
+.folder-body{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:24px;min-height:220px}
+.dl{display:grid;grid-template-columns:200px 1fr;margin:0}
+.dl dt,.dl dd{padding:11px 0;border-bottom:1px solid #EAEFF0;margin:0}
+.dl dt{color:var(--muted);font-size:14px}
+.dl dd{overflow-wrap:anywhere}
+.dl dt:last-of-type,.dl dd:last-of-type{border-bottom:0}
+.sect-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:12px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+
+/* auth */
+.auth{min-height:100vh;display:grid;grid-template-columns:minmax(340px,1.05fr) minmax(340px,1fr)}
+.auth-art{background:var(--spruce);color:#D5E4E1;padding:48px 56px;display:flex;flex-direction:column;justify-content:space-between;gap:32px;position:relative;overflow:hidden}
+.auth-art h2{font-size:clamp(30px,3.6vw,46px);color:#fff;max-width:13em;line-height:1.08}
+.auth-art ul{list-style:none;padding:0;margin:26px 0 0;display:grid;gap:14px;max-width:32em}
+.auth-art li{display:flex;gap:12px;align-items:flex-start}
+.auth-art li svg{flex:none;margin-top:3px;color:var(--gold)}
+.auth-art .art{width:min(360px,80%);align-self:flex-end;opacity:.95}
+.auth-panel{display:grid;place-items:center;padding:32px}
+.auth-card{width:min(420px,100%)}
+.auth-card h1{margin-bottom:6px}
+.auth-card .sub{color:var(--muted);margin-bottom:22px}
+.auth-links{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:18px;font-size:14px}
+.auth-links button{background:none;border:0;padding:0;color:var(--spruce-hi);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.auth-card .btn.primary{width:100%;justify-content:center}
+.center-screen{min-height:100vh;display:grid;place-content:center;gap:14px;justify-items:center;padding:24px;color:var(--muted);text-align:center}
+.center-screen .panel{max-width:520px;text-align:left;display:grid;gap:12px}
+.spinner{width:28px;height:28px;border-radius:50%;border:3px solid var(--sage);border-top-color:var(--spruce);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loadline{padding:36px;text-align:center;color:var(--muted)}
+
+/* modal + toast */
+.overlay{position:fixed;inset:0;background:rgba(9,44,45,.45);display:grid;place-items:center;padding:16px;z-index:50;animation:fade .15s ease-out}
+.modal{background:#fff;border-radius:14px;width:min(520px,100%);max-height:calc(100vh - 32px);display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(9,44,45,.3)}
+.modal.wide{width:min(720px,100%)}
+.modal form{display:flex;flex-direction:column;min-height:0}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)}
+.modal-body{padding:20px;overflow-y:auto}
+.modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--line)}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+#toasts{position:fixed;right:16px;bottom:16px;display:grid;gap:8px;z-index:80;max-width:min(380px,calc(100vw - 32px))}
+.toast{background:var(--spruce-deep);color:#fff;padding:12px 16px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.25);animation:fade .15s ease-out}
+.toast.error{background:var(--bad)}
+textarea.copybox{width:100%;min-height:170px;padding:12px;border:1px solid #C9D3D6;border-radius:8px;font:14px/1.5 var(--font-body)}
+
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr}
+  .side{position:fixed;left:0;top:0;bottom:0;width:280px;z-index:40;transform:translateX(-100%);transition:transform .2s}
+  .shell.menu-open .side{transform:none}
+  .shell.menu-open::after{content:"";position:fixed;inset:0;background:rgba(9,44,45,.4);z-index:30}
+  .shell.menu-open .side{z-index:40}
+  .mobilebar{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--spruce);color:#fff;position:sticky;top:0;z-index:20}
+  .mobilebar .icon-btn{color:#fff}
+  .mobilebar .brand{padding:0;font-size:18px}
+  .page{padding:20px 16px 56px}
+  .stat-strip{grid-template-columns:1fr 1fr}
+  .stat:nth-child(2){border-right:0}
+  .stat:nth-child(-n+2){border-bottom:1px solid var(--line)}
+  .grid-main,.two-col{grid-template-columns:1fr}
+  .dl{grid-template-columns:1fr}
+  .dl dt{border-bottom:0;padding-bottom:0}
+  .auth{grid-template-columns:1fr}
+  .auth-art{padding:28px 24px}
+  .auth-art .art,.auth-art ul{display:none}
+  .grid2{grid-template-columns:1fr}
+  .bar-row{grid-template-columns:110px 1fr 28px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal-root"></div>
+<div id="toasts" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(() => {
+'use strict';
+
+/* =====================================================================
+   SETTINGS: the only lines you normally need to change
+   ===================================================================== */
+const CONFIG = {
+  APP_NAME: 'PeopleDesk',                       // your product name
+  SUPABASE_URL: 'https://efgckodcvtzrjiabcktf.supabase.co',
+  SUPABASE_KEY: 'sb_publishable_Kd560On82iHu2UadJow4lQ_BLP1Hr4L', // publishable key: safe to be public
+  SUPPORT_EMAIL: ''                             // shown on the "workspace locked" screen
+};
+
+if (!window.supabase) {
+  document.getElementById('app').innerHTML =
+    '<div style="padding:32px;font-family:system-ui">Could not load the app library. Check your internet connection and reload the page.</div>';
+  return;
+}
+document.title = CONFIG.APP_NAME;
+const sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+});
+const hr = sb.schema('hrms');
+
+/* =====================================================================
+   CONSTANTS
+   ===================================================================== */
+const EMP_TYPES = { full_time:'Full-time', part_time:'Part-time', contract:'Contract', casual:'Casual', intern:'Intern', volunteer:'Volunteer' };
+const STATUSES = { active:'Active', on_leave:'On leave', suspended:'Suspended', resigned:'Resigned', terminated:'Terminated', retired:'Retired' };
+const EXITED = ['resigned','terminated','retired'];
+const CONTRACT_TYPES = { permanent:'Permanent', fixed_term:'Fixed-term', probation:'Probation', casual:'Casual', internship:'Internship', volunteer:'Volunteer' };
+const CONTRACT_STATUSES = { draft:'Draft', active:'Active', expired:'Expired', terminated:'Terminated' };
+const PAY_FREQ = { monthly:'Monthly', weekly:'Weekly', daily:'Daily', hourly:'Hourly' };
+const DOC_TYPES = { contract:'Contract', certificate:'Certificate', id_document:'ID document', cv:'CV or résumé', appraisal:'Appraisal', disciplinary:'Disciplinary', other:'Other' };
+const ROLES = { owner:'Owner', admin:'Admin', hr_officer:'HR officer', payroll:'Payroll', employee:'Employee' };
+const ROLE_HELP = {
+  admin:'Full access to HR data, team and settings.',
+  hr_officer:'Manages employees, contracts and documents.',
+  payroll:'Can view pay and personal details, but cannot edit.',
+  employee:'Sees their own record, and their team if they manage people.'
+};
+const INDUSTRIES = ['Education','Healthcare','Retail','Finance','Technology','Manufacturing','Hospitality','Construction','Non-profit','Government','Other'];
+const GENDERS = { Female:'Female', Male:'Male', Other:'Other' };
+const MARITAL = { Single:'Single', Married:'Married', Divorced:'Divorced', Widowed:'Widowed', Other:'Other' };
+const TABLE_LABEL = { employees:'Employee', employee_private:'Personal details', contracts:'Contract', employee_documents:'Document',
+  departments:'Department', positions:'Position', org_members:'Team member', invitations:'Invitation', organizations:'Organization' };
+const ACTION_LABEL = { INSERT:'Added', UPDATE:'Changed', DELETE:'Removed' };
+const SENSITIVE = new Set(['national_id_no','tax_id_no','social_security_no','home_address','date_of_birth']);
+
+/* =====================================================================
+   STATE
+   ===================================================================== */
+const state = {
+  user:null, memberships:[], org:null, role:null, me:null,
+  view:'dashboard', empId:null, tab:'overview', menuOpen:false,
+  departments:[], positions:[], employees:[], contracts:[], attention:{ docs:[] },
+  detail:{ id:null, priv:null, docs:[], loaded:false, error:null },
+  team:{ members:[], invitations:[], loaded:false, loading:false, error:null },
+  audit:{ rows:[], loaded:false, loading:false, error:null },
+  filters:{ q:'', dept:'', status:'current' },
+  authMode:'signin', pendingEmail:'', joined:0,
+  recovery:/type=recovery/.test(location.hash)
+};
+
+/* =====================================================================
+   UTILITIES
+   ===================================================================== */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const localISO = d => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+const TODAY = () => localISO(new Date());
+const addDays = (iso, n) => { const d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n); return localISO(d); };
+const fmtDate = v => { if (!v) return '—'; const s = String(v); const d = new Date(s.length === 10 ? s + 'T00:00:00' : s); return isNaN(d) ? '—' : d.toLocaleDateString(undefined, { day:'numeric', month:'short', year:'numeric' }); };
+const fmtDateTime = v => { const d = new Date(v); return isNaN(d) ? '—' : d.toLocaleString(undefined, { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }); };
+const money = (n, cur) => {
+  if (n == null || n === '') return '—';
+  try { return new Intl.NumberFormat(undefined, { style:'currency', currency: cur || state.org?.currency || 'USD' }).format(n); }
+  catch { return `${cur || ''} ${Number(n).toLocaleString()}`.trim(); }
+};
+const initials = name => (String(name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('') || '?').toUpperCase();
+const hue = name => { let h = 0; for (const c of String(name || '')) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
+const avatar = (name, size = '') => `<span class="avatar ${size}" style="--h:${hue(name)}" aria-hidden="true">${esc(initials(name))}</span>`;
+const chip = (text, tone = 'neutral') => `<span class="chip ${tone}">${esc(text)}</span>`;
+const statusTone = s => ({ active:'ok', on_leave:'warn', suspended:'warn', terminated:'bad' }[s] || 'neutral');
+const nz = v => (v == null || v === '') ? '—' : esc(v);
+
+const ICONS = {
+  grid:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
+  users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  user:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  building:'<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/>',
+  key:'<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>',
+  history:'<path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/>',
+  sliders:'<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>',
+  logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+  plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+  trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',
+  menu:'<line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>',
+  back:'<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>',
+  file:'<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/>',
+  mail:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/>',
+  copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  check:'<polyline points="20 6 9 17 4 12"/>',
+  x:'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'
+};
+const icon = (n, s = 18) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ''}</svg>`;
+const brandMark = `<svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#F0B429"/><path d="M7 11h7l2 2.4h9V24H7z" fill="#0E4142"/></svg>`;
+
+const opts = (map, sel, blank) => (blank !== undefined ? `<option value="">${esc(blank)}</option>` : '') +
+  Object.entries(map).map(([k, v]) => `<option value="${esc(k)}"${k === sel ? ' selected' : ''}>${esc(v)}</option>`).join('');
+const listOpts = (arr, vk, lk, sel, blank) => (blank !== undefined ? `<option value="">${esc(blank)}</option>` : '') +
+  arr.map(o => `<option value="${esc(o[vk])}"${o[vk] === sel ? ' selected' : ''}>${esc(o[lk])}</option>`).join('');
+const fld = (label, control, help) => `<label class="fld"><span>${esc(label)}</span>${control}${help ? `<span class="help">${esc(help)}</span>` : ''}</label>`;
+const inp = (name, o = {}) => `<input name="${esc(name)}" type="${o.type || 'text'}" value="${esc(o.value ?? '')}"${o.required ? ' required' : ''}${o.placeholder ? ` placeholder="${esc(o.placeholder)}"` : ''}${o.extra ? ' ' + o.extra : ''}>`;
+const sel = (name, optionsHtml, o = {}) => `<select name="${esc(name)}"${o.required ? ' required' : ''}${o.extra ? ' ' + o.extra : ''}>${optionsHtml}</select>`;
+const dl = pairs => `<dl class="dl">${pairs.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('')}</dl>`;
+const pageHead = (title, sub = '', actions = '') => `<header class="pagehead"><div><h1>${esc(title)}</h1>${sub ? `<p class="sub">${esc(sub)}</p>` : ''}</div><div class="actions">${actions}</div></header>`;
+const loadBlock = (msg = 'Loading') => `<div class="loadline"><div class="spinner" style="margin:0 auto 10px"></div>${esc(msg)}…</div>`;
+
+function toast(msg, type = 'ok') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  $('#toasts').appendChild(el);
+  setTimeout(() => el.remove(), 4500);
+}
+
+function friendly(err) {
+  const m = String(err?.message || err || 'Something went wrong.');
+  const has = re => re.test(m);
+  if (err?.code === '42501' || has(/permission denied|row-level security/i)) return "You don't have permission to do that.";
+  if (has(/employees_org_empno_uq/)) return 'That employee number is already in use.';
+  if (has(/contracts_one_active_uq/)) return 'This employee already has an active contract. End it first, or save this one as a draft.';
+  if (has(/invitations_one_pending_uq/)) return 'That email already has a pending invitation.';
+  if (has(/departments_org_id_name_key/)) return 'A department with that name already exists.';
+  if (has(/positions_org_id_title_key/)) return 'A position with that title already exists.';
+  if (has(/employees_exit_after_hire/)) return 'The exit date must be on or after the hire date.';
+  if (has(/contracts_dates/)) return 'The end date must be on or after the start date.';
+  if (has(/Failed to fetch|NetworkError|Load failed/i)) return "Can't reach the server. Check your internet connection and try again.";
+  return m;
+}
+
+const q = async promise => { const { data, error } = await promise; if (error) throw error; return data; };
+const perms = () => {
+  const r = state.role;
+  return { owner: r === 'owner', admin: r === 'owner' || r === 'admin', hr: ['owner','admin','hr_officer'].includes(r), pay: ['owner','admin','hr_officer','payroll'].includes(r) };
+};
+const deptName = id => state.departments.find(d => d.id === id)?.name || '—';
+const posTitle = id => state.positions.find(p => p.id === id)?.title || '—';
+const findEmp = id => state.employees.find(e => e.id === id);
+const orgUsable = o => o.status === 'active' || (o.status === 'trial' && (!o.trial_ends_at || new Date(o.trial_ends_at) > new Date()));
+const appUrl = () => location.href.split('#')[0].split('?')[0];
+const redirectUrl = () => /^https?:$/.test(location.protocol) ? location.origin + location.pathname : undefined;
+
+function formToObj(form) {
+  const o = {};
+  for (const el of form.elements) {
+    if (!el.name) continue;
+    if (el.type === 'checkbox') o[el.name] = el.checked;
+    else if (el.type === 'file') o[el.name] = el.files[0] || null;
+    else if (el.type === 'radio') { if (el.checked) o[el.name] = el.value; }
+    else if (el.type === 'password') o[el.name] = el.value;
+    else o[el.name] = el.value.trim() === '' ? null : el.value.trim();
+  }
+  return o;
+}
+function showFormError(form, msg) {
+  const box = form?.querySelector('.form-error');
+  if (box) { box.textContent = msg; box.hidden = false; box.scrollIntoView?.({ block:'nearest' }); }
+  else toast(msg, 'error');
+}
+function tzOptions(selected) {
+  let zones = [];
+  try { zones = Intl.supportedValuesOf('timeZone'); } catch {}
+  if (!zones.includes('UTC')) zones = ['UTC', ...zones];
+  if (selected && !zones.includes(selected)) zones = [selected, ...zones];
+  return zones.map(z => `<option value="${esc(z)}"${z === selected ? ' selected' : ''}>${esc(z)}</option>`).join('');
+}
+const browserTZ = () => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch { return 'UTC'; } };
+
+/* =====================================================================
+   MODAL
+   ===================================================================== */
+let modalSubmit = null;
+function openModal(o) {
+  modalSubmit = o.onSubmit || null;
+  $('#modal-root').innerHTML = `<div class="overlay"><div class="modal ${o.wide ? 'wide' : ''}" role="dialog" aria-modal="true" aria-label="${esc(o.title)}">
+    <div class="modal-head"><h3>${esc(o.title)}</h3><button type="button" class="icon-btn" data-action="close-modal" aria-label="Close">${icon('x')}</button></div>
+    <form data-form="modal"><div class="modal-body"><div class="form-error" role="alert" hidden></div>${o.body}</div>
+    ${o.hideFooter ? '' : `<div class="modal-foot"><button type="button" class="btn ghost" data-action="close-modal">Cancel</button><button class="btn primary" type="submit">${esc(o.submitLabel || 'Save changes')}</button></div>`}
+    </form></div></div>`;
+  $('#modal-root input:not([type=hidden]), #modal-root select, #modal-root textarea')?.focus();
+}
+function closeModal() { $('#modal-root').innerHTML = ''; modalSubmit = null; }
+
+/* =====================================================================
+   AUTH SCREENS
+   ===================================================================== */
+const artSvg = `<svg class="art" viewBox="0 0 360 280" aria-hidden="true">
+  <g transform="rotate(-7 180 150)"><path d="M40 62h90l16 18h174a10 10 0 0 1 10 10v150a10 10 0 0 1-10 10H50a10 10 0 0 1-10-10z" fill="#175759"/></g>
+  <g transform="rotate(3 180 150)"><path d="M40 56h90l16 18h174a10 10 0 0 1 10 10v150a10 10 0 0 1-10 10H50a10 10 0 0 1-10-10z" fill="#23696A"/></g>
+  <path d="M40 48h90l16 18h174a10 10 0 0 1 10 10v160a10 10 0 0 1-10 10H50a10 10 0 0 1-10-10z" fill="#F0B429"/>
+  <circle cx="86" cy="118" r="18" fill="#0E4142"/>
+  <rect x="118" y="106" width="130" height="10" rx="5" fill="#0E4142"/>
+  <rect x="118" y="126" width="90" height="8" rx="4" fill="#0E4142" opacity=".45"/>
+  <rect x="64" y="166" width="230" height="8" rx="4" fill="#0E4142" opacity=".35"/>
+  <rect x="64" y="188" width="196" height="8" rx="4" fill="#0E4142" opacity=".35"/>
+  <rect x="64" y="210" width="214" height="8" rx="4" fill="#0E4142" opacity=".35"/>
+</svg>`;
+
+function authArt() {
+  return `<aside class="auth-art"><div>
+    <div class="brand" style="padding:0 0 28px">${brandMark}<span>${esc(CONFIG.APP_NAME)}</span></div>
+    <h2>Every employee file, in order.</h2>
+    <ul>
+      <li>${icon('check', 20)}<span>Personal details and salaries stay private to HR and payroll. Managers see only their team.</span></li>
+      <li>${icon('check', 20)}<span>Contracts and documents in one place, with alerts before they expire.</span></li>
+      <li>${icon('check', 20)}<span>Invite colleagues with the right access, and see who changed what.</span></li>
+    </ul></div>${artSvg}</aside>`;
+}
+
+function renderAuth() {
+  if (state.recovery) state.authMode = 'recovery';
+  const m = state.authMode;
+  let card = '';
+  if (m === 'signin') card = `
+    <h1>Sign in</h1><p class="sub">Welcome back. Enter your details to open your workspace.</p>
+    <form data-form="signin"><div class="form-error" role="alert" hidden></div>
+      ${fld('Email', inp('email', { type:'email', required:true, extra:'autocomplete="username"' }))}
+      ${fld('Password', inp('password', { type:'password', required:true, extra:'autocomplete="current-password"' }))}
+      <button class="btn primary" type="submit">Sign in</button></form>
+    <div class="auth-links"><button data-action="auth-mode" data-mode="forgot">Forgot your password?</button><button data-action="auth-mode" data-mode="signup">Create an account</button></div>`;
+  else if (m === 'signup') card = `
+    <h1>Create your account</h1><p class="sub">Start with a free trial. You will set up your organization next.</p>
+    <form data-form="signup"><div class="form-error" role="alert" hidden></div>
+      ${fld('Your name', inp('full_name', { required:true, extra:'autocomplete="name"' }))}
+      ${fld('Work email', inp('email', { type:'email', required:true, extra:'autocomplete="email"' }))}
+      ${fld('Password', inp('password', { type:'password', required:true, extra:'minlength="8" autocomplete="new-password"' }), 'At least 8 characters.')}
+      <button class="btn primary" type="submit">Create account</button></form>
+    <div class="auth-links"><span class="muted">Already registered?</span><button data-action="auth-mode" data-mode="signin">Sign in</button></div>`;
+  else if (m === 'forgot') card = `
+    <h1>Reset your password</h1><p class="sub">Enter your email and we will send you a link to choose a new password.</p>
+    <form data-form="forgot"><div class="form-error" role="alert" hidden></div>
+      ${fld('Email', inp('email', { type:'email', required:true, extra:'autocomplete="email"' }))}
+      <button class="btn primary" type="submit">Send reset link</button></form>
+    <div class="auth-links"><button data-action="auth-mode" data-mode="signin">Back to sign in</button></div>`;
+  else if (m === 'recovery') card = `
+    <h1>Choose a new password</h1><p class="sub">Enter a new password for your account.</p>
+    <form data-form="recovery"><div class="form-error" role="alert" hidden></div>
+      ${fld('New password', inp('password', { type:'password', required:true, extra:'minlength="8" autocomplete="new-password"' }))}
+      ${fld('Repeat new password', inp('password2', { type:'password', required:true, extra:'minlength="8" autocomplete="new-password"' }))}
+      <button class="btn primary" type="submit">Save password</button></form>`;
+  else if (m === 'check-email') card = `
+    <h1>Check your inbox</h1><p class="sub">We sent a confirmation link to <b>${esc(state.pendingEmail)}</b>. Open it, then come back here and sign in.</p>
+    <div class="row"><button class="btn" data-action="resend">Send the email again</button><button class="btn ghost" data-action="auth-mode" data-mode="signin">Back to sign in</button></div>`;
+  $('#app').innerHTML = `<div class="auth">${authArt()}<main class="auth-panel"><div class="auth-card">${card}</div></main></div>`;
+}
+
+function renderLoading(msg = 'Loading') { $('#app').innerHTML = `<div class="center-screen"><div class="spinner" aria-hidden="true"></div><p>${esc(msg)}…</p></div>`; }
+function renderFatal(err) {
+  $('#app').innerHTML = `<div class="center-screen"><div class="panel pad"><h2>We couldn't load your workspace</h2>
+    <p class="muted">${esc(friendly(err))}</p>
+    <p class="muted small">If you have just set up the database, check that the <code>hrms</code> schema is listed under Project Settings > API > Exposed schemas.</p>
+    <div class="row"><button class="btn primary" data-action="retry">Try again</button><button class="btn" data-action="signout">Sign out</button></div></div></div>`;
+}
+function renderLocked() {
+  const o = state.org;
+  const why = o.status === 'trial' ? 'Your free trial has ended.' : o.status === 'suspended' ? 'This workspace is suspended.' : 'This workspace has been cancelled.';
+  const contact = CONFIG.SUPPORT_EMAIL ? `Contact <a href="mailto:${esc(CONFIG.SUPPORT_EMAIL)}">${esc(CONFIG.SUPPORT_EMAIL)}</a> to activate a plan.` : 'Contact the product team to activate a plan.';
+  $('#app').innerHTML = `<div class="center-screen"><div class="panel pad"><h2>${esc(o.name)} is locked</h2>
+    <p>${esc(why)} Your data is safe and will be available again once a plan is active.</p><p class="muted">${contact}</p>
+    <div class="row">${state.memberships.length > 1 ? `<button class="btn" data-action="choose-org">Switch organization</button>` : ''}<button class="btn" data-action="signout">Sign out</button></div></div></div>`;
+}
+function renderOnboarding() {
+  const name = state.user?.user_metadata?.full_name || '';
+  $('#app').innerHTML = `<div class="auth">${authArt()}<main class="auth-panel"><div class="auth-card">
+    <h1>Set up your organization</h1><p class="sub">This creates your workspace and makes you its owner. You can invite your team afterwards.</p>
+    <form data-form="createOrg"><div class="form-error" role="alert" hidden></div>
+      ${fld('Organization name', inp('name', { required:true }))}
+      <div class="grid2">
+        ${fld('Industry', sel('industry', listOpts(INDUSTRIES.map(i => ({ v:i })), 'v', 'v', null, 'Select…')))}
+        ${fld('Country', inp('country'))}
+      </div>
+      <div class="grid2">
+        ${fld('Currency code', inp('currency', { required:true, placeholder:'USD', extra:'maxlength="3" minlength="3" pattern="[A-Za-z]{3}" list="cur-list" style="text-transform:uppercase"' }), 'Used for salaries.')}
+        ${fld('Time zone', sel('timezone', tzOptions(browserTZ())))}
+      </div>
+      <datalist id="cur-list">${['USD','EUR','GBP','GHS','NGN','KES','ZAR','XOF','CAD','AUD','INR','AED'].map(c => `<option value="${c}">`).join('')}</datalist>
+      ${fld('Your name', inp('owner_name', { value:name }))}
+      <button class="btn primary" type="submit">Create organization</button></form>
+    <div class="auth-links"><span class="muted">Were you invited? Sign in with the invited email.</span><button data-action="retry">Check again</button></div>
+    <div class="auth-links"><button data-action="signout">Sign out</button></div>
+  </div></main></div>`;
+}
+
+/* =====================================================================
+   SHELL + NAVIGATION
+   ===================================================================== */
+function navItems() {
+  const p = perms();
+  if (state.role === 'employee') {
+    const items = [{ view:'me', label:'My profile', icon:'user' }];
+    if (state.me && state.employees.some(e => e.manager_id === state.me.id)) items.push({ view:'reports', label:'My team', icon:'users' });
+    return items;
+  }
+  const items = [{ view:'dashboard', label:'Dashboard', icon:'grid' }, { view:'employees', label:'Employees', icon:'users' }];
+  if (state.me) items.push({ view:'me', label:'My profile', icon:'user' });
+  items.push({ view:'structure', label:'Departments & positions', icon:'building' });
+  if (p.admin) items.push({ view:'team', label:'Team & access', icon:'key' }, { view:'audit', label:'Activity log', icon:'history' }, { view:'settings', label:'Settings', icon:'sliders' });
+  return items;
+}
+function renderShell() {
+  const active = state.view === 'employee' ? (state.role === 'employee' ? 'reports' : 'employees') : state.view;
+  const nav = navItems().map(i => `<button class="navitem" data-action="nav" data-view="${i.view}"${i.view === active ? ' aria-current="page"' : ''}>${icon(i.icon)}<span>${esc(i.label)}</span></button>`).join('');
+  const multi = state.memberships.length > 1
+    ? `<select data-input="switch-org" aria-label="Switch organization">${state.memberships.map(m => `<option value="${esc(m.org_id)}"${m.org_id === state.org.id ? ' selected' : ''}>${esc(m.org.name)}</option>`).join('')}</select>` : '';
+  const who = state.me?.full_name || state.user.user_metadata?.full_name || state.user.email || '';
+  $('#app').innerHTML = `<div class="shell${state.menuOpen ? ' menu-open' : ''}">
+    <aside class="side"><div class="brand">${brandMark}<span>${esc(CONFIG.APP_NAME)}</span></div>
+      <div class="orgbox"><div class="label">Organization</div><div class="oname">${esc(state.org.name)}</div>${multi}</div>
+      <nav class="nav" aria-label="Main">${nav}</nav>
+      <div class="mecard">${avatar(who)}<div class="who-txt"><div class="em">${esc(state.user.email || who)}</div><div class="rl">${esc(ROLES[state.role] || state.role)}</div></div>
+      <button class="icon-btn" data-action="signout" aria-label="Sign out" title="Sign out">${icon('logout')}</button></div>
+    </aside>
+    <div class="main"><div class="mobilebar"><button class="icon-btn" data-action="menu" aria-label="Open menu">${icon('menu', 22)}</button><div class="brand">${brandMark}<span>${esc(CONFIG.APP_NAME)}</span></div></div>
+    <div class="page" id="view"></div></div></div>`;
+  renderView();
+}
+function renderView() {
+  const v = $('#view'); if (!v) return;
+  const fns = { dashboard:viewDashboard, employees:() => viewEmployees(false), reports:() => viewEmployees(true), employee:viewEmployee, me:viewMe, structure:viewStructure, team:viewTeam, audit:viewAudit, settings:viewSettings };
+  v.innerHTML = (fns[state.view] || (() => ''))();
+}
+function go(view, extra = {}) {
+  state.view = view; Object.assign(state, extra); state.menuOpen = false;
+  if (view === 'me' && state.me) { state.empId = state.me.id; state.tab = 'overview'; }
+  if (view === 'employee' || (view === 'me' && state.me)) loadDetail(state.empId);
+  renderShell();
+  try { window.scrollTo(0, 0); } catch {}
+}
+
+/* =====================================================================
+   DATA LOADING
+   ===================================================================== */
+async function loadMemberships() {
+  const members = await q(hr.from('org_members').select('id,org_id,role,status,display_name').eq('user_id', state.user.id));
+  const ids = members.map(m => m.org_id);
+  const orgs = ids.length ? await q(hr.from('organizations').select('*').in('id', ids)) : [];
+  const byId = Object.fromEntries(orgs.map(o => [o.id, o]));
+  state.memberships = members.filter(m => byId[m.org_id]).map(m => ({ ...m, org: byId[m.org_id] }));
+}
+async function loadOrgData() {
+  const oid = state.org.id, p = perms();
+  const [departments, positions, employees, contracts] = await Promise.all([
+    q(hr.from('departments').select('*').eq('org_id', oid).order('name')),
+    q(hr.from('positions').select('*').eq('org_id', oid).order('title')),
+    q(hr.from('employees').select('*').eq('org_id', oid).order('full_name')),
+    q(hr.from('contracts').select('*').eq('org_id', oid))
+  ]);
+  Object.assign(state, { departments, positions, employees, contracts });
+  state.me = employees.find(e => e.user_id === state.user.id) || null;
+  state.attention = { docs: [] };
+  if (p.hr) {
+    try {
+      state.attention.docs = await q(hr.from('employee_documents').select('id,employee_id,title,expires_on')
+        .eq('org_id', oid).not('expires_on', 'is', null).lte('expires_on', addDays(TODAY(), 60)).order('expires_on'));
+    } catch {}
+  }
+}
+async function reloadEmployees() {
+  state.employees = await q(hr.from('employees').select('*').eq('org_id', state.org.id).order('full_name'));
+  state.me = state.employees.find(e => e.user_id === state.user.id) || null;
+}
+async function reloadStructure() {
+  [state.departments, state.positions] = await Promise.all([
+    q(hr.from('departments').select('*').eq('org_id', state.org.id).order('name')),
+    q(hr.from('positions').select('*').eq('org_id', state.org.id).order('title'))
+  ]);
+}
+async function reloadContracts() { state.contracts = await q(hr.from('contracts').select('*').eq('org_id', state.org.id)); }
+
+async function loadDetail(id) {
+  const e = findEmp(id), p = perms();
+  const self = !!e && e.user_id === state.user.id;
+  const d = state.detail = { id, priv:null, docs:[], loaded:false, error:null };
+  try {
+    const jobs = [];
+    if (p.pay || self) jobs.push(hr.from('employee_private').select('*').eq('employee_id', id).maybeSingle().then(r => { if (r.error) throw r.error; d.priv = r.data; }));
+    if (p.hr || self) jobs.push(hr.from('employee_documents').select('*').eq('employee_id', id).order('created_at', { ascending:false }).then(r => { if (r.error) throw r.error; d.docs = r.data || []; }));
+    await Promise.all(jobs);
+  } catch (err) { d.error = friendly(err); }
+  d.loaded = true;
+  if (state.detail === d && ['employee', 'me'].includes(state.view)) renderView();
+}
+async function loadTeam() {
+  const t = state.team; if (t.loading) return;
+  t.loading = true;
+  try {
+    const oid = state.org.id;
+    const [members, invitations] = await Promise.all([
+      q(hr.from('org_members').select('*').eq('org_id', oid).order('created_at')),
+      q(hr.from('invitations').select('*').eq('org_id', oid).order('created_at', { ascending:false }))
+    ]);
+    t.members = members; t.invitations = invitations; t.error = null;
+  } catch (err) { t.error = friendly(err); }
+  t.loaded = true; t.loading = false;
+  if (state.view === 'team') renderView();
+}
+async function loadAudit() {
+  const a = state.audit; if (a.loading) return;
+  a.loading = true;
+  try {
+    if (!state.team.loaded) await loadTeam();
+    a.rows = await q(hr.from('audit_log').select('*').eq('org_id', state.org.id).order('created_at', { ascending:false }).limit(100));
+    a.error = null;
+  } catch (err) { a.error = friendly(err); }
+  a.loaded = true; a.loading = false;
+  if (state.view === 'audit') renderView();
+}
+
+/* =====================================================================
+   VIEW: DASHBOARD
+   ===================================================================== */
+function viewDashboard() {
+  const p = perms();
+  const current = state.employees.filter(e => !EXITED.includes(e.status));
+  const onLeave = current.filter(e => e.status === 'on_leave').length;
+  const since = addDays(TODAY(), -30), since90 = addDays(TODAY(), -90);
+  const joined = current.filter(e => e.hire_date && e.hire_date >= since).length;
+  const left = state.employees.filter(e => EXITED.includes(e.status) && e.exit_date && e.exit_date >= since90).length;
+  const add = p.hr ? `<button class="btn primary" data-action="add-emp">${icon('plus')} Add employee</button>` : '';
+  if (!state.employees.length) {
+    return pageHead('Dashboard', state.org.name, add) + `<div class="panel empty"><h3>No employees yet</h3><p>Add your first employee to start building your people records.</p>${p.hr ? `<button class="btn primary" data-action="add-emp">${icon('plus')} Add employee</button>` : ''}</div>`;
+  }
+  const counts = {};
+  current.forEach(e => { const k = e.department_id ? deptName(e.department_id) : 'No department'; counts[k] = (counts[k] || 0) + 1; });
+  const rows = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const max = rows.length ? rows[0][1] : 1;
+  const bars = rows.map(([k, n]) => `<div class="bar-row"><span class="lbl" title="${esc(k)}">${esc(k)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(n / max * 100)}%"></div></div><span class="n">${n}</span></div>`).join('');
+
+  const today = TODAY(), soon = addDays(today, 60), att = [];
+  if (p.pay) state.contracts.filter(c => c.status === 'active' && c.end_date && c.end_date <= soon).forEach(c => {
+    att.push({ date:c.end_date, emp:c.employee_id, text:'Contract', late:c.end_date < today });
+  });
+  if (p.hr) state.attention.docs.forEach(d => att.push({ date:d.expires_on, emp:d.employee_id, text:d.title, late:d.expires_on < today }));
+  att.sort((a, b) => a.date.localeCompare(b.date));
+  const attn = att.length ? `<ul class="attn">${att.slice(0, 8).map(a => `<li><button data-action="open-emp" data-id="${esc(a.emp)}"><span><span class="an">${esc(findEmp(a.emp)?.full_name || 'Employee')}</span><br><span class="muted small">${esc(a.text)} ${a.late ? 'expired' : 'expires'} ${esc(fmtDate(a.date))}</span></span>${chip(a.late ? 'Overdue' : 'Soon', a.late ? 'bad' : 'warn')}</button></li>`).join('')}</ul>`
+    : `<p class="muted">Nothing needs attention in the next 60 days.</p>`;
+
+  const o = state.org;
+  const cap = o.max_employees;
+  const used = current.length;
+  const daysLeft = o.trial_ends_at ? Math.max(0, Math.ceil((new Date(o.trial_ends_at) - new Date()) / 86400000)) : null;
+  const plan = p.admin ? `<div class="panel pad" style="margin-top:20px"><h3 style="margin-bottom:6px">Your plan</h3>
+    <p>${o.status === 'trial' ? `Free trial${daysLeft != null ? `, ${daysLeft} day${daysLeft === 1 ? '' : 's'} left` : ''}` : esc(o.plan_key)}</p>
+    <div class="meter" role="img" aria-label="${used} of ${cap ?? 'unlimited'} employees"><i style="width:${cap ? Math.min(100, Math.round(used / cap * 100)) : 0}%"></i></div>
+    <p class="muted small">${used} of ${cap ?? 'unlimited'} employees used</p></div>` : '';
+
+  return pageHead('Dashboard', state.org.name, add) + `
+  <div class="panel stat-strip">
+    <div class="stat"><b>${current.length}</b><span>People employed</span></div>
+    <div class="stat"><b>${onLeave}</b><span>On leave now</span></div>
+    <div class="stat"><b>${joined}</b><span>Joined in 30 days</span></div>
+    <div class="stat"><b>${left}</b><span>Left in 90 days</span></div>
+  </div>
+  <div class="grid-main">
+    <section class="panel pad"><h3 style="margin-bottom:16px">People by department</h3><div class="bars">${bars || '<p class="muted">No data yet.</p>'}</div></section>
+    <div><section class="panel pad"><h3 style="margin-bottom:8px">Needs attention</h3>${attn}</section>${plan}</div>
+  </div>`;
+}
+
+/* =====================================================================
+   VIEW: EMPLOYEES LIST
+   ===================================================================== */
+function employeeList(reportsOnly) {
+  const f = state.filters, term = (f.q || '').toLowerCase();
+  return state.employees.filter(e => {
+    if (reportsOnly && (!state.me || e.manager_id !== state.me.id)) return false;
+    if (f.dept && e.department_id !== f.dept) return false;
+    if (f.status === 'current' && EXITED.includes(e.status)) return false;
+    if (f.status === 'exited' && !EXITED.includes(e.status)) return false;
+    if (['active', 'on_leave', 'suspended'].includes(f.status) && e.status !== f.status) return false;
+    if (term && !`${e.full_name} ${e.employee_no || ''} ${e.work_email || ''} ${e.phone || ''}`.toLowerCase().includes(term)) return false;
+    return true;
+  });
+}
+function empTableHtml(reportsOnly) {
+  const list = employeeList(reportsOnly);
+  if (!list.length) return `<div class="empty"><h3>No employees found</h3><p>${state.employees.length ? 'Try a different search or filter.' : 'Employees you add will appear here.'}</p></div>`;
+  return `<div class="tablewrap"><table><thead><tr><th>Name</th><th>No.</th><th>Department</th><th>Position</th><th>Status</th><th>Hired</th></tr></thead><tbody>${list.map(e => `
+    <tr data-action="open-emp" data-id="${esc(e.id)}"><td><div class="who">${avatar(e.full_name)}<div><a href="#" class="name" data-action="open-emp" data-id="${esc(e.id)}">${esc(e.full_name)}</a><div class="muted small">${esc(e.work_email || '')}</div></div></div></td>
+    <td>${nz(e.employee_no)}</td><td>${esc(deptName(e.department_id))}</td><td>${esc(posTitle(e.position_id))}</td>
+    <td>${chip(STATUSES[e.status] || e.status, statusTone(e.status))}</td><td>${fmtDate(e.hire_date)}</td></tr>`).join('')}</tbody></table></div>`;
+}
+function viewEmployees(reportsOnly) {
+  const p = perms(), f = state.filters;
+  const actions = p.hr ? `<button class="btn" data-action="export-csv">${icon('download')} Export CSV</button><button class="btn primary" data-action="add-emp">${icon('plus')} Add employee</button>` : '';
+  const statusOpts = { current:'Current staff', active:'Active', on_leave:'On leave', suspended:'Suspended', exited:'Left the organization', all:'Everyone' };
+  return pageHead(reportsOnly ? 'My team' : 'Employees', reportsOnly ? 'People who report to you' : `${state.employees.filter(e => !EXITED.includes(e.status)).length} current`, actions) + `
+  <div class="panel"><div class="toolbar">
+    <input class="search" type="search" placeholder="Search by name, number, email or phone" value="${esc(f.q)}" data-input="emp-filter" data-key="q" aria-label="Search employees">
+    <select data-input="emp-filter" data-key="dept" aria-label="Department">${listOpts(state.departments, 'id', 'name', f.dept, 'All departments')}</select>
+    <select data-input="emp-filter" data-key="status" aria-label="Status">${opts(statusOpts, f.status)}</select>
+  </div><div id="emp-table" data-reports="${reportsOnly ? 1 : 0}">${empTableHtml(reportsOnly)}</div></div>`;
+}
+function updateEmployeeTable() {
+  const box = $('#emp-table'); if (box) box.innerHTML = empTableHtml(box.dataset.reports === '1');
+}
+
+/* =====================================================================
+   VIEW: EMPLOYEE FILE (folder with tabs)
+   ===================================================================== */
+function viewMe() {
+  if (!state.me) return pageHead('My profile') + `<div class="panel empty"><h3>Your login isn't linked to an employee record yet</h3><p>Ask your HR team to link your account, or check back after they have.</p></div>`;
+  return viewEmployee();
+}
+function viewEmployee() {
+  const e = findEmp(state.empId);
+  const isMe = state.view === 'me';
+  if (!e) return pageHead('Employee') + `<div class="panel empty"><h3>Employee not found</h3><button class="btn" data-action="back">Back to the list</button></div>`;
+  const p = perms(), self = e.user_id === state.user.id;
+  const canPriv = p.pay || self, canDocs = p.hr || self;
+  const tabs = [['overview', 'Overview']];
+  if (canPriv) tabs.push(['personal', 'Personal'], ['contracts', 'Contracts']);
+  if (canDocs) tabs.push(['documents', 'Documents']);
+  if (!tabs.some(t => t[0] === state.tab)) state.tab = 'overview';
+  const back = isMe ? '' : `<button class="btn ghost sm" data-action="back" style="margin-left:-12px">${icon('back')} ${state.role === 'employee' ? 'My team' : 'Employees'}</button>`;
+  const acts = [];
+  if (p.hr) acts.push(`<button class="btn" data-action="edit-emp" data-id="${esc(e.id)}">${icon('edit')} Edit</button>`);
+  if (p.admin && !e.user_id) acts.push(`<button class="btn" data-action="invite-emp" data-id="${esc(e.id)}">${icon('mail')} Invite to sign in</button>`);
+  const body = { overview:tabOverview, personal:tabPersonal, contracts:tabContracts, documents:tabDocuments }[state.tab](e, p, self);
+  return `${back}<div class="profile-head">${avatar(e.full_name, 'lg')}<div class="grow"><h1>${esc(e.full_name)}</h1>
+    <p class="muted">${esc(posTitle(e.position_id) !== '—' ? posTitle(e.position_id) : 'No position set')}${e.department_id ? `, ${esc(deptName(e.department_id))}` : ''}</p></div>
+    ${chip(STATUSES[e.status] || e.status, statusTone(e.status))}<div class="actions">${acts.join('')}</div></div>
+    <div class="folder"><div class="folder-tabs" role="tablist">${tabs.map(([k, l]) => `<button class="folder-tab" role="tab" data-action="tab" data-tab="${k}" aria-selected="${k === state.tab}">${l}</button>`).join('')}</div>
+    <div class="folder-body" role="tabpanel">${body}</div></div>`;
+}
+function tabOverview(e, p) {
+  const mgr = e.manager_id ? findEmp(e.manager_id) : null;
+  const reports = state.employees.filter(x => x.manager_id === e.id);
+  const pairs = [
+    ['Employee number', nz(e.employee_no)],
+    ['Position', esc(posTitle(e.position_id))],
+    ['Department', esc(deptName(e.department_id))],
+    ['Reports to', mgr ? `<a href="#" data-action="open-emp" data-id="${esc(mgr.id)}">${esc(mgr.full_name)}</a>` : '—'],
+    ['Employment type', esc(EMP_TYPES[e.employment_type] || e.employment_type)],
+    ['Hired on', esc(fmtDate(e.hire_date))]
+  ];
+  if (EXITED.includes(e.status) || e.exit_date) pairs.push(['Left on', esc(fmtDate(e.exit_date))], ['Reason for leaving', nz(e.exit_reason)]);
+  pairs.push(['Work email', nz(e.work_email)], ['Phone', nz(e.phone)], ['Gender', nz(e.gender)]);
+  if (p.hr) pairs.push(['Sign-in access', e.user_id ? 'Has a login' : 'No login yet']);
+  const rep = reports.length ? `<div style="margin-top:26px"><h3 style="margin-bottom:8px">Direct reports</h3><div class="row">${reports.map(r => `<a class="who" href="#" data-action="open-emp" data-id="${esc(r.id)}" style="text-decoration:none;color:inherit;margin-right:16px">${avatar(r.full_name)}<span class="name">${esc(r.full_name)}</span></a>`).join('')}</div></div>` : '';
+  return dl(pairs) + rep;
+}
+function tabPersonal(e, p) {
+  const d = state.detail;
+  if (!d.loaded || d.id !== e.id) return loadBlock();
+  if (d.error) return `<p class="muted">${esc(d.error)}</p>`;
+  const edit = p.hr ? `<button class="btn sm" data-action="edit-private">${icon('edit', 16)} ${d.priv ? 'Edit' : 'Add details'}</button>` : '';
+  if (!d.priv) return `<div class="sect-head"><h3>Personal details</h3>${edit}</div><p class="muted">No personal details have been recorded yet.</p>`;
+  const x = d.priv;
+  return `<div class="sect-head"><h3>Personal details</h3>${edit}</div>` + dl([
+    ['Date of birth', esc(fmtDate(x.date_of_birth))], ['Marital status', nz(x.marital_status)],
+    ['National ID number', nz(x.national_id_no)], ['Tax ID number', nz(x.tax_id_no)], ['Social security number', nz(x.social_security_no)],
+    ['Home address', nz(x.home_address)],
+    ['Emergency contact', x.emergency_name ? `${esc(x.emergency_name)}${x.emergency_relation ? ` (${esc(x.emergency_relation)})` : ''}<br><span class="muted">${esc(x.emergency_phone || '')}</span>` : '—']
+  ]);
+}
+function tabContracts(e, p) {
+  const list = state.contracts.filter(c => c.employee_id === e.id).sort((a, b) => String(b.start_date).localeCompare(String(a.start_date)));
+  const add = p.hr ? `<button class="btn sm" data-action="add-contract">${icon('plus', 16)} Add contract</button>` : '';
+  if (!list.length) return `<div class="sect-head"><h3>Contracts</h3>${add}</div><p class="muted">No contracts recorded yet.</p>`;
+  return `<div class="sect-head"><h3>Contracts</h3>${add}</div><div class="tablewrap"><table><thead><tr><th>Type</th><th>Period</th><th>Pay</th><th>Status</th><th></th></tr></thead><tbody>${list.map(c => `
+    <tr><td>${esc(CONTRACT_TYPES[c.contract_type] || c.contract_type)}</td><td>${esc(fmtDate(c.start_date))} to ${c.end_date ? esc(fmtDate(c.end_date)) : 'open-ended'}</td>
+    <td>${esc(money(c.basic_salary, c.currency))} <span class="muted small">${esc((PAY_FREQ[c.pay_frequency] || '').toLowerCase())}</span></td>
+    <td>${chip(CONTRACT_STATUSES[c.status] || c.status, c.status === 'active' ? 'ok' : c.status === 'terminated' ? 'bad' : 'neutral')}</td>
+    <td class="right">${p.hr ? `<button class="icon-btn" data-action="edit-contract" data-id="${esc(c.id)}" aria-label="Edit contract">${icon('edit', 16)}</button><button class="icon-btn danger" data-action="delete-contract" data-id="${esc(c.id)}" aria-label="Delete contract">${icon('trash', 16)}</button>` : ''}</td></tr>`).join('')}</tbody></table></div>`;
+}
+function tabDocuments(e, p) {
+  const d = state.detail;
+  if (!d.loaded || d.id !== e.id) return loadBlock();
+  if (d.error) return `<p class="muted">${esc(d.error)}</p>`;
+  const add = p.hr ? `<button class="btn sm" data-action="add-doc">${icon('plus', 16)} Upload document</button>` : '';
+  if (!d.docs.length) return `<div class="sect-head"><h3>Documents</h3>${add}</div><p class="muted">No documents uploaded yet.</p>`;
+  return `<div class="sect-head"><h3>Documents</h3>${add}</div><div class="tablewrap"><table><thead><tr><th>Title</th><th>Type</th><th>Expires</th><th>Added</th><th></th></tr></thead><tbody>${d.docs.map(x => `
+    <tr><td>${icon('file', 16)} ${esc(x.title)} ${p.hr && !x.visible_to_employee ? chip('HR only', 'warn') : ''}</td><td>${esc(DOC_TYPES[x.doc_type] || x.doc_type)}</td>
+    <td>${x.expires_on ? chip(fmtDate(x.expires_on), x.expires_on < TODAY() ? 'bad' : x.expires_on <= addDays(TODAY(), 60) ? 'warn' : 'neutral') : '—'}</td><td>${esc(fmtDate(x.created_at))}</td>
+    <td class="right"><button class="icon-btn" data-action="download-doc" data-id="${esc(x.id)}" aria-label="Download">${icon('download', 16)}</button>${p.hr ? `<button class="icon-btn danger" data-action="delete-doc" data-id="${esc(x.id)}" aria-label="Delete document">${icon('trash', 16)}</button>` : ''}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+/* ---------- employee forms ---------- */
+function employeeForm(e) {
+  const editing = !!e; e = e || {};
+  const depts = state.departments.filter(d => d.is_active || d.id === e.department_id);
+  const poss = state.positions.filter(x => x.is_active || x.id === e.position_id);
+  const mgrs = state.employees.filter(x => x.id !== e.id && !EXITED.includes(x.status));
+  openModal({
+    title: editing ? 'Edit employee' : 'Add employee', wide: true, submitLabel: editing ? 'Save changes' : 'Add employee',
+    body: `<div class="grid2">${fld('Full name', inp('full_name', { value:e.full_name, required:true }))}${fld('Employee number', inp('employee_no', { value:e.employee_no }))}</div>
+    <div class="grid2">${fld('Work email', inp('work_email', { type:'email', value:e.work_email }))}${fld('Phone', inp('phone', { value:e.phone }))}</div>
+    <div class="grid2">${fld('Department', sel('department_id', listOpts(depts, 'id', 'name', e.department_id, 'No department')))}${fld('Position', sel('position_id', listOpts(poss, 'id', 'title', e.position_id, 'No position')))}</div>
+    <div class="grid2">${fld('Reports to', sel('manager_id', listOpts(mgrs, 'id', 'full_name', e.manager_id, 'No manager')))}${fld('Gender', sel('gender', opts(GENDERS, e.gender, 'Not specified')))}</div>
+    <div class="grid2">${fld('Employment type', sel('employment_type', opts(EMP_TYPES, e.employment_type || 'full_time'), { required:true }))}${fld('Status', sel('status', opts(STATUSES, e.status || 'active'), { required:true }))}</div>
+    <div class="grid2">${fld('Hire date', inp('hire_date', { type:'date', value:e.hire_date }))}${fld('Exit date', inp('exit_date', { type:'date', value:e.exit_date }))}</div>
+    ${fld('Reason for leaving', inp('exit_reason', { value:e.exit_reason }))}`,
+    onSubmit: async d => {
+      const payload = { full_name:d.full_name, employee_no:d.employee_no, gender:d.gender, work_email:d.work_email, phone:d.phone,
+        department_id:d.department_id, position_id:d.position_id, manager_id:d.manager_id, employment_type:d.employment_type,
+        status:d.status, hire_date:d.hire_date, exit_date:d.exit_date, exit_reason:d.exit_reason };
+      if (editing) await q(hr.from('employees').update(payload).eq('id', e.id));
+      else await q(hr.from('employees').insert({ ...payload, org_id: state.org.id }));
+      await reloadEmployees();
+      toast(editing ? 'Changes saved.' : 'Employee added.');
+      renderShell();
+    }
+  });
+}
+function privateForm() {
+  const x = state.detail.priv || {}, id = state.empId;
+  openModal({
+    title: 'Personal details', wide: true,
+    body: `<div class="grid2">${fld('Date of birth', inp('date_of_birth', { type:'date', value:x.date_of_birth }))}${fld('Marital status', sel('marital_status', opts(MARITAL, x.marital_status, 'Not specified')))}</div>
+    <div class="grid2">${fld('National ID number', inp('national_id_no', { value:x.national_id_no }))}${fld('Tax ID number', inp('tax_id_no', { value:x.tax_id_no }))}</div>
+    ${fld('Social security number', inp('social_security_no', { value:x.social_security_no }))}
+    ${fld('Home address', `<textarea name="home_address">${esc(x.home_address || '')}</textarea>`)}
+    <div class="grid2">${fld('Emergency contact name', inp('emergency_name', { value:x.emergency_name }))}${fld('Relationship', inp('emergency_relation', { value:x.emergency_relation }))}</div>
+    ${fld('Emergency contact phone', inp('emergency_phone', { value:x.emergency_phone }))}`,
+    onSubmit: async d => {
+      if (x.id) await q(hr.from('employee_private').update(d).eq('id', x.id));
+      else await q(hr.from('employee_private').insert({ ...d, employee_id: id }));
+      await loadDetail(id);
+      toast('Personal details saved.');
+    }
+  });
+}
+function contractForm(c) {
+  const editing = !!c; c = c || {}; const id = state.empId;
+  openModal({
+    title: editing ? 'Edit contract' : 'Add contract', wide: true,
+    body: `<div class="grid2">${fld('Contract type', sel('contract_type', opts(CONTRACT_TYPES, c.contract_type || 'permanent'), { required:true }))}${fld('Status', sel('status', opts(CONTRACT_STATUSES, c.status || 'active'), { required:true }))}</div>
+    <div class="grid2">${fld('Start date', inp('start_date', { type:'date', value:c.start_date, required:true }))}${fld('End date', inp('end_date', { type:'date', value:c.end_date }), 'Leave empty if open-ended.')}</div>
+    <div class="grid2">${fld(`Basic salary (${state.org.currency})`, inp('basic_salary', { type:'number', value:c.basic_salary, extra:'min="0" step="0.01"' }))}${fld('Paid', sel('pay_frequency', opts(PAY_FREQ, c.pay_frequency || 'monthly'), { required:true }))}</div>
+    ${fld('Notes', `<textarea name="notes">${esc(c.notes || '')}</textarea>`)}`,
+    onSubmit: async d => {
+      const payload = { contract_type:d.contract_type, status:d.status, start_date:d.start_date, end_date:d.end_date,
+        basic_salary: d.basic_salary == null ? null : Number(d.basic_salary), pay_frequency:d.pay_frequency, notes:d.notes };
+      if (editing) await q(hr.from('contracts').update(payload).eq('id', c.id));
+      else await q(hr.from('contracts').insert({ ...payload, employee_id: id }));
+      await reloadContracts();
+      toast('Contract saved.');
+      renderView();
+    }
+  });
+}
+function docForm() {
+  const id = state.empId;
+  openModal({
+    title: 'Upload document', submitLabel: 'Upload',
+    body: `${fld('Title', inp('title', { required:true, placeholder:'e.g. Signed employment contract' }))}
+    <div class="grid2">${fld('Type', sel('doc_type', opts(DOC_TYPES, 'contract'), { required:true }))}${fld('Expires on', inp('expires_on', { type:'date' }))}</div>
+    ${fld('File', '<input type="file" name="file" required>', 'Up to 10 MB.')}
+    <label class="check"><input type="checkbox" name="visible_to_employee" checked><span>The employee can see this document</span></label>`,
+    onSubmit: async d => {
+      const file = d.file;
+      if (!file) throw new Error('Choose a file to upload.');
+      if (file.size > 10 * 1024 * 1024) throw new Error('That file is larger than 10 MB.');
+      const path = `${state.org.id}/${id}/${Date.now()}-${file.name.replace(/[^\w.\-]+/g, '_')}`;
+      const up = await sb.storage.from('hr-documents').upload(path, file, { contentType: file.type || undefined, upsert:false });
+      if (up.error) throw up.error;
+      const ins = await hr.from('employee_documents').insert({ employee_id:id, doc_type:d.doc_type, title:d.title, storage_path:path, expires_on:d.expires_on, visible_to_employee:d.visible_to_employee });
+      if (ins.error) { await sb.storage.from('hr-documents').remove([path]); throw ins.error; }
+      await loadDetail(id);
+      try { state.attention.docs = await q(hr.from('employee_documents').select('id,employee_id,title,expires_on').eq('org_id', state.org.id).not('expires_on', 'is', null).lte('expires_on', addDays(TODAY(), 60)).order('expires_on')); } catch {}
+      toast('Document uploaded.');
+    }
+  });
+}
+
+/* =====================================================================
+   VIEW: DEPARTMENTS & POSITIONS
+   ===================================================================== */
+function viewStructure() {
+  const p = perms();
+  const deptRows = state.departments.map(d => {
+    const n = state.employees.filter(e => e.department_id === d.id && !EXITED.includes(e.status)).length;
+    const head = d.head_employee_id ? findEmp(d.head_employee_id)?.full_name : null;
+    return `<tr><td><b>${esc(d.name)}</b>${d.code ? ` <span class="muted small">${esc(d.code)}</span>` : ''}</td><td>${nz(head)}</td><td>${n}</td><td>${d.is_active ? '' : chip('Inactive')}</td>
+      <td class="right">${p.hr ? `<button class="icon-btn" data-action="edit-dept" data-id="${esc(d.id)}" aria-label="Edit department">${icon('edit', 16)}</button><button class="icon-btn danger" data-action="delete-dept" data-id="${esc(d.id)}" aria-label="Delete department">${icon('trash', 16)}</button>` : ''}</td></tr>`;
+  }).join('');
+  const posRows = state.positions.map(x => {
+    const n = state.employees.filter(e => e.position_id === x.id && !EXITED.includes(e.status)).length;
+    return `<tr><td><b>${esc(x.title)}</b></td><td>${esc(deptName(x.department_id))}</td><td>${n}</td><td>${x.is_active ? '' : chip('Inactive')}</td>
+      <td class="right">${p.hr ? `<button class="icon-btn" data-action="edit-pos" data-id="${esc(x.id)}" aria-label="Edit position">${icon('edit', 16)}</button><button class="icon-btn danger" data-action="delete-pos" data-id="${esc(x.id)}" aria-label="Delete position">${icon('trash', 16)}</button>` : ''}</td></tr>`;
+  }).join('');
+  const table = (head, rows, emptyMsg) => rows ? `<div class="tablewrap"><table><thead><tr>${head}<th class="right"></th></tr></thead><tbody>${rows}</tbody></table></div>` : `<div class="empty"><p>${emptyMsg}</p></div>`;
+  return pageHead('Departments & positions', 'How your organization is structured') + `
+  <section class="panel"><div class="panel-head"><h3>Departments</h3>${p.hr ? `<button class="btn sm" data-action="add-dept">${icon('plus', 16)} Add department</button>` : ''}</div>
+    ${table('<th>Name</th><th>Head</th><th>People</th><th></th>', deptRows, 'No departments yet. Add one to group your employees.')}</section>
+  <section class="panel" style="margin-top:20px"><div class="panel-head"><h3>Positions</h3>${p.hr ? `<button class="btn sm" data-action="add-pos">${icon('plus', 16)} Add position</button>` : ''}</div>
+    ${table('<th>Title</th><th>Department</th><th>People</th><th></th>', posRows, 'No positions yet. Add job titles to assign to employees.')}</section>`;
+}
+function deptForm(d) {
+  const editing = !!d; d = d || {};
+  openModal({
+    title: editing ? 'Edit department' : 'Add department',
+    body: `${fld('Name', inp('name', { value:d.name, required:true }))}${fld('Code', inp('code', { value:d.code }), 'Optional short code, such as FIN.')}
+    ${fld('Head of department', sel('head_employee_id', listOpts(state.employees.filter(e => !EXITED.includes(e.status)), 'id', 'full_name', d.head_employee_id, 'Not assigned')))}
+    <label class="check"><input type="checkbox" name="is_active"${d.is_active === false ? '' : ' checked'}><span>Active</span></label>`,
+    onSubmit: async v => {
+      const payload = { name:v.name, code:v.code, head_employee_id:v.head_employee_id, is_active:v.is_active };
+      if (editing) await q(hr.from('departments').update(payload).eq('id', d.id));
+      else await q(hr.from('departments').insert({ ...payload, org_id: state.org.id }));
+      await reloadStructure(); toast('Department saved.'); renderView();
+    }
+  });
+}
+function posForm(x) {
+  const editing = !!x; x = x || {};
+  openModal({
+    title: editing ? 'Edit position' : 'Add position',
+    body: `${fld('Job title', inp('title', { value:x.title, required:true }))}
+    ${fld('Department', sel('department_id', listOpts(state.departments, 'id', 'name', x.department_id, 'Any department')))}
+    ${fld('Description', `<textarea name="description">${esc(x.description || '')}</textarea>`)}
+    <label class="check"><input type="checkbox" name="is_active"${x.is_active === false ? '' : ' checked'}><span>Active</span></label>`,
+    onSubmit: async v => {
+      const payload = { title:v.title, department_id:v.department_id, description:v.description, is_active:v.is_active };
+      if (editing) await q(hr.from('positions').update(payload).eq('id', x.id));
+      else await q(hr.from('positions').insert({ ...payload, org_id: state.org.id }));
+      await reloadStructure(); toast('Position saved.'); renderView();
+    }
+  });
+}
+
+/* =====================================================================
+   VIEW: TEAM & ACCESS (owner / admin)
+   ===================================================================== */
+function inviteText(inv) {
+  return `You've been invited to join ${state.org.name} on ${CONFIG.APP_NAME}.\n\n1. Open ${appUrl()}\n2. Choose "Create an account" (or sign in if you already have one) using this exact email address: ${inv.email}\n3. Confirm your email if asked. You will be added to ${state.org.name} automatically.\n\nThis invitation expires on ${fmtDate(inv.expires_at)}.`;
+}
+function viewTeam() {
+  const t = state.team, p = perms();
+  if (!t.loaded) { loadTeam(); return pageHead('Team & access') + loadBlock(); }
+  if (t.error) return pageHead('Team & access') + `<div class="panel empty"><h3>Couldn't load the team</h3><p>${esc(t.error)}</p></div>`;
+  const rolesFor = r => (p.owner || r === 'owner') ? ROLES : Object.fromEntries(Object.entries(ROLES).filter(([k]) => k !== 'owner'));
+  const members = t.members.map(m => {
+    const mine = m.user_id === state.user.id, locked = m.role === 'owner' && !p.owner;
+    return `<tr><td><div class="who">${avatar(m.display_name || m.email)}<div><b>${esc(m.display_name || m.email || 'Member')}</b>${mine ? ' <span class="muted small">(you)</span>' : ''}<div class="muted small">${esc(m.email || '')}</div></div></div></td>
+      <td><select data-input="member-role" data-id="${esc(m.id)}" aria-label="Access level"${locked ? ' disabled' : ''}>${opts(rolesFor(m.role), m.role)}</select></td>
+      <td><select data-input="member-status" data-id="${esc(m.id)}" aria-label="Status"${locked || mine ? ' disabled' : ''}>${opts({ active:'Active', suspended:'Suspended' }, m.status)}</select></td>
+      <td class="right">${mine || locked ? '' : `<button class="icon-btn danger" data-action="remove-member" data-id="${esc(m.id)}" aria-label="Remove member">${icon('trash', 16)}</button>`}</td></tr>`;
+  }).join('');
+  const now = new Date();
+  const inv = t.invitations.slice(0, 30).map(i => {
+    const expired = i.status === 'pending' && new Date(i.expires_at) < now;
+    const tone = i.status === 'accepted' ? 'ok' : i.status === 'pending' && !expired ? 'warn' : 'neutral';
+    const label = expired ? 'Expired' : i.status[0].toUpperCase() + i.status.slice(1);
+    return `<tr><td>${esc(i.email)}</td><td>${esc(ROLES[i.role] || i.role)}</td><td>${i.employee_id ? esc(findEmp(i.employee_id)?.full_name || 'Employee') : '—'}</td><td>${esc(fmtDate(i.created_at))}</td><td>${chip(label, tone)}</td>
+      <td class="right">${i.status === 'pending' && !expired ? `<button class="icon-btn" data-action="copy-invite" data-id="${esc(i.id)}" aria-label="Copy invitation message" title="Copy invitation message">${icon('copy', 16)}</button><button class="icon-btn danger" data-action="revoke-invite" data-id="${esc(i.id)}" aria-label="Cancel invitation" title="Cancel invitation">${icon('x', 16)}</button>` : ''}</td></tr>`;
+  }).join('');
+  return pageHead('Team & access', 'Who can sign in to this organization, and what they can do', `<button class="btn primary" data-action="invite">${icon('mail')} Invite someone</button>`) + `
+  <section class="panel"><div class="panel-head"><h3>People with access</h3></div><div class="tablewrap"><table><thead><tr><th>Person</th><th>Access</th><th>Status</th><th></th></tr></thead><tbody>${members}</tbody></table></div></section>
+  <section class="panel" style="margin-top:20px"><div class="panel-head"><h3>Invitations</h3></div>
+    ${inv ? `<div class="tablewrap"><table><thead><tr><th>Email</th><th>Access</th><th>Employee record</th><th>Sent</th><th>Status</th><th></th></tr></thead><tbody>${inv}</tbody></table></div>` : '<div class="empty"><p>No invitations yet.</p></div>'}
+    <div class="panel-body muted small">Invitations are not emailed automatically yet. After inviting someone, copy the message and send it to them. They join as soon as they sign in with the invited email.</div></section>`;
+}
+function inviteForm(pre = {}) {
+  const p = perms();
+  const linkable = state.employees.filter(e => !e.user_id && !EXITED.includes(e.status));
+  const roleOpts = Object.fromEntries(Object.entries(ROLES).filter(([k]) => k !== 'owner'));
+  openModal({
+    title: 'Invite someone', submitLabel: 'Create invitation',
+    body: `${fld('Email address', inp('email', { type:'email', required:true, value:pre.email }))}
+    ${fld('Access level', sel('role', opts(roleOpts, pre.role || 'employee'), { required:true }), '')}
+    <ul class="help" style="margin:-8px 0 14px;padding-left:18px">${Object.entries(ROLE_HELP).map(([k, v]) => `<li><b>${esc(ROLES[k])}:</b> ${esc(v)}</li>`).join('')}</ul>
+    ${fld('Link to an employee record', sel('employee_id', listOpts(linkable, 'id', 'full_name', pre.employee_id, 'Not linked')), 'Links their sign-in to an existing employee so they see their own file.')}`,
+    onSubmit: async d => {
+      const row = await q(hr.from('invitations').insert({ org_id: state.org.id, email: d.email.toLowerCase(), role: d.role, employee_id: d.employee_id }).select().single());
+      state.team.loaded = false;
+      if (state.view === 'team') renderView();
+      setTimeout(() => showInviteShare(row), 40);
+    }
+  });
+}
+function showInviteShare(inv) {
+  openModal({
+    title: 'Invitation ready', hideFooter: true,
+    body: `<p style="margin-bottom:12px">Send this message to <b>${esc(inv.email)}</b>. They will join ${esc(state.org.name)} once they sign in with that email.</p>
+    <textarea class="copybox" id="invite-text" readonly>${esc(inviteText(inv))}</textarea>
+    <div class="row" style="margin-top:14px;justify-content:flex-end"><button type="button" class="btn" data-action="copy-text">${icon('copy', 16)} Copy message</button><button type="button" class="btn primary" data-action="close-modal">Done</button></div>`
+  });
+}
+
+/* =====================================================================
+   VIEW: ACTIVITY LOG (owner / admin)
+   ===================================================================== */
+const humanKey = k => k.replace(/_/g, ' ');
+const shortVal = v => v == null ? 'empty' : (typeof v === 'object' ? JSON.stringify(v) : String(v)).slice(0, 40);
+function diffSummary(r) {
+  const o = r.old_data || {}, n = r.new_data || {};
+  if (r.action === 'UPDATE') {
+    const keys = Object.keys(n).filter(k => k !== 'updated_at' && JSON.stringify(n[k]) !== JSON.stringify(o[k]));
+    if (!keys.length) return 'No visible change';
+    return keys.map(k => SENSITIVE.has(k) ? `${humanKey(k)} changed` : `${humanKey(k)}: ${shortVal(o[k])} to ${shortVal(n[k])}`).join('; ');
+  }
+  const src = r.action === 'DELETE' ? o : n;
+  return src.full_name || src.name || src.title || src.email || '';
+}
+function viewAudit() {
+  const a = state.audit;
+  if (!a.loaded) { loadAudit(); return pageHead('Activity log') + loadBlock(); }
+  if (a.error) return pageHead('Activity log') + `<div class="panel empty"><h3>Couldn't load the activity log</h3><p>${esc(a.error)}</p></div>`;
+  const people = Object.fromEntries(state.team.members.map(m => [m.user_id, m.display_name || m.email]));
+  if (!a.rows.length) return pageHead('Activity log', 'The 100 most recent changes') + `<div class="panel empty"><h3>No activity yet</h3><p>Changes to employees, contracts and access will appear here.</p></div>`;
+  return pageHead('Activity log', 'The 100 most recent changes') + `<div class="panel"><div class="tablewrap"><table><thead><tr><th>When</th><th>Who</th><th>What</th><th>Details</th></tr></thead><tbody>${a.rows.map(r => `
+    <tr><td style="white-space:nowrap">${esc(fmtDateTime(r.created_at))}</td><td>${esc(r.actor_id ? (people[r.actor_id] || 'Someone') : 'System')}</td>
+    <td>${esc(ACTION_LABEL[r.action] || r.action)} ${esc((TABLE_LABEL[r.table_name] || r.table_name).toLowerCase())}</td><td class="small">${esc(diffSummary(r))}</td></tr>`).join('')}</tbody></table></div></div>`;
+}
+
+/* =====================================================================
+   VIEW: SETTINGS
+   ===================================================================== */
+function viewSettings() {
+  const o = state.org, p = perms(), dis = p.owner ? '' : ' disabled';
+  const daysLeft = o.trial_ends_at ? Math.max(0, Math.ceil((new Date(o.trial_ends_at) - new Date()) / 86400000)) : null;
+  return pageHead('Settings', p.owner ? 'Your organization' : 'Only the owner can change these settings') + `
+  <div class="two-col"><section class="panel pad"><form data-form="settings"><div class="form-error" role="alert" hidden></div>
+    ${fld('Organization name', inp('name', { value:o.name, required:true, extra: dis }))}
+    ${fld('Industry', sel('industry', listOpts(INDUSTRIES.map(i => ({ v:i })), 'v', 'v', o.industry, 'Not specified'), { extra: dis }))}
+    ${fld('Country', inp('country', { value:o.country, extra: dis }))}
+    ${fld('Time zone', sel('timezone', tzOptions(o.timezone), { extra: dis }))}
+    ${p.owner ? '<button class="btn primary" type="submit">Save changes</button>' : ''}</form></section>
+  <section class="panel pad"><h3 style="margin-bottom:12px">Plan</h3>${dl([
+    ['Plan', esc(o.plan_key)], ['Status', chip(o.status[0].toUpperCase() + o.status.slice(1), o.status === 'active' ? 'ok' : o.status === 'trial' ? 'warn' : 'bad')],
+    ['Trial ends', o.status === 'trial' && o.trial_ends_at ? `${esc(fmtDate(o.trial_ends_at))}${daysLeft != null ? ` (${daysLeft} day${daysLeft === 1 ? '' : 's'} left)` : ''}` : '—'],
+    ['Employee limit', o.max_employees ?? 'Unlimited'], ['Currency', esc(o.currency)]])}
+    <p class="muted small" style="margin-top:14px">To change your plan or currency, contact the product team.</p></section></div>`;
+}
+
+/* =====================================================================
+   CSV EXPORT
+   ===================================================================== */
+function exportCsv() {
+  const cell = v => { let s = String(v ?? ''); if (/^[=+\-@]/.test(s)) s = "'" + s; return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+  const head = ['Employee number','Full name','Gender','Work email','Phone','Department','Position','Reports to','Employment type','Status','Hire date','Exit date'];
+  const rows = state.employees.map(e => [e.employee_no, e.full_name, e.gender, e.work_email, e.phone, e.department_id ? deptName(e.department_id) : '',
+    e.position_id ? posTitle(e.position_id) : '', e.manager_id ? findEmp(e.manager_id)?.full_name : '', EMP_TYPES[e.employment_type], STATUSES[e.status], e.hire_date, e.exit_date]);
+  const csv = '\ufeff' + [head, ...rows].map(r => r.map(cell).join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' }));
+  a.download = `employees-${TODAY()}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+/* =====================================================================
+   EVENTS
+   ===================================================================== */
+const copyText = async text => {
+  try { await navigator.clipboard.writeText(text); toast('Copied to the clipboard.'); }
+  catch { toast('Could not copy. Select the text and copy it manually.', 'error'); }
+};
+async function act(fn, okMsg) { try { await fn(); if (okMsg) toast(okMsg); } catch (err) { toast(friendly(err), 'error'); } }
+
+const actions = {
+  'close-modal': () => closeModal(),
+  'nav': el => go(el.dataset.view),
+  'back': () => go(state.role === 'employee' ? 'reports' : 'employees'),
+  'menu': () => { state.menuOpen = !state.menuOpen; $('.shell')?.classList.toggle('menu-open', state.menuOpen); },
+  'signout': async () => { try { await sb.auth.signOut(); } catch {} resetSession(); renderAuth(); },
+  'retry': () => scheduleBoot(),
+  'choose-org': () => { state.role = null; state.org = null; renderChooser(); },
+  'auth-mode': el => { state.authMode = el.dataset.mode; renderAuth(); },
+  'resend': () => act(async () => { const { error } = await sb.auth.resend({ type:'signup', email: state.pendingEmail, options: { emailRedirectTo: redirectUrl() } }); if (error) throw error; }, 'Confirmation email sent again.'),
+  'open-emp': el => go('employee', { empId: el.dataset.id, tab: 'overview' }),
+  'add-emp': () => employeeForm(),
+  'edit-emp': el => employeeForm(findEmp(el.dataset.id)),
+  'export-csv': () => exportCsv(),
+  'tab': el => { state.tab = el.dataset.tab; renderView(); },
+  'edit-private': () => privateForm(),
+  'add-contract': () => contractForm(),
+  'edit-contract': el => contractForm(state.contracts.find(c => c.id === el.dataset.id)),
+  'delete-contract': el => { if (confirm('Delete this contract? This cannot be undone.')) act(async () => { await q(hr.from('contracts').delete().eq('id', el.dataset.id)); await reloadContracts(); renderView(); }, 'Contract deleted.'); },
+  'add-doc': () => docForm(),
+  'download-doc': el => act(async () => {
+    const doc = state.detail.docs.find(x => x.id === el.dataset.id); if (!doc) return;
+    const { data, error } = await sb.storage.from('hr-documents').createSignedUrl(doc.storage_path, 60);
+    if (error) throw error;
+    const a = document.createElement('a'); a.href = data.signedUrl; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
+  }),
+  'delete-doc': el => { if (confirm('Delete this document? This cannot be undone.')) act(async () => {
+    const doc = state.detail.docs.find(x => x.id === el.dataset.id); if (!doc) return;
+    await q(hr.from('employee_documents').delete().eq('id', doc.id));
+    await sb.storage.from('hr-documents').remove([doc.storage_path]);
+    await loadDetail(state.empId);
+  }, 'Document deleted.'); },
+  'add-dept': () => deptForm(),
+  'edit-dept': el => deptForm(state.departments.find(d => d.id === el.dataset.id)),
+  'delete-dept': el => { if (confirm('Delete this department? Its employees will be left without a department.')) act(async () => { await q(hr.from('departments').delete().eq('id', el.dataset.id)); await Promise.all([reloadStructure(), reloadEmployees()]); renderView(); }, 'Department deleted.'); },
+  'add-pos': () => posForm(),
+  'edit-pos': el => posForm(state.positions.find(x => x.id === el.dataset.id)),
+  'delete-pos': el => { if (confirm('Delete this position? Its employees will be left without a position.')) act(async () => { await q(hr.from('positions').delete().eq('id', el.dataset.id)); await Promise.all([reloadStructure(), reloadEmployees()]); renderView(); }, 'Position deleted.'); },
+  'invite': () => inviteForm(),
+  'invite-emp': el => { const e = findEmp(el.dataset.id); inviteForm({ email: e?.work_email || '', employee_id: e?.id }); },
+  'copy-invite': el => { const i = state.team.invitations.find(x => x.id === el.dataset.id); if (i) copyText(inviteText(i)); },
+  'copy-text': () => copyText($('#invite-text')?.value || ''),
+  'revoke-invite': el => { if (confirm('Cancel this invitation?')) act(async () => { await q(hr.from('invitations').update({ status:'revoked' }).eq('id', el.dataset.id)); state.team.loaded = false; renderView(); }, 'Invitation cancelled.'); },
+  'remove-member': el => { if (confirm('Remove this person’s access to the organization?')) act(async () => { await q(hr.from('org_members').delete().eq('id', el.dataset.id)); state.team.loaded = false; renderView(); }, 'Access removed.'); }
+};
+document.addEventListener('click', e => {
+  if (e.target.classList?.contains('overlay')) { closeModal(); return; }
+  const el = e.target.closest('[data-action]'); if (!el) return;
+  const fn = actions[el.dataset.action]; if (!fn) return;
+  e.preventDefault(); fn(el, e);
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#modal-root .overlay')) closeModal(); });
+
+const inputs = {
+  'emp-filter': el => { state.filters[el.dataset.key] = el.value; updateEmployeeTable(); },
+  'switch-org': (el, e) => { if (e.type === 'change') enterOrg(el.value); },
+  'member-role': (el, e) => { if (e.type !== 'change') return; act(async () => { await q(hr.from('org_members').update({ role: el.value }).eq('id', el.dataset.id)); state.team.loaded = false; renderView(); }, 'Access updated.').then(() => { state.team.loaded = false; renderView(); }); },
+  'member-status': (el, e) => { if (e.type !== 'change') return; act(async () => { await q(hr.from('org_members').update({ status: el.value }).eq('id', el.dataset.id)); state.team.loaded = false; renderView(); }, 'Status updated.').then(() => { state.team.loaded = false; renderView(); }); }
+};
+['input', 'change'].forEach(ev => document.addEventListener(ev, e => {
+  const el = e.target.closest?.('[data-input]'); if (!el) return;
+  inputs[el.dataset.input]?.(el, e);
+}));
+
+const forms = {
+  signin: async d => { const { error } = await sb.auth.signInWithPassword({ email: d.email, password: d.password }); if (error) throw error; },
+  signup: async d => {
+    const { data, error } = await sb.auth.signUp({ email: d.email, password: d.password, options: { data: { app:'hrms', full_name: d.full_name }, emailRedirectTo: redirectUrl() } });
+    if (error) throw error;
+    if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) throw new Error('An account with this email already exists. Try signing in instead.');
+    if (data.session) return;
+    state.pendingEmail = d.email; state.authMode = 'check-email'; renderAuth();
+  },
+  forgot: async d => {
+    const { error } = await sb.auth.resetPasswordForEmail(d.email, { redirectTo: redirectUrl() }); if (error) throw error;
+    toast('If that email has an account, a reset link is on its way.'); state.authMode = 'signin'; renderAuth();
+  },
+  recovery: async d => {
+    if (d.password !== d.password2) throw new Error('The two passwords do not match.');
+    const { error } = await sb.auth.updateUser({ password: d.password }); if (error) throw error;
+    state.recovery = false; state.authMode = 'signin';
+    try { history.replaceState(null, '', location.pathname); } catch {}
+    toast('Password updated.'); scheduleBoot();
+  },
+  createOrg: async d => {
+    const { data, error } = await hr.rpc('create_organization', { p_name:d.name, p_currency:(d.currency || '').toUpperCase(), p_country:d.country, p_industry:d.industry, p_timezone:d.timezone, p_owner_name:d.owner_name });
+    if (error) throw error;
+    await loadMemberships(); await enterOrg(data);
+  },
+  settings: async d => {
+    await q(hr.from('organizations').update({ name:d.name, industry:d.industry, country:d.country, timezone:d.timezone }).eq('id', state.org.id));
+    await loadMemberships();
+    state.org = state.memberships.find(m => m.org_id === state.org.id).org;
+    toast('Settings saved.'); renderShell();
+  }
+};
+document.addEventListener('submit', async e => {
+  const form = e.target, kind = form.dataset?.form; if (!kind) return;
+  e.preventDefault();
+  const btn = form.querySelector('button[type=submit]');
+  const errBox = form.querySelector('.form-error'); if (errBox) errBox.hidden = true;
+  if (btn) btn.disabled = true;
+  try {
+    if (kind === 'modal') { if (modalSubmit) { await modalSubmit(formToObj(form), form); closeModal(); } }
+    else if (forms[kind]) await forms[kind](formToObj(form), form);
+  } catch (err) { showFormError(form, friendly(err)); }
+  finally { if (btn && btn.isConnected) btn.disabled = false; }
+});
+
+/* =====================================================================
+   SESSION + BOOT
+   ===================================================================== */
+function resetSession() {
+  Object.assign(state, { user:null, memberships:[], org:null, role:null, me:null, employees:[], departments:[], positions:[], contracts:[], view:'dashboard', authMode:'signin', menuOpen:false });
+  closeModal();
+}
+function renderChooser() {
+  $('#app').innerHTML = `<div class="center-screen"><div class="panel pad"><h2>Choose an organization</h2>${state.memberships.map(m => `<button class="btn" data-action="pick-org" data-id="${esc(m.org_id)}">${esc(m.org.name)}</button>`).join('')}</div></div>`;
+}
+actions['pick-org'] = el => enterOrg(el.dataset.id);
+
+async function enterOrg(orgId) {
+  const m = state.memberships.find(x => x.org_id === orgId); if (!m) return;
+  state.org = m.org; state.role = m.role;
+  try { localStorage.setItem('hrms_org', orgId); } catch {}
+  state.team = { members:[], invitations:[], loaded:false, loading:false, error:null };
+  state.audit = { rows:[], loaded:false, loading:false, error:null };
+  state.filters = { q:'', dept:'', status:'current' };
+  if (!orgUsable(state.org)) { renderLocked(); return; }
+  renderLoading('Loading your workspace');
+  try { await loadOrgData(); } catch (err) { renderFatal(err); return; }
+  go(state.role === 'employee' ? 'me' : 'dashboard');
+}
+
+let booting = false, bootTimer = null;
+function scheduleBoot() { clearTimeout(bootTimer); bootTimer = setTimeout(boot, 0); }
+async function boot() {
+  if (booting) return;
+  booting = true;
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    state.user = session?.user || null;
+    if (!state.user) { renderAuth(); return; }
+    if (state.recovery) { renderAuth(); return; }
+    renderLoading('Loading your workspace');
+    try {
+      const inv = await hr.rpc('accept_invitations');
+      if (!inv.error && Array.isArray(inv.data) && inv.data.length) state.joined = inv.data.length;
+      await loadMemberships();
+    } catch (err) { renderFatal(err); return; }
+    if (!state.memberships.length) { renderOnboarding(); return; }
+    let pick = null; try { pick = localStorage.getItem('hrms_org'); } catch {}
+    const m = state.memberships.find(x => x.org_id === pick) || state.memberships[0];
+    await enterOrg(m.org_id);
+    if (state.joined && state.org) { toast(`You've joined ${state.org.name}.`); state.joined = 0; }
+  } catch (err) { renderFatal(err); }
+  finally { booting = false; }
+}
+
+sb.auth.onAuthStateChange((event, session) => {
+  if (event === 'PASSWORD_RECOVERY') { state.recovery = true; scheduleBoot(); return; }
+  if (event === 'SIGNED_OUT') { resetSession(); setTimeout(renderAuth, 0); return; }
+  if (event === 'SIGNED_IN' && session && !booting && state.user?.id !== session.user.id) scheduleBoot();
+});
+boot();
+})();
+</script>
+</body>
+</html>
