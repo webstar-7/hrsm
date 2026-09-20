@@ -190,6 +190,16 @@ td.right,th.right{text-align:right}
 .toast.error{background:var(--bad)}
 textarea.copybox{width:100%;min-height:170px;padding:12px;border:1px solid #C9D3D6;border-radius:8px;font:14px/1.5 var(--font-body)}
 
+.badge{margin-left:auto;background:var(--gold);color:var(--spruce-deep);border-radius:99px;padding:0 8px;font-size:12px;font-weight:700;line-height:20px;min-width:20px;text-align:center}
+.balances{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.bal{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px;min-width:180px;display:grid;gap:2px;align-content:start}
+.bal .lbl{font-weight:600}
+.bal b{font-family:var(--font-display);font-size:30px;line-height:1.1}
+.clockcard{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:22px 24px;margin-bottom:20px}
+.clockcard .big{font-family:var(--font-display);font-size:28px;font-weight:700;line-height:1.15}
+.daypick{display:flex;gap:6px 22px;flex-wrap:wrap;margin-bottom:16px}
+.stack>*+*{margin-top:20px}
+.panel-head select{min-height:36px;padding:4px 10px;border:1px solid #C9D3D6;border-radius:8px;background:#fff}
 @media (max-width:900px){
   .shell{grid-template-columns:1fr}
   .side{position:fixed;left:0;top:0;bottom:0;width:280px;z-index:40;transform:translateX(-100%);transition:transform .2s}
@@ -283,6 +293,9 @@ const state = {
   audit:{ rows:[], loaded:false, loading:false, error:null },
   filters:{ q:'', dept:'', status:'current' },
   authMode:'signin', pendingEmail:'', joined:0,
+  hasTime:false, timeError:null, leaveTypes:[], holidays:[], shifts:[], leaveRequests:[], leaveFilter:'upcoming',
+  leave:{ balances:[], loaded:false, loading:false, error:null },
+  att:{ mine:[], today:[], loaded:false, loading:false, error:null, report:null, from:'', to:'' },
   recovery:/type=recovery/.test(location.hash)
 };
 
@@ -327,7 +340,10 @@ const ICONS = {
   mail:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/>',
   copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
   check:'<polyline points="20 6 9 17 4 12"/>',
-  x:'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'
+  x:'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+  calendar:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+  clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'
 };
 const icon = (n, s = 18) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ''}</svg>`;
 const brandMark = `<svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#F0B429"/><path d="M7 11h7l2 2.4h9V24H7z" fill="#0E4142"/></svg>`;
@@ -362,6 +378,7 @@ function friendly(err) {
   if (has(/positions_org_id_title_key/)) return 'A position with that title already exists.';
   if (has(/employees_exit_after_hire/)) return 'The exit date must be on or after the hire date.';
   if (has(/contracts_dates/)) return 'The end date must be on or after the start date.';
+  if (has(/leave_requests_leave_type_id_fkey/)) return 'This leave type already has requests. Mark it as not available instead of deleting it.';
   if (has(/Failed to fetch|NetworkError|Load failed/i)) return "Can't reach the server. Check your internet connection and try again.";
   return m;
 }
@@ -524,20 +541,23 @@ function renderOnboarding() {
    ===================================================================== */
 function navItems() {
   const p = perms();
+  const pending = state.hasTime ? state.leaveRequests.filter(canDecide).length : 0;
+  const time = state.hasTime ? [{ view:'leave', label:'Leave', icon:'calendar', badge:pending }, { view:'attendance', label:'Attendance', icon:'clock' }] : [];
   if (state.role === 'employee') {
-    const items = [{ view:'me', label:'My profile', icon:'user' }];
+    const items = [{ view:'me', label:'My profile', icon:'user' }, ...time];
     if (state.me && state.employees.some(e => e.manager_id === state.me.id)) items.push({ view:'reports', label:'My team', icon:'users' });
     return items;
   }
-  const items = [{ view:'dashboard', label:'Dashboard', icon:'grid' }, { view:'employees', label:'Employees', icon:'users' }];
+  const items = [{ view:'dashboard', label:'Dashboard', icon:'grid' }, { view:'employees', label:'Employees', icon:'users' }, ...time];
   if (state.me) items.push({ view:'me', label:'My profile', icon:'user' });
   items.push({ view:'structure', label:'Departments & positions', icon:'building' });
-  if (p.admin) items.push({ view:'team', label:'Team & access', icon:'key' }, { view:'audit', label:'Activity log', icon:'history' }, { view:'settings', label:'Settings', icon:'sliders' });
+  if (p.hr && state.hasTime) items.push({ view:'timesettings', label:'Leave & work hours', icon:'sliders' });
+  if (p.admin) items.push({ view:'team', label:'Team & access', icon:'key' }, { view:'audit', label:'Activity log', icon:'history' }, { view:'settings', label:'Settings', icon:'gear' });
   return items;
 }
 function renderShell() {
   const active = state.view === 'employee' ? (state.role === 'employee' ? 'reports' : 'employees') : state.view;
-  const nav = navItems().map(i => `<button class="navitem" data-action="nav" data-view="${i.view}"${i.view === active ? ' aria-current="page"' : ''}>${icon(i.icon)}<span>${esc(i.label)}</span></button>`).join('');
+  const nav = navItems().map(i => `<button class="navitem" data-action="nav" data-view="${i.view}"${i.view === active ? ' aria-current="page"' : ''}>${icon(i.icon)}<span>${esc(i.label)}</span>${i.badge ? `<span class="badge" aria-label="${i.badge} waiting">${i.badge}</span>` : ''}</button>`).join('');
   const multi = state.memberships.length > 1
     ? `<select data-input="switch-org" aria-label="Switch organization">${state.memberships.map(m => `<option value="${esc(m.org_id)}"${m.org_id === state.org.id ? ' selected' : ''}>${esc(m.org.name)}</option>`).join('')}</select>` : '';
   const who = state.me?.full_name || state.user.user_metadata?.full_name || state.user.email || '';
@@ -554,7 +574,8 @@ function renderShell() {
 }
 function renderView() {
   const v = $('#view'); if (!v) return;
-  const fns = { dashboard:viewDashboard, employees:() => viewEmployees(false), reports:() => viewEmployees(true), employee:viewEmployee, me:viewMe, structure:viewStructure, team:viewTeam, audit:viewAudit, settings:viewSettings };
+  const fns = { dashboard:viewDashboard, employees:() => viewEmployees(false), reports:() => viewEmployees(true), employee:viewEmployee, me:viewMe, structure:viewStructure, team:viewTeam, audit:viewAudit, settings:viewSettings,
+    leave:viewLeave, attendance:viewAttendance, timesettings:viewTimeSettings };
   v.innerHTML = (fns[state.view] || (() => ''))();
 }
 function go(view, extra = {}) {
@@ -592,6 +613,7 @@ async function loadOrgData() {
         .eq('org_id', oid).not('expires_on', 'is', null).lte('expires_on', addDays(TODAY(), 60)).order('expires_on'));
     } catch {}
   }
+  await loadTime();
 }
 async function reloadEmployees() {
   state.employees = await q(hr.from('employees').select('*').eq('org_id', state.org.id).order('full_name'));
@@ -608,11 +630,13 @@ async function reloadContracts() { state.contracts = await q(hr.from('contracts'
 async function loadDetail(id) {
   const e = findEmp(id), p = perms();
   const self = !!e && e.user_id === state.user.id;
-  const d = state.detail = { id, priv:null, docs:[], loaded:false, error:null };
+  const d = state.detail = { id, priv:null, docs:[], balances:[], loaded:false, error:null };
   try {
     const jobs = [];
     if (p.pay || self) jobs.push(hr.from('employee_private').select('*').eq('employee_id', id).maybeSingle().then(r => { if (r.error) throw r.error; d.priv = r.data; }));
     if (p.hr || self) jobs.push(hr.from('employee_documents').select('*').eq('employee_id', id).order('created_at', { ascending:false }).then(r => { if (r.error) throw r.error; d.docs = r.data || []; }));
+    const mgr = !!state.me && !!e && e.manager_id === state.me.id;
+    if (state.hasTime && (p.hr || self || mgr)) jobs.push(hr.rpc('leave_balance', { p_employee:id, p_year:new Date().getFullYear() }).then(r => { if (r.error) throw r.error; d.balances = r.data || []; }));
     await Promise.all(jobs);
   } catch (err) { d.error = friendly(err); }
   d.loaded = true;
@@ -650,7 +674,10 @@ async function loadAudit() {
 function viewDashboard() {
   const p = perms();
   const current = state.employees.filter(e => !EXITED.includes(e.status));
-  const onLeave = current.filter(e => e.status === 'on_leave').length;
+  const todayIso = TODAY();
+  const awayIds = new Set(current.filter(e => e.status === 'on_leave').map(e => e.id));
+  state.leaveRequests.filter(r => r.status === 'approved' && r.start_date <= todayIso && r.end_date >= todayIso).forEach(r => awayIds.add(r.employee_id));
+  const onLeave = current.filter(e => awayIds.has(e.id)).length;
   const since = addDays(TODAY(), -30), since90 = addDays(TODAY(), -90);
   const joined = current.filter(e => e.hire_date && e.hire_date >= since).length;
   const left = state.employees.filter(e => EXITED.includes(e.status) && e.exit_date && e.exit_date >= since90).length;
@@ -670,8 +697,11 @@ function viewDashboard() {
   });
   if (p.hr) state.attention.docs.forEach(d => att.push({ date:d.expires_on, emp:d.employee_id, text:d.title, late:d.expires_on < today }));
   att.sort((a, b) => a.date.localeCompare(b.date));
-  const attn = att.length ? `<ul class="attn">${att.slice(0, 8).map(a => `<li><button data-action="open-emp" data-id="${esc(a.emp)}"><span><span class="an">${esc(findEmp(a.emp)?.full_name || 'Employee')}</span><br><span class="muted small">${esc(a.text)} ${a.late ? 'expired' : 'expires'} ${esc(fmtDate(a.date))}</span></span>${chip(a.late ? 'Overdue' : 'Soon', a.late ? 'bad' : 'warn')}</button></li>`).join('')}</ul>`
-    : `<p class="muted">Nothing needs attention in the next 60 days.</p>`;
+  const pendingN = state.hasTime ? state.leaveRequests.filter(canDecide).length : 0;
+  const attItems = att.slice(0, 8).map(a => `<li><button data-action="open-emp" data-id="${esc(a.emp)}"><span><span class="an">${esc(findEmp(a.emp)?.full_name || 'Employee')}</span><br><span class="muted small">${esc(a.text)} ${a.late ? 'expired' : 'expires'} ${esc(fmtDate(a.date))}</span></span>${chip(a.late ? 'Overdue' : 'Soon', a.late ? 'bad' : 'warn')}</button></li>`);
+  if (pendingN) attItems.unshift(`<li><button data-action="nav" data-view="leave"><span><span class="an">${pendingN} leave request${pendingN === 1 ? '' : 's'} waiting</span><br><span class="muted small">Review and decide</span></span>${chip('Review', 'warn')}</button></li>`);
+  const attn = attItems.length ? `<ul class="attn">${attItems.join('')}</ul>` : `<p class="muted">Nothing needs attention right now.</p>`;
+  const banner = p.admin && state.timeError === 'missing' ? `<div class="panel pad" style="margin-bottom:20px;border-color:#E8C56A;background:#FFF8E6"><b>Leave and attendance are in the app but not switched on yet.</b><p class="muted" style="margin-top:4px">Run <code>hrms_phase2_leave_attendance.sql</code> in the Supabase SQL Editor to add them.</p></div>` : '';
 
   const o = state.org;
   const cap = o.max_employees;
@@ -682,7 +712,7 @@ function viewDashboard() {
     <div class="meter" role="img" aria-label="${used} of ${cap ?? 'unlimited'} employees"><i style="width:${cap ? Math.min(100, Math.round(used / cap * 100)) : 0}%"></i></div>
     <p class="muted small">${used} of ${cap ?? 'unlimited'} employees used</p></div>` : '';
 
-  return pageHead('Dashboard', state.org.name, add) + `
+  return pageHead('Dashboard', state.org.name, add) + banner + `
   <div class="panel stat-strip">
     <div class="stat"><b>${current.length}</b><span>People employed</span></div>
     <div class="stat"><b>${onLeave}</b><span>On leave now</span></div>
@@ -749,12 +779,13 @@ function viewEmployee() {
   const tabs = [['overview', 'Overview']];
   if (canPriv) tabs.push(['personal', 'Personal'], ['contracts', 'Contracts']);
   if (canDocs) tabs.push(['documents', 'Documents']);
+  if (state.hasTime && (p.hr || self || (!!state.me && e.manager_id === state.me.id))) tabs.push(['leave', 'Leave']);
   if (!tabs.some(t => t[0] === state.tab)) state.tab = 'overview';
   const back = isMe ? '' : `<button class="btn ghost sm" data-action="back" style="margin-left:-12px">${icon('back')} ${state.role === 'employee' ? 'My team' : 'Employees'}</button>`;
   const acts = [];
   if (p.hr) acts.push(`<button class="btn" data-action="edit-emp" data-id="${esc(e.id)}">${icon('edit')} Edit</button>`);
   if (p.admin && !e.user_id) acts.push(`<button class="btn" data-action="invite-emp" data-id="${esc(e.id)}">${icon('mail')} Invite to sign in</button>`);
-  const body = { overview:tabOverview, personal:tabPersonal, contracts:tabContracts, documents:tabDocuments }[state.tab](e, p, self);
+  const body = { overview:tabOverview, personal:tabPersonal, contracts:tabContracts, documents:tabDocuments, leave:tabLeave }[state.tab](e, p, self);
   return `${back}<div class="profile-head">${avatar(e.full_name, 'lg')}<div class="grow"><h1>${esc(e.full_name)}</h1>
     <p class="muted">${esc(posTitle(e.position_id) !== '—' ? posTitle(e.position_id) : 'No position set')}${e.department_id ? `, ${esc(deptName(e.department_id))}` : ''}</p></div>
     ${chip(STATUSES[e.status] || e.status, statusTone(e.status))}<div class="actions">${acts.join('')}</div></div>
@@ -828,11 +859,13 @@ function employeeForm(e) {
     <div class="grid2">${fld('Reports to', sel('manager_id', listOpts(mgrs, 'id', 'full_name', e.manager_id, 'No manager')))}${fld('Gender', sel('gender', opts(GENDERS, e.gender, 'Not specified')))}</div>
     <div class="grid2">${fld('Employment type', sel('employment_type', opts(EMP_TYPES, e.employment_type || 'full_time'), { required:true }))}${fld('Status', sel('status', opts(STATUSES, e.status || 'active'), { required:true }))}</div>
     <div class="grid2">${fld('Hire date', inp('hire_date', { type:'date', value:e.hire_date }))}${fld('Exit date', inp('exit_date', { type:'date', value:e.exit_date }))}</div>
-    ${fld('Reason for leaving', inp('exit_reason', { value:e.exit_reason }))}`,
+    ${fld('Reason for leaving', inp('exit_reason', { value:e.exit_reason }))}
+    ${state.hasTime ? fld('Working hours', sel('shift_id', listOpts(state.shifts, 'id', 'name', e.shift_id, 'Organization default'))) : ''}`,
     onSubmit: async d => {
       const payload = { full_name:d.full_name, employee_no:d.employee_no, gender:d.gender, work_email:d.work_email, phone:d.phone,
         department_id:d.department_id, position_id:d.position_id, manager_id:d.manager_id, employment_type:d.employment_type,
         status:d.status, hire_date:d.hire_date, exit_date:d.exit_date, exit_reason:d.exit_reason };
+      if (state.hasTime) payload.shift_id = d.shift_id;
       if (editing) await q(hr.from('employees').update(payload).eq('id', e.id));
       else await q(hr.from('employees').insert({ ...payload, org_id: state.org.id }));
       await reloadEmployees();
@@ -1079,6 +1112,337 @@ function exportCsv() {
 }
 
 /* =====================================================================
+   LEAVE + ATTENDANCE
+   ===================================================================== */
+const LEAVE_STATUS = { pending:'Waiting', approved:'Approved', rejected:'Declined', cancelled:'Cancelled' };
+const leaveTone = s => ({ pending:'warn', approved:'ok', rejected:'bad' }[s] || 'neutral');
+const DOW = { 1:'Monday', 2:'Tuesday', 3:'Wednesday', 4:'Thursday', 5:'Friday', 6:'Saturday', 7:'Sunday' };
+const leaveTypeName = id => state.leaveTypes.find(t => t.id === id)?.name || 'Leave';
+const fmtDays = n => { const v = Number(n); return Number.isInteger(v) ? String(v) : v.toFixed(1); };
+const fmtMins = m => m == null ? '—' : `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m`;
+const orgToday = () => { try { return new Date().toLocaleDateString('en-CA', { timeZone: state.org.timezone }); } catch { return TODAY(); } };
+const fmtTime = ts => {
+  if (!ts) return '—';
+  try { return new Date(ts).toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit', timeZone: state.org.timezone }); }
+  catch { return new Date(ts).toLocaleTimeString(); }
+};
+function freshAtt() { const t = TODAY(); return { mine:[], today:[], loaded:false, loading:false, error:null, report:null, from: t.slice(0, 8) + '01', to: t }; }
+
+const weekendDays = () => { const w = state.org.settings?.weekend_days; return Array.isArray(w) ? w.map(Number) : [6, 7]; };
+const isoDow = iso => { const n = new Date(iso + 'T00:00:00').getDay(); return n === 0 ? 7 : n; };
+function workingDaysBetween(a, b) {
+  if (!a || !b || b < a) return 0;
+  const hol = new Set(state.holidays.map(h => h.holiday_date)), wk = weekendDays();
+  let n = 0, d = a, guard = 0;
+  while (d <= b && guard++ < 400) { if (!wk.includes(isoDow(d)) && !hol.has(d)) n++; d = addDays(d, 1); }
+  return n;
+}
+function downloadCsv(filename, header, rows) {
+  const cell = v => { let s = String(v ?? ''); if (/^[=+\-@]/.test(s)) s = "'" + s; return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+  const csv = '\ufeff' + [header, ...rows].map(r => r.map(cell).join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' }));
+  a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+/* ---------- loading ---------- */
+async function loadTime() {
+  const oid = state.org.id;
+  try {
+    const [leaveTypes, holidays, shifts, leaveRequests] = await Promise.all([
+      q(hr.from('leave_types').select('*').eq('org_id', oid).order('name')),
+      q(hr.from('holidays').select('*').eq('org_id', oid).order('holiday_date')),
+      q(hr.from('shifts').select('*').eq('org_id', oid).order('name')),
+      q(hr.from('leave_requests').select('*').eq('org_id', oid).gte('end_date', addDays(TODAY(), -400)).order('start_date', { ascending:false }).limit(1000))
+    ]);
+    Object.assign(state, { leaveTypes, holidays, shifts, leaveRequests, hasTime:true, timeError:null });
+  } catch (err) {
+    state.hasTime = false;
+    state.timeError = /PGRST205|42P01|schema cache|does not exist/i.test(`${err?.code} ${err?.message}`) ? 'missing' : friendly(err);
+  }
+}
+async function loadMyBalances() {
+  const L = state.leave; if (L.loading) return;
+  L.loading = true;
+  try {
+    L.balances = state.me ? await q(hr.rpc('leave_balance', { p_employee: state.me.id, p_year: new Date().getFullYear() })) : [];
+    L.error = null;
+  } catch (err) { L.error = friendly(err); }
+  L.loaded = true; L.loading = false;
+  if (state.view === 'leave') renderView();
+}
+async function reloadLeave() {
+  state.leaveRequests = await q(hr.from('leave_requests').select('*').eq('org_id', state.org.id).gte('end_date', addDays(TODAY(), -400)).order('start_date', { ascending:false }).limit(1000));
+  state.leave.loaded = false;
+  await loadMyBalances();
+  renderShell();
+}
+async function reloadTimeConfig() { await loadTime(); renderShell(); }
+async function loadAttendance() {
+  const a = state.att; if (a.loading) return;
+  a.loading = true;
+  try {
+    const oid = state.org.id, today = orgToday(), jobs = [];
+    if (state.me) jobs.push(q(hr.from('attendance_records').select('*').eq('employee_id', state.me.id).gte('work_date', addDays(today, -30)).order('work_date', { ascending:false })).then(r => { a.mine = r; }));
+    if (perms().hr || (state.me && state.employees.some(e => e.manager_id === state.me.id)))
+      jobs.push(q(hr.from('attendance_records').select('*').eq('org_id', oid).eq('work_date', today)).then(r => { a.today = r; }));
+    await Promise.all(jobs);
+    a.error = null;
+  } catch (err) { a.error = friendly(err); }
+  a.loaded = true; a.loading = false;
+  if (state.view === 'attendance') renderView();
+}
+
+/* ---------- who can decide ---------- */
+function canDecide(r) {
+  if (r.status !== 'pending') return false;
+  const e = findEmp(r.employee_id); if (!e) return false;
+  if (state.me && e.id === state.me.id && state.role !== 'owner') return false;
+  return perms().hr || (!!state.me && e.manager_id === state.me.id);
+}
+
+/* ---------- LEAVE VIEW ---------- */
+function balanceCards(list) {
+  return list.length ? `<div class="balances">${list.map(b => `<div class="bal"><span class="lbl">${esc(b.type_name)}</span>
+    <b${b.remaining == null ? ' style="font-size:20px"' : ''}>${b.remaining == null ? 'No limit' : fmtDays(b.remaining)}</b>
+    <span class="muted small">${b.remaining == null ? `${fmtDays(b.taken)} taken this year` : `days left of ${fmtDays(Number(b.entitled) + Number(b.adjusted))}`}</span></div>`).join('')}</div>` : '';
+}
+function leaveTable(list, o = {}) {
+  const p = perms(), today = TODAY();
+  if (!list.length) return `<div class="empty"><p>${esc(o.empty || 'Nothing to show.')}</p></div>`;
+  return `<div class="tablewrap"><table><thead><tr>${o.who ? '<th>Person</th>' : ''}<th>Type</th><th>Dates</th><th>Days</th><th>Status</th><th></th></tr></thead><tbody>${list.map(r => {
+    const e = findEmp(r.employee_id);
+    const cancellable = (r.status === 'pending' || r.status === 'approved') && (o.mine || p.hr)
+      && (p.hr ? r.end_date >= today : (r.status === 'pending' || r.start_date > today));
+    let act = '';
+    if (o.decide && canDecide(r)) act += `<button class="btn sm primary" data-action="decide-leave" data-id="${esc(r.id)}" data-decision="approved">Approve</button> <button class="btn sm" data-action="decide-leave" data-id="${esc(r.id)}" data-decision="rejected">Decline</button>`;
+    if (cancellable) act += ` <button class="btn sm ghost danger" data-action="cancel-leave" data-id="${esc(r.id)}">Cancel</button>`;
+    return `<tr>${o.who ? `<td><div class="who">${avatar(e?.full_name)}<b>${esc(e?.full_name || 'Employee')}</b></div></td>` : ''}
+      <td>${esc(leaveTypeName(r.leave_type_id))}</td>
+      <td>${esc(fmtDate(r.start_date))}${r.end_date !== r.start_date ? ` to ${esc(fmtDate(r.end_date))}` : ''}${r.reason ? `<div class="muted small">${esc(r.reason)}</div>` : ''}</td>
+      <td>${fmtDays(r.days)}</td>
+      <td>${chip(LEAVE_STATUS[r.status] || r.status, leaveTone(r.status))}${r.decision_note ? `<div class="muted small">${esc(r.decision_note)}</div>` : ''}</td>
+      <td class="right">${act}</td></tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+function viewLeave() {
+  const p = perms(), me = state.me, L = state.leave, today = TODAY();
+  if (!L.loaded && !L.loading) loadMyBalances();
+  const acts = (me || p.hr) ? `<button class="btn primary" data-action="request-leave">${icon('plus')} Request leave</button>` : '';
+  let bal = '';
+  if (me) bal = !L.loaded ? loadBlock('Loading your balances') : L.error ? `<div class="form-error">${esc(L.error)}</div>` : balanceCards(L.balances);
+
+  const waiting = state.leaveRequests.filter(canDecide).sort((a, b) => a.start_date.localeCompare(b.start_date));
+  const waitHtml = waiting.length ? `<section class="panel"><div class="panel-head"><h3>Waiting for your decision</h3>${chip(String(waiting.length), 'warn')}</div>${leaveTable(waiting, { who:true, decide:true })}</section>` : '';
+
+  const mine = me ? state.leaveRequests.filter(r => r.employee_id === me.id) : [];
+  const mineHtml = me ? `<section class="panel"><div class="panel-head"><h3>My requests</h3></div>${leaveTable(mine, { mine:true, empty:'You have not requested any leave yet.' })}</section>` : '';
+
+  const f = state.leaveFilter;
+  const others = state.leaveRequests.filter(r => !me || r.employee_id !== me.id).filter(r =>
+    f === 'all' ? true : f === 'upcoming' ? ['pending', 'approved'].includes(r.status) && r.end_date >= today : r.status === f);
+  const filterOpts = { upcoming:'Current and upcoming', pending:'Waiting', approved:'Approved', rejected:'Declined', all:'Everything' };
+  const teamHtml = (p.hr || state.leaveRequests.some(r => !me || r.employee_id !== me.id))
+    ? `<section class="panel"><div class="panel-head"><h3>${p.hr ? "Everyone's leave" : "My team's leave"}</h3>
+        <select data-input="leave-filter" aria-label="Filter leave">${opts(filterOpts, f)}</select></div>
+        ${leaveTable(others, { who:true, empty:'No leave to show for this filter.' })}</section>` : '';
+  return pageHead('Leave', 'Request time off and manage approvals', acts) + bal + `<div class="stack">${waitHtml}${mineHtml}${teamHtml}</div>`;
+}
+function requestLeaveForm() {
+  const p = perms(), types = state.leaveTypes.filter(t => t.is_active);
+  if (!types.length) { toast('No leave types are set up yet. Ask HR to add them.', 'error'); return; }
+  const people = state.employees.filter(e => !EXITED.includes(e.status));
+  const who = p.hr ? fld('Employee', sel('employee_id', listOpts(people, 'id', 'full_name', state.me?.id), { required:true })) : '';
+  openModal({
+    title: 'Request leave', submitLabel: 'Send request',
+    body: `${who}${fld('Type of leave', sel('leave_type_id', listOpts(types, 'id', 'name', null), { required:true }))}
+    <div class="grid2">${fld('From', inp('start_date', { type:'date', required:true, extra:'data-input="leave-preview"' }))}${fld('To', inp('end_date', { type:'date', required:true, extra:'data-input="leave-preview"' }))}</div>
+    <p class="help" id="leave-preview" style="margin:-6px 0 14px">Choose your dates to see how many working days this uses.</p>
+    ${fld('Reason', '<textarea name="reason"></textarea>', 'Optional.')}`,
+    onSubmit: async d => {
+      await q(hr.from('leave_requests').insert({ employee_id: p.hr ? d.employee_id : state.me.id, leave_type_id: d.leave_type_id, start_date: d.start_date, end_date: d.end_date, reason: d.reason }));
+      await reloadLeave(); toast('Leave request sent.');
+    }
+  });
+}
+function decideForm(id, decision) {
+  const r = state.leaveRequests.find(x => x.id === id); if (!r) return;
+  const e = findEmp(r.employee_id), yes = decision === 'approved';
+  openModal({
+    title: yes ? 'Approve leave' : 'Decline leave', submitLabel: yes ? 'Approve' : 'Decline',
+    body: `<p style="margin-bottom:8px"><b>${esc(e?.full_name || 'Employee')}</b> asked for ${esc(leaveTypeName(r.leave_type_id))} from ${esc(fmtDate(r.start_date))} to ${esc(fmtDate(r.end_date))} (${fmtDays(r.days)} working days).</p>
+    ${r.reason ? `<p class="muted" style="margin-bottom:12px">Reason given: ${esc(r.reason)}</p>` : ''}
+    ${fld('Note to the employee', '<textarea name="note"></textarea>', yes ? 'Optional.' : 'Say why the request was declined.')}`,
+    onSubmit: async d => {
+      const { error } = await hr.rpc('decide_leave', { p_request: id, p_decision: decision, p_note: d.note });
+      if (error) throw error;
+      await reloadLeave(); toast(yes ? 'Leave approved.' : 'Leave declined.');
+    }
+  });
+}
+function adjustForm() {
+  const id = state.empId, types = state.leaveTypes.filter(t => t.is_active);
+  openModal({
+    title: 'Adjust leave balance',
+    body: `${fld('Type of leave', sel('leave_type_id', listOpts(types, 'id', 'name', null), { required:true }))}
+    <div class="grid2">${fld('Year', inp('year', { type:'number', value:new Date().getFullYear(), required:true, extra:'min="2000" max="2100"' }))}${fld('Days to add', inp('days', { type:'number', required:true, extra:'step="0.5"' }), 'Use a negative number to remove days.')}</div>
+    ${fld('Reason', inp('reason', { placeholder:'e.g. Carry-over from last year' }))}`,
+    onSubmit: async d => {
+      await q(hr.from('leave_adjustments').insert({ employee_id: id, leave_type_id: d.leave_type_id, year: Number(d.year), days: Number(d.days), reason: d.reason }));
+      await loadDetail(id); toast('Balance adjusted.');
+    }
+  });
+}
+function tabLeave(e, p) {
+  const d = state.detail;
+  if (!d.loaded || d.id !== e.id) return loadBlock();
+  const list = state.leaveRequests.filter(r => r.employee_id === e.id).sort((a, b) => b.start_date.localeCompare(a.start_date));
+  const adj = p.hr ? `<button class="btn sm" data-action="adjust-leave">${icon('plus', 16)} Adjust balance</button>` : '';
+  return `<div class="sect-head"><h3>Leave balances</h3>${adj}</div>${d.error ? `<p class="muted">${esc(d.error)}</p>` : (balanceCards(d.balances) || '<p class="muted">No leave types are set up yet.</p>')}
+    <h3 style="margin:22px 0 8px">Leave history</h3>${leaveTable(list, { empty:'No leave recorded yet.' })}`;
+}
+
+/* ---------- ATTENDANCE VIEW ---------- */
+function viewAttendance() {
+  const p = perms(), a = state.att, me = state.me;
+  if (!a.loaded && !a.loading) loadAttendance();
+  const today = orgToday();
+  const isMgr = !!me && state.employees.some(e => e.manager_id === me.id);
+  const acts = p.hr ? `<button class="btn" data-action="record-att">${icon('edit')} Record a day</button>` : '';
+
+  let clock = '';
+  if (me) {
+    if (!a.loaded) clock = `<div class="panel clockcard">${loadBlock()}</div>`;
+    else {
+      const rec = a.mine.find(r => r.work_date === today);
+      let info, btn = '';
+      if (!rec) { info = `<div class="big">Not clocked in</div><div class="muted">${esc(fmtDate(today))}</div>`; btn = `<button class="btn primary" data-action="clock-in">${icon('clock')} Clock in</button>`; }
+      else if (!rec.clock_out) { info = `<div class="big">In since ${esc(fmtTime(rec.clock_in))}</div><div class="muted">${rec.minutes_late > 0 ? `${rec.minutes_late} minutes late` : 'On time'}</div>`; btn = `<button class="btn primary" data-action="clock-out">${icon('clock')} Clock out</button>`; }
+      else info = `<div class="big">Done for today</div><div class="muted">${esc(fmtTime(rec.clock_in))} to ${esc(fmtTime(rec.clock_out))}, ${esc(fmtMins(rec.worked_minutes))}</div>`;
+      clock = `<div class="panel clockcard"><div>${info}</div><div>${btn}</div></div>`;
+    }
+  }
+  if (a.error) clock += `<div class="form-error">${esc(a.error)}</div>`;
+
+  const mineRows = a.mine.map(r => `<tr><td>${esc(fmtDate(r.work_date))}</td><td>${esc(fmtTime(r.clock_in))}</td><td>${esc(fmtTime(r.clock_out))}</td><td>${esc(fmtMins(r.worked_minutes))}</td><td>${r.minutes_late > 0 ? chip(`${r.minutes_late} min late`, 'warn') : (r.clock_in ? chip('On time', 'ok') : '')}</td></tr>`).join('');
+  const mineHtml = me && a.loaded ? `<section class="panel"><div class="panel-head"><h3>My last 30 days</h3></div>${mineRows ? `<div class="tablewrap"><table><thead><tr><th>Date</th><th>In</th><th>Out</th><th>Hours</th><th>Arrival</th></tr></thead><tbody>${mineRows}</tbody></table></div>` : '<div class="empty"><p>No attendance recorded yet.</p></div>'}</section>` : '';
+
+  let todayHtml = '';
+  if ((p.hr || isMgr) && a.loaded) {
+    const team = state.employees.filter(e => !EXITED.includes(e.status) && (p.hr || (me && e.manager_id === me.id)));
+    const away = new Set(state.leaveRequests.filter(r => r.status === 'approved' && r.start_date <= today && r.end_date >= today).map(r => r.employee_id));
+    const off = workingDaysBetween(today, today) === 0;
+    const rows = team.map(e => {
+      const r = a.today.find(x => x.employee_id === e.id);
+      let st;
+      if (r) st = r.minutes_late > 0 ? chip(`Late by ${r.minutes_late} min`, 'warn') : chip('On time', 'ok');
+      else if (away.has(e.id)) st = chip('On leave');
+      else if (off) st = chip('Day off');
+      else st = chip('Not in yet');
+      return `<tr><td><div class="who">${avatar(e.full_name)}<b>${esc(e.full_name)}</b></div></td><td>${st}</td><td>${esc(fmtTime(r?.clock_in))}</td><td>${esc(fmtTime(r?.clock_out))}</td></tr>`;
+    }).join('');
+    todayHtml = `<section class="panel"><div class="panel-head"><h3>${p.hr ? 'Everyone today' : 'My team today'}</h3><span class="muted small">${esc(fmtDate(today))}</span></div>${rows ? `<div class="tablewrap"><table><thead><tr><th>Person</th><th>Status</th><th>In</th><th>Out</th></tr></thead><tbody>${rows}</tbody></table></div>` : '<div class="empty"><p>No one to show.</p></div>'}</section>`;
+  }
+
+  let reportHtml = '';
+  if (p.hr || isMgr) {
+    const rp = a.report;
+    const body = rp ? (rp.rows.length ? `<div class="tablewrap"><table><thead><tr><th>Person</th><th>Working days</th><th>Present</th><th>Late days</th><th>Minutes late</th><th>On leave</th><th>Absent</th></tr></thead><tbody>${rp.rows.map(r => `<tr><td><b>${esc(r.full_name)}</b></td><td>${fmtDays(r.working_days)}</td><td>${r.present_days}</td><td>${r.late_days}</td><td>${r.minutes_late}</td><td>${fmtDays(r.leave_days)}</td><td>${Number(r.absent_days) > 0 ? chip(fmtDays(r.absent_days), 'warn') : '0'}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty"><p>No one to report on for these dates.</p></div>') : '<div class="panel-body muted">Choose a date range and select Show report.</div>';
+    reportHtml = `<section class="panel"><div class="panel-head"><h3>Attendance report</h3>${rp && rp.rows.length ? `<button class="btn sm" data-action="export-att">${icon('download', 16)} Export CSV</button>` : ''}</div>
+      <form data-form="att-report" class="toolbar"><div class="form-error" role="alert" hidden style="flex-basis:100%;margin:0"></div>
+        <label class="row" style="gap:8px">From <input type="date" name="from" value="${esc(a.from)}" required></label>
+        <label class="row" style="gap:8px">To <input type="date" name="to" value="${esc(a.to)}" required></label>
+        <button class="btn sm primary" type="submit">Show report</button></form>${body}</section>`;
+  }
+  const note = !me && !p.hr && !isMgr ? '<div class="panel empty"><h3>Your login is not linked to an employee record yet</h3><p>Ask HR to link it, then you can clock in here.</p></div>' : '';
+  return pageHead('Attendance', 'Clock in, and see who is in today', acts) + clock + `<div class="stack">${note}${mineHtml}${todayHtml}${reportHtml}</div>`;
+}
+function recordForm() {
+  const people = state.employees.filter(e => !EXITED.includes(e.status));
+  openModal({
+    title: 'Record a day', submitLabel: 'Save record',
+    body: `${fld('Employee', sel('employee_id', listOpts(people, 'id', 'full_name', null), { required:true }))}
+    ${fld('Date', inp('work_date', { type:'date', value:orgToday(), required:true }))}
+    <div class="grid2">${fld('Time in', inp('time_in', { type:'time' }))}${fld('Time out', inp('time_out', { type:'time' }))}</div>
+    ${fld('Note', inp('note', { placeholder:'e.g. Corrected after a power cut' }), `Times are in your organization's time zone (${state.org.timezone}). Saving replaces any record for that day.`)}`,
+    onSubmit: async d => {
+      const { error } = await hr.rpc('record_attendance', { p_employee: d.employee_id, p_date: d.work_date, p_in: d.time_in, p_out: d.time_out, p_note: d.note });
+      if (error) throw error;
+      state.att.loaded = false; await loadAttendance(); toast('Attendance saved.');
+    }
+  });
+}
+
+/* ---------- LEAVE & WORK HOURS SETTINGS ---------- */
+function viewTimeSettings() {
+  const p = perms();
+  const typeRows = state.leaveTypes.map(t => `<tr><td><b>${esc(t.name)}</b></td><td>${t.days_per_year == null ? 'No limit' : `${fmtDays(t.days_per_year)} days a year`}</td><td>${t.is_paid ? 'Paid' : 'Unpaid'}</td><td>${t.is_active ? '' : chip('Inactive')}</td>
+    <td class="right"><button class="icon-btn" data-action="edit-ltype" data-id="${esc(t.id)}" aria-label="Edit leave type">${icon('edit', 16)}</button><button class="icon-btn danger" data-action="delete-ltype" data-id="${esc(t.id)}" aria-label="Delete leave type">${icon('trash', 16)}</button></td></tr>`).join('');
+  const holRows = state.holidays.map(h => `<tr><td>${esc(fmtDate(h.holiday_date))}</td><td><b>${esc(h.name)}</b></td>
+    <td class="right"><button class="icon-btn" data-action="edit-holiday" data-id="${esc(h.id)}" aria-label="Edit holiday">${icon('edit', 16)}</button><button class="icon-btn danger" data-action="delete-holiday" data-id="${esc(h.id)}" aria-label="Delete holiday">${icon('trash', 16)}</button></td></tr>`).join('');
+  const shiftRows = state.shifts.map(s => `<tr><td><b>${esc(s.name)}</b> ${s.is_default ? chip('Default', 'ok') : ''}</td><td>${esc(String(s.start_time).slice(0, 5))} to ${esc(String(s.end_time).slice(0, 5))}</td><td>${s.grace_minutes} min</td>
+    <td class="right"><button class="icon-btn" data-action="edit-shift" data-id="${esc(s.id)}" aria-label="Edit working hours">${icon('edit', 16)}</button><button class="icon-btn danger" data-action="delete-shift" data-id="${esc(s.id)}" aria-label="Delete working hours">${icon('trash', 16)}</button></td></tr>`).join('');
+  const wk = weekendDays();
+  const tbl = (head, rows, empty) => rows ? `<div class="tablewrap"><table><thead><tr>${head}<th></th></tr></thead><tbody>${rows}</tbody></table></div>` : `<div class="empty"><p>${empty}</p></div>`;
+  return pageHead('Leave & work hours', 'Set the rules that leave and attendance follow') + `<div class="stack">
+  <section class="panel"><div class="panel-head"><h3>Leave types</h3><button class="btn sm" data-action="add-ltype">${icon('plus', 16)} Add leave type</button></div>${tbl('<th>Name</th><th>Allowance</th><th>Pay</th><th></th>', typeRows, 'No leave types yet.')}
+    <div class="panel-body muted small">Allowances apply to every employee each calendar year. Use "Adjust balance" on an employee's Leave tab for carry-over or exceptions.</div></section>
+  <section class="panel"><div class="panel-head"><h3>Public holidays</h3><button class="btn sm" data-action="add-holiday">${icon('plus', 16)} Add holiday</button></div>${tbl('<th>Date</th><th>Name</th>', holRows, 'No holidays yet. Holidays are skipped when counting leave days.')}</section>
+  <section class="panel"><div class="panel-head"><h3>Working hours</h3><button class="btn sm" data-action="add-shift">${icon('plus', 16)} Add working hours</button></div>${tbl('<th>Name</th><th>Hours</th><th>Grace period</th><th></th>', shiftRows, 'No working hours yet.')}
+    <div class="panel-body muted small">People who clock in after the start time plus the grace period are marked late. The default applies to everyone unless you choose different hours on an employee's record.</div></section>
+  <section class="panel"><div class="panel-head"><h3>Weekend days</h3></div><div class="panel-body"><form data-form="weekend"><div class="form-error" role="alert" hidden></div>
+    <div class="daypick">${[1, 2, 3, 4, 5, 6, 7].map(i => `<label class="check" style="margin:0"><input type="checkbox" name="wk${i}"${wk.includes(i) ? ' checked' : ''}${p.owner ? '' : ' disabled'}><span>${DOW[i]}</span></label>`).join('')}</div>
+    ${p.owner ? '<button class="btn primary sm" type="submit">Save weekend days</button>' : '<p class="muted small">Only the owner can change the weekend days.</p>'}</form></div></section></div>`;
+}
+function leaveTypeForm(t) {
+  const editing = !!t; t = t || {};
+  openModal({
+    title: editing ? 'Edit leave type' : 'Add leave type',
+    body: `${fld('Name', inp('name', { value:t.name, required:true }))}
+    ${fld('Days a year', inp('days_per_year', { type:'number', value:t.days_per_year, extra:'min="0" step="0.5"' }), 'Leave empty for no limit.')}
+    <label class="check"><input type="checkbox" name="is_paid"${t.is_paid === false ? '' : ' checked'}><span>Paid leave</span></label>
+    <label class="check"><input type="checkbox" name="is_active"${t.is_active === false ? '' : ' checked'}><span>Available for requests</span></label>`,
+    onSubmit: async d => {
+      const payload = { name:d.name, days_per_year: d.days_per_year == null ? null : Number(d.days_per_year), is_paid:d.is_paid, is_active:d.is_active };
+      if (editing) await q(hr.from('leave_types').update(payload).eq('id', t.id));
+      else await q(hr.from('leave_types').insert({ ...payload, org_id: state.org.id }));
+      await reloadTimeConfig(); toast('Leave type saved.');
+    }
+  });
+}
+function holidayForm(h) {
+  const editing = !!h; h = h || {};
+  openModal({
+    title: editing ? 'Edit holiday' : 'Add holiday',
+    body: `${fld('Date', inp('holiday_date', { type:'date', value:h.holiday_date, required:true }))}${fld('Name', inp('name', { value:h.name, required:true }))}`,
+    onSubmit: async d => {
+      if (editing) await q(hr.from('holidays').update({ holiday_date:d.holiday_date, name:d.name }).eq('id', h.id));
+      else await q(hr.from('holidays').insert({ holiday_date:d.holiday_date, name:d.name, org_id: state.org.id }));
+      await reloadTimeConfig(); toast('Holiday saved.');
+    }
+  });
+}
+function shiftForm(s) {
+  const editing = !!s; s = s || {};
+  openModal({
+    title: editing ? 'Edit working hours' : 'Add working hours',
+    body: `${fld('Name', inp('name', { value:s.name, required:true, placeholder:'e.g. Standard day' }))}
+    <div class="grid2">${fld('Start', inp('start_time', { type:'time', value:String(s.start_time || '08:00').slice(0, 5), required:true }))}${fld('End', inp('end_time', { type:'time', value:String(s.end_time || '17:00').slice(0, 5), required:true }))}</div>
+    ${fld('Grace period (minutes)', inp('grace_minutes', { type:'number', value:s.grace_minutes ?? 10, required:true, extra:'min="0"' }), 'People arriving within this time after the start are not marked late.')}
+    <label class="check"><input type="checkbox" name="is_default"${s.is_default ? ' checked' : ''}><span>Use as the default for everyone</span></label>`,
+    onSubmit: async d => {
+      const payload = { name:d.name, start_time:d.start_time, end_time:d.end_time, grace_minutes:Number(d.grace_minutes), is_default:d.is_default };
+      if (d.is_default) await q(hr.from('shifts').update({ is_default:false }).eq('org_id', state.org.id).eq('is_default', true));
+      if (editing) await q(hr.from('shifts').update(payload).eq('id', s.id));
+      else await q(hr.from('shifts').insert({ ...payload, org_id: state.org.id }));
+      await reloadTimeConfig(); toast('Working hours saved.');
+    }
+  });
+}
+
+
+/* =====================================================================
    EVENTS
    ===================================================================== */
 const copyText = async text => {
@@ -1183,6 +1547,54 @@ const forms = {
     toast('Settings saved.'); renderShell();
   }
 };
+Object.assign(actions, {
+  'request-leave': () => requestLeaveForm(),
+  'decide-leave': el => decideForm(el.dataset.id, el.dataset.decision),
+  'cancel-leave': el => { if (confirm('Cancel this leave request?')) act(async () => { const { error } = await hr.rpc('cancel_leave', { p_request: el.dataset.id }); if (error) throw error; await reloadLeave(); }, 'Leave cancelled.'); },
+  'adjust-leave': () => adjustForm(),
+  'add-ltype': () => leaveTypeForm(),
+  'edit-ltype': el => leaveTypeForm(state.leaveTypes.find(t => t.id === el.dataset.id)),
+  'delete-ltype': el => { if (confirm('Delete this leave type?')) act(async () => { await q(hr.from('leave_types').delete().eq('id', el.dataset.id)); await reloadTimeConfig(); }, 'Leave type deleted.'); },
+  'add-holiday': () => holidayForm(),
+  'edit-holiday': el => holidayForm(state.holidays.find(h => h.id === el.dataset.id)),
+  'delete-holiday': el => { if (confirm('Delete this holiday?')) act(async () => { await q(hr.from('holidays').delete().eq('id', el.dataset.id)); await reloadTimeConfig(); }, 'Holiday deleted.'); },
+  'add-shift': () => shiftForm(),
+  'edit-shift': el => shiftForm(state.shifts.find(x => x.id === el.dataset.id)),
+  'delete-shift': el => { if (confirm('Delete these working hours? Employees using them will fall back to the default.')) act(async () => { await q(hr.from('shifts').delete().eq('id', el.dataset.id)); await reloadTimeConfig(); }, 'Working hours deleted.'); },
+  'clock-in': () => act(async () => { const { error } = await hr.rpc('clock_in', { p_org: state.org.id }); if (error) throw error; state.att.loaded = false; await loadAttendance(); }, 'Clocked in.'),
+  'clock-out': () => act(async () => { const { error } = await hr.rpc('clock_out', { p_org: state.org.id }); if (error) throw error; state.att.loaded = false; await loadAttendance(); }, 'Clocked out.'),
+  'record-att': () => recordForm(),
+  'export-att': () => { const r = state.att.report; if (!r) return; downloadCsv(`attendance-${r.from}-to-${r.to}.csv`, ['Person','Working days','Present','Late days','Minutes late','On leave','Absent'], r.rows.map(x => [x.full_name, x.working_days, x.present_days, x.late_days, x.minutes_late, x.leave_days, x.absent_days])); }
+});
+Object.assign(inputs, {
+  'leave-filter': el => { state.leaveFilter = el.value; renderView(); },
+  'leave-preview': el => {
+    const f = el.closest('form'), box = $('#leave-preview'); if (!f || !box) return;
+    const s1 = f.querySelector('[name=start_date]'), e1 = f.querySelector('[name=end_date]');
+    if (el === s1 && s1.value && (!e1.value || e1.value < s1.value)) e1.value = s1.value;
+    const a = s1.value, b = e1.value; if (!a || !b) return;
+    if (b < a) { box.textContent = 'The end date must be on or after the start date.'; return; }
+    const n = workingDaysBetween(a, b);
+    box.textContent = n ? `${n} working day${n === 1 ? '' : 's'} (weekends and holidays are skipped).` : 'These dates have no working days.';
+  }
+});
+Object.assign(forms, {
+  weekend: async d => {
+    const days = [1, 2, 3, 4, 5, 6, 7].filter(i => d['wk' + i]);
+    await q(hr.from('organizations').update({ settings: { ...(state.org.settings || {}), weekend_days: days } }).eq('id', state.org.id));
+    await loadMemberships();
+    state.org = state.memberships.find(m => m.org_id === state.org.id).org;
+    toast('Weekend days saved.'); renderShell();
+  },
+  'att-report': async d => {
+    if (!d.from || !d.to) throw new Error('Choose both dates.');
+    if (d.to < d.from) throw new Error('The end date must be on or after the start date.');
+    state.att.from = d.from; state.att.to = d.to;
+    const rows = await q(hr.rpc('attendance_summary', { p_org: state.org.id, p_from: d.from, p_to: d.to }));
+    state.att.report = { rows, from: d.from, to: d.to }; renderView();
+  }
+});
+
 document.addEventListener('submit', async e => {
   const form = e.target, kind = form.dataset?.form; if (!kind) return;
   e.preventDefault();
@@ -1215,6 +1627,7 @@ async function enterOrg(orgId) {
   state.team = { members:[], invitations:[], loaded:false, loading:false, error:null };
   state.audit = { rows:[], loaded:false, loading:false, error:null };
   state.filters = { q:'', dept:'', status:'current' };
+  state.leave = { balances:[], loaded:false, loading:false, error:null }; state.att = freshAtt(); state.leaveFilter = 'upcoming';
   if (!orgUsable(state.org)) { renderLocked(); return; }
   renderLoading('Loading your workspace');
   try { await loadOrgData(); } catch (err) { renderFatal(err); return; }
