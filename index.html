@@ -91,20 +91,21 @@ td.right,th.right{text-align:right}
 
 /* app shell */
 .shell{display:grid;grid-template-columns:264px 1fr;min-height:100vh}
-.side{background:var(--spruce);color:#D5E4E1;display:flex;flex-direction:column;padding:22px 16px;position:sticky;top:0;height:100vh}
+.side{background:var(--spruce);color:#D5E4E1;display:flex;flex-direction:column;padding:20px 16px 14px;position:sticky;top:0;height:100vh;overflow:hidden}
 .side :focus-visible{outline-color:var(--gold)}
-.brand{display:flex;align-items:center;gap:10px;color:#fff;font-family:var(--font-display);font-weight:700;font-size:20px;padding:0 8px 18px}
-.orgbox{margin:0 0 16px;padding:10px 12px;border-radius:10px;background:var(--spruce-deep)}
+.brand{display:flex;align-items:center;gap:10px;color:#fff;font-family:var(--font-display);font-weight:700;font-size:20px;padding:0 8px 14px}
+.orgbox{margin:0 0 6px;padding:10px 12px;border-radius:10px;background:var(--spruce-deep)}
 .orgbox .label{font-size:12px;color:#9DBBB6}
 .orgbox .oname{font-weight:600;color:#fff;overflow-wrap:anywhere}
 .orgbox select{width:100%;margin-top:6px;background:transparent;color:#fff;border:1px solid #2E6465;border-radius:6px;padding:5px 8px}
 .orgbox select option{color:#111}
-.nav{display:grid;gap:2px;flex:1;align-content:start}
-.navitem{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;color:#D5E4E1;background:transparent;border:0;text-align:left;cursor:pointer;font-weight:500;position:relative}
+.nav{display:grid;gap:1px;flex:1;align-content:start;min-height:0;overflow-y:auto;margin:0 -16px;padding:0 16px 8px;scrollbar-width:thin;scrollbar-color:#2E6465 transparent}
+.navgroup{font-size:12px;font-weight:600;color:#8FB0AB;padding:14px 12px 4px}
+.navitem{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:8px;color:#D5E4E1;background:transparent;border:0;text-align:left;cursor:pointer;font-weight:500;position:relative}
 .navitem:hover{background:var(--spruce-hi);color:#fff}
 .navitem[aria-current=page]{background:var(--spruce-hi);color:#fff;font-weight:600}
 .navitem[aria-current=page]::before{content:"";position:absolute;left:-16px;top:8px;bottom:8px;width:4px;border-radius:0 4px 4px 0;background:var(--gold)}
-.mecard{border-top:1px solid #23595A;padding-top:14px;display:flex;align-items:center;gap:10px}
+.mecard{border-top:1px solid #23595A;padding-top:12px;margin-top:6px;flex:none;display:flex;align-items:center;gap:10px}
 .mecard .avatar{background:#23595A;color:#fff}
 .mecard .who-txt{min-width:0;flex:1}
 .mecard .em{font-size:13px;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -126,11 +127,11 @@ td.right,th.right{text-align:right}
 .stat span{color:var(--muted);font-size:14px}
 .grid-main{display:grid;grid-template-columns:1.25fr 1fr;gap:20px;margin-top:20px}
 .bars{display:grid;gap:12px}
-.bar-row{display:grid;grid-template-columns:150px 1fr 32px;gap:12px;align-items:center;font-size:14px}
+.bar-row{display:grid;grid-template-columns:150px 1fr auto;gap:12px;align-items:center;font-size:14px}
 .bar-row .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bar-track{height:10px;background:var(--sage);border-radius:99px;overflow:hidden}
 .bar-fill{height:100%;background:var(--spruce);border-radius:99px}
-.bar-row .n{text-align:right;font-weight:600}
+.bar-row .n{text-align:right;font-weight:600;white-space:nowrap;min-width:32px}
 .attn{list-style:none;margin:0;padding:0;display:grid}
 .attn li{border-bottom:1px solid #EAEFF0}
 .attn li:last-child{border-bottom:0}
@@ -147,7 +148,7 @@ td.right,th.right{text-align:right}
 .folder-tab:hover{color:var(--ink)}
 .folder-tab[aria-selected=true]{background:var(--panel);color:var(--ink);border-bottom-color:var(--panel);box-shadow:inset 0 3px 0 var(--gold)}
 .folder-body{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:24px;min-height:220px}
-.dl{display:grid;grid-template-columns:200px 1fr;margin:0}
+.dl{display:grid;grid-template-columns:minmax(140px,240px) minmax(0,1fr);margin:0}
 .dl dt,.dl dd{padding:11px 0;border-bottom:1px solid #EAEFF0;margin:0}
 .dl dt{color:var(--muted);font-size:14px}
 .dl dd{overflow-wrap:anywhere}
@@ -199,6 +200,14 @@ textarea.copybox{width:100%;min-height:170px;padding:12px;border:1px solid #C9D3
 .clockcard .big{font-family:var(--font-display);font-size:28px;font-weight:700;line-height:1.15}
 .daypick{display:flex;gap:6px 22px;flex-wrap:wrap;margin-bottom:16px}
 .stack>*+*{margin-top:20px}
+.ann{padding:18px 20px;margin-bottom:14px}
+.ann.unread{border-left:4px solid var(--gold)}
+.annbody{white-space:pre-wrap;margin:8px 0 0}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.chart{width:100%;height:auto;display:block}
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:8px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+@media print{.side,.mobilebar,.actions,#toasts,#modal-root,.toolbar button,.icon-btn{display:none!important}.shell{display:block}.page{max-width:none;padding:0}.panel{break-inside:avoid;box-shadow:none}body{background:#fff}}
 .pbar{height:8px;background:var(--sage);border-radius:99px;overflow:hidden;min-width:90px;margin-bottom:2px}
 .pbar i{display:block;height:100%;background:var(--spruce);border-radius:99px}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
@@ -228,14 +237,14 @@ textarea.copybox{width:100%;min-height:170px;padding:12px;border:1px solid #C9D3
   .stat-strip{grid-template-columns:1fr 1fr}
   .stat:nth-child(2){border-right:0}
   .stat:nth-child(-n+2){border-bottom:1px solid var(--line)}
-  .grid-main,.two-col{grid-template-columns:1fr}
+  .grid-main,.two-col,.grid-2{grid-template-columns:1fr}
   .dl{grid-template-columns:1fr}
   .dl dt{border-bottom:0;padding-bottom:0}
   .auth{grid-template-columns:1fr}
   .auth-art{padding:28px 24px}
   .auth-art .art,.auth-art ul{display:none}
   .grid2{grid-template-columns:1fr}
-  .bar-row{grid-template-columns:110px 1fr 28px}
+  .bar-row{grid-template-columns:110px 1fr auto}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -308,6 +317,8 @@ const state = {
   audit:{ rows:[], loaded:false, loading:false, error:null },
   filters:{ q:'', dept:'', status:'current' },
   authMode:'signin', pendingEmail:'', joined:0,
+  rep:{ from:'', to:'', rows:null },
+  hasCompany:false, companyError:null, announcements:[], reads:[], companyInfo:null, companyDocs:[], compTab:'about', directory:{ rows:[], loaded:false, loading:false, q:'', error:null }, lastBulkEmails:'',
   hasPerf:false, perfError:null, cycles:[], appraisals:[], mgrReviews:[], goals:[], perfTab:'mine',
   hasTrain:false, trainError:null, courses:[], trainRecords:[], trainTab:'mine',
   hasRecruit:false, recruitError:null, jobs:[], applicants:[], interviews:[], recTab:'pipeline', pipeJob:'', showClosed:false,
@@ -363,8 +374,12 @@ const ICONS = {
   x:'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
   calendar:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
   clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  chart:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
   trending:'<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
   book:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+  home:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
+  megaphone:'<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
+  globe:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
   briefcase:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
   banknote:'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>',
   gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'
@@ -575,34 +590,37 @@ function renderOnboarding() {
 /* =====================================================================
    SHELL + NAVIGATION
    ===================================================================== */
+const NAV_GROUPS = ['Overview', 'Company', 'People', 'Time', 'Pay', 'Growth', 'My space', 'Organization'];
 function navItems() {
-  const p = perms();
+  const p = perms(), isEmp = state.role === 'employee';
   const pending = state.hasTime ? state.leaveRequests.filter(canDecide).length : 0;
-  const time = state.hasTime ? [{ view:'leave', label:'Leave', icon:'calendar', badge:pending }, { view:'attendance', label:'Attendance', icon:'clock' }] : [];
-  const slips = state.hasPayroll && state.me ? [{ view:'payslips', label:'My payslips', icon:'banknote' }] : [];
-  const grow = [];
-  if (state.hasPerf && (state.me || p.hr)) grow.push({ view:'performance', label:'Performance', icon:'trending' });
-  if (state.hasTrain && (state.me || p.hr)) grow.push({ view:'training', label:'Training', icon:'book' });
-  if (state.role === 'employee') {
-    const items = [{ view:'me', label:'My profile', icon:'user' }, ...time, ...grow, ...slips];
-    if (state.hasRecruit && myInterviews().length) items.push({ view:'interviews', label:'My interviews', icon:'calendar', badge: myInterviews().filter(i => i.status === 'scheduled').length });
-    if (state.me && state.employees.some(e => e.manager_id === state.me.id)) items.push({ view:'reports', label:'My team', icon:'users' });
-    return items;
+  const N = (view, label, icon, group, badge) => ({ view, label, icon, group, badge });
+  const list = [N('home', 'Home', 'home', 'Overview')];
+  if (!isEmp) list.push(N('dashboard', 'Dashboard', 'grid', 'Overview'));
+  if (!isEmp && p.pay) list.push(N('analytics', 'Reports', 'chart', 'Overview'));
+  if (state.hasCompany) list.push(N('announcements', 'Announcements', 'megaphone', 'Company', unreadAnn().length), N('company', 'Company', 'globe', 'Company'));
+  if (!isEmp) list.push(N('employees', 'Employees', 'users', 'People'));
+  if (isEmp && state.me && state.employees.some(e => e.manager_id === state.me.id)) list.push(N('reports', 'My team', 'users', 'People'));
+  if (!isEmp && state.hasRecruit && p.hr) list.push(N('recruitment', 'Recruitment', 'briefcase', 'People'));
+  if (!isEmp) list.push(N('structure', 'Departments & positions', 'building', 'People'));
+  if (state.hasTime) {
+    list.push(N('leave', 'Leave', 'calendar', 'Time', pending), N('attendance', 'Attendance', 'clock', 'Time'));
+    if (!isEmp && p.hr) list.push(N('timesettings', 'Leave & work hours', 'sliders', 'Time'));
   }
-  const items = [{ view:'dashboard', label:'Dashboard', icon:'grid' }, { view:'employees', label:'Employees', icon:'users' }, ...time, ...grow];
-  if (state.hasPayroll && canRunPayroll()) items.push({ view:'payroll', label:'Payroll', icon:'banknote' }, { view:'paysetup', label:'Pay setup', icon:'sliders' });
-  if (state.hasRecruit && p.hr) items.push({ view:'recruitment', label:'Recruitment', icon:'briefcase' });
-  if (state.me) items.push({ view:'me', label:'My profile', icon:'user' });
-  items.push(...slips);
-  if (state.hasRecruit && myInterviews().length) items.push({ view:'interviews', label:'My interviews', icon:'calendar', badge: myInterviews().filter(i => i.status === 'scheduled').length });
-  items.push({ view:'structure', label:'Departments & positions', icon:'building' });
-  if (p.hr && state.hasTime) items.push({ view:'timesettings', label:'Leave & work hours', icon:'sliders' });
-  if (p.admin) items.push({ view:'team', label:'Team & access', icon:'key' }, { view:'audit', label:'Activity log', icon:'history' }, { view:'settings', label:'Settings', icon:'gear' });
-  return items;
+  if (!isEmp && state.hasPayroll && canRunPayroll()) list.push(N('payroll', 'Payroll', 'banknote', 'Pay'), N('paysetup', 'Pay setup', 'sliders', 'Pay'));
+  if (state.hasPerf && (state.me || p.hr)) list.push(N('performance', 'Performance', 'trending', 'Growth'));
+  if (state.hasTrain && (state.me || p.hr)) list.push(N('training', 'Training', 'book', 'Growth'));
+  if (state.me) list.push(N('me', 'My profile', 'user', 'My space'));
+  if (state.hasPayroll && state.me) list.push(N('payslips', 'My payslips', 'banknote', 'My space'));
+  if (state.hasRecruit && myInterviews().length) list.push(N('interviews', 'My interviews', 'calendar', 'My space', myInterviews().filter(i => i.status === 'scheduled').length));
+  if (p.admin) list.push(N('team', 'Team & access', 'key', 'Organization'), N('audit', 'Activity log', 'history', 'Organization'), N('settings', 'Settings', 'gear', 'Organization'));
+  return list;
 }
 function renderShell() {
   const active = state.view === 'employee' ? (state.role === 'employee' ? 'reports' : 'employees') : state.view === 'payrun' ? 'payroll' : state.view;
-  const nav = navItems().map(i => `<button class="navitem" data-action="nav" data-view="${i.view}"${i.view === active ? ' aria-current="page"' : ''}>${icon(i.icon)}<span>${esc(i.label)}</span>${i.badge ? `<span class="badge" aria-label="${i.badge} waiting">${i.badge}</span>` : ''}</button>`).join('');
+  const navBtn = i => `<button class="navitem" data-action="nav" data-view="${i.view}"${i.view === active ? ' aria-current="page"' : ''}>${icon(i.icon)}<span>${esc(i.label)}</span>${i.badge ? `<span class="badge" aria-label="${i.badge} waiting">${i.badge}</span>` : ''}</button>`;
+  const all = navItems();
+  const nav = NAV_GROUPS.map(g => { const its = all.filter(i => i.group === g); return its.length ? (g === 'Overview' ? '' : `<div class="navgroup">${g}</div>`) + its.map(navBtn).join('') : ''; }).join('');
   const multi = state.memberships.length > 1
     ? `<select data-input="switch-org" aria-label="Switch organization">${state.memberships.map(m => `<option value="${esc(m.org_id)}"${m.org_id === state.org.id ? ' selected' : ''}>${esc(m.org.name)}</option>`).join('')}</select>` : '';
   const who = state.me?.full_name || state.user.user_metadata?.full_name || state.user.email || '';
@@ -623,7 +641,8 @@ function renderView() {
     leave:viewLeave, attendance:viewAttendance, timesettings:viewTimeSettings,
     payroll:viewPayroll, payrun:viewRun, paysetup:viewPaySetup, payslips:viewMyPayslips,
     recruitment:viewRecruitment, interviews:viewMyInterviews,
-    performance:viewPerformance, training:viewTraining };
+    performance:viewPerformance, training:viewTraining, analytics:viewReports,
+    home:viewHome, announcements:viewAnnouncements, company:viewCompany };
   v.innerHTML = (fns[state.view] || (() => ''))();
 }
 function go(view, extra = {}) {
@@ -667,6 +686,7 @@ async function loadOrgData() {
   await loadRecruit();
   await loadPerf();
   await loadTrain();
+  await loadCompany();
 }
 async function reloadEmployees() {
   state.employees = await q(hr.from('employees').select('*').eq('org_id', state.org.id).order('full_name'));
@@ -769,7 +789,7 @@ function viewDashboard() {
   if (newApps) attItems.unshift(`<li><button data-action="nav" data-view="recruitment"><span><span class="an">${newApps} new applicant${newApps === 1 ? '' : 's'} to review</span><br><span class="muted small">Open the recruitment pipeline</span></span>${chip('Review', 'warn')}</button></li>`);
   const attn = attItems.length ? `<ul class="attn">${attItems.join('')}</ul>` : `<p class="muted">Nothing needs attention right now.</p>`;
   const setupNote = (file, what) => `<div class="panel pad" style="margin-bottom:20px;border-color:#E8C56A;background:#FFF8E6"><b>${what} are in the app but not switched on yet.</b><p class="muted" style="margin-top:4px">Run <code>${file}</code> in the Supabase SQL Editor to add them.</p></div>`;
-  const banner = p.admin ? (state.timeError === 'missing' ? setupNote('hrms_phase2_leave_attendance.sql', 'Leave and attendance') : (state.payError === 'missing' ? setupNote('hrms_phase3_payroll.sql', 'Payroll and payslips') : (state.recruitError === 'missing' ? setupNote('hrms_phase4_recruitment.sql', 'Recruitment tools') : ((state.perfError === 'missing' || state.trainError === 'missing') ? setupNote('hrms_phase5_performance_training.sql', 'Performance and training tools') : '')))) : '';
+  const banner = p.admin ? (state.timeError === 'missing' ? setupNote('hrms_phase2_leave_attendance.sql', 'Leave and attendance') : (state.payError === 'missing' ? setupNote('hrms_phase3_payroll.sql', 'Payroll and payslips') : (state.recruitError === 'missing' ? setupNote('hrms_phase4_recruitment.sql', 'Recruitment tools') : ((state.perfError === 'missing' || state.trainError === 'missing') ? setupNote('hrms_phase5_performance_training.sql', 'Performance and training tools') : (state.companyError === 'missing' ? setupNote('hrms_phase6_company_selfservice.sql', 'Announcements and the company hub') : ''))))) : '';
 
   const o = state.org;
   const cap = o.max_employees;
@@ -878,11 +898,11 @@ function tabOverview(e, p) {
   const rep = reports.length ? `<div style="margin-top:26px"><h3 style="margin-bottom:8px">Direct reports</h3><div class="row">${reports.map(r => `<a class="who" href="#" data-action="open-emp" data-id="${esc(r.id)}" style="text-decoration:none;color:inherit;margin-right:16px">${avatar(r.full_name)}<span class="name">${esc(r.full_name)}</span></a>`).join('')}</div></div>` : '';
   return dl(pairs) + rep;
 }
-function tabPersonal(e, p) {
+function tabPersonal(e, p, self) {
   const d = state.detail;
   if (!d.loaded || d.id !== e.id) return loadBlock();
   if (d.error) return `<p class="muted">${esc(d.error)}</p>`;
-  const edit = p.hr ? `<button class="btn sm" data-action="edit-private">${icon('edit', 16)} ${d.priv ? 'Edit' : 'Add details'}</button>` : '';
+  const edit = p.hr ? `<button class="btn sm" data-action="edit-private">${icon('edit', 16)} ${d.priv ? 'Edit' : 'Add details'}</button>` : (self && state.hasCompany ? `<button class="btn sm" data-action="my-details">${icon('edit', 16)} Update my details</button>` : '');
   if (!d.priv) return `<div class="sect-head"><h3>Personal details</h3>${edit}</div><p class="muted">No personal details have been recorded yet.</p>`;
   const x = d.priv;
   return `<div class="sect-head"><h3>Personal details</h3>${edit}</div>` + dl([
@@ -1085,7 +1105,7 @@ function viewTeam() {
     return `<tr><td>${esc(i.email)}</td><td>${esc(ROLES[i.role] || i.role)}</td><td>${i.employee_id ? esc(findEmp(i.employee_id)?.full_name || 'Employee') : '—'}</td><td>${esc(fmtDate(i.created_at))}</td><td>${chip(label, tone)}</td>
       <td class="right">${i.status === 'pending' && !expired ? `<button class="icon-btn" data-action="copy-invite" data-id="${esc(i.id)}" aria-label="Copy invitation message" title="Copy invitation message">${icon('copy', 16)}</button><button class="icon-btn danger" data-action="revoke-invite" data-id="${esc(i.id)}" aria-label="Cancel invitation" title="Cancel invitation">${icon('x', 16)}</button>` : ''}</td></tr>`;
   }).join('');
-  return pageHead('Team & access', 'Who can sign in to this organization, and what they can do', `<button class="btn primary" data-action="invite">${icon('mail')} Invite someone</button>`) + `
+  return pageHead('Team & access', 'Who can sign in to this organization, and what they can do', `<button class="btn" data-action="bulk-invite">${icon('users')} Invite all employees</button><button class="btn primary" data-action="invite">${icon('mail')} Invite someone</button>`) + `
   <section class="panel"><div class="panel-head"><h3>People with access</h3></div><div class="tablewrap"><table><thead><tr><th>Person</th><th>Access</th><th>Status</th><th></th></tr></thead><tbody>${members}</tbody></table></div></section>
   <section class="panel" style="margin-top:20px"><div class="panel-head"><h3>Invitations</h3></div>
     ${inv ? `<div class="tablewrap"><table><thead><tr><th>Email</th><th>Access</th><th>Employee record</th><th>Sent</th><th>Status</th><th></th></tr></thead><tbody>${inv}</tbody></table></div>` : '<div class="empty"><p>No invitations yet.</p></div>'}
@@ -1239,7 +1259,7 @@ async function loadMyBalances() {
     L.error = null;
   } catch (err) { L.error = friendly(err); }
   L.loaded = true; L.loading = false;
-  if (state.view === 'leave') renderView();
+  if (['leave', 'home'].includes(state.view)) renderView();
 }
 async function reloadLeave() {
   state.leaveRequests = await q(hr.from('leave_requests').select('*').eq('org_id', state.org.id).gte('end_date', addDays(TODAY(), -400)).order('start_date', { ascending:false }).limit(1000));
@@ -1260,7 +1280,7 @@ async function loadAttendance() {
     a.error = null;
   } catch (err) { a.error = friendly(err); }
   a.loaded = true; a.loading = false;
-  if (state.view === 'attendance') renderView();
+  if (['attendance', 'home'].includes(state.view)) renderView();
 }
 
 /* ---------- who can decide ---------- */
@@ -1585,7 +1605,7 @@ function viewRun() {
   if (r.status === 'draft' && p.admin && r.calculated_at) acts.push(`<button class="btn primary" data-action="approve-run">Approve payroll</button>`);
   if (r.status === 'approved' && runner) acts.push(`<button class="btn primary" data-action="paid-run">Mark as paid</button>`);
   if (r.status === 'approved' && p.admin) acts.push(`<button class="btn" data-action="reopen-run">Reopen</button>`);
-  if (R.loaded && R.slips.length) acts.push(`<button class="btn" data-action="export-run">${icon('download')} Export CSV</button>`);
+  if (R.loaded && R.slips.length) acts.push(`<button class="btn" data-action="print-run">${icon('file')} Print all payslips</button>`, `<button class="btn" data-action="export-run">${icon('download')} Export CSV</button>`);
   const guide = r.status === 'draft' ? (r.calculated_at ? (p.admin ? 'Check the figures, then approve. Approving locks the payroll and lets employees see their payslips.' : 'Check the figures, then ask an owner or admin to approve.') : 'Calculate to work out each employee\'s payslip.')
     : r.status === 'approved' ? 'Approved. Employees can now see their payslips. Mark it as paid once the money has been sent.' : 'Paid. This payroll is final.';
   const head = back + pageHead(r.label, `${fmtDate(r.period_start)} to ${fmtDate(r.period_end)}${r.pay_date ? `, paid on ${fmtDate(r.pay_date)}` : ''}`, acts.join('')) +
@@ -1649,14 +1669,6 @@ function printPayslip() {
   if (!w) { toast('Allow pop-ups for this site to print.', 'error'); return; }
   w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Payslip</title><style>body{font:14px/1.5 system-ui,sans-serif;color:#111;padding:32px;max-width:720px;margin:auto}table{width:100%;border-collapse:collapse;margin:8px 0 18px}td,th{padding:6px 4px;border-bottom:1px solid #ddd;text-align:left}.right{text-align:right}h2,h3{margin:0 0 6px}.tot td{font-weight:700;border-top:2px solid #111}.muted{color:#555}dl{display:grid;grid-template-columns:150px 1fr;margin:12px 0}dt{color:#555}dd{margin:0}</style></head><body>${doc.innerHTML}</body></html>`);
   w.document.close(); w.focus(); setTimeout(() => w.print(), 250);
-}
-
-/* ---------- MY PAYSLIPS ---------- */
-function viewMyPayslips() {
-  const rows = state.payslips.map(s => `<tr data-action="open-payslip" data-id="${esc(s.id)}"><td><a href="#" class="name" data-action="open-payslip" data-id="${esc(s.id)}"><b>${esc(s.run_label)}</b></a></td>
-    <td>${esc(fmtDate(s.period_start))} to ${esc(fmtDate(s.period_end))}</td><td>${esc(fmtDate(s.pay_date))}</td><td><b>${esc(money(s.net, s.currency))}</b></td></tr>`).join('');
-  return pageHead('My payslips', 'Your pay statements appear here once payroll is approved') +
-    `<div class="panel">${rows ? runTable('<th>Payslip</th><th>Period</th><th>Pay date</th><th>Net pay</th>', rows) : '<div class="empty"><h3>No payslips yet</h3><p>They will appear here after payroll is approved.</p></div>'}</div>`;
 }
 
 /* ---------- PAY SETUP ---------- */
@@ -2208,6 +2220,382 @@ function completeTrainForm(r) {
 
 
 /* =====================================================================
+   REPORTS
+   ===================================================================== */
+const sumBy = (arr, f) => arr.reduce((t, x) => t + (Number(f(x)) || 0), 0);
+const pct = (a, b) => b ? Math.round(a / b * 1000) / 10 : 0;
+const niceMax = m => { const p = Math.pow(10, Math.floor(Math.log10(m))), f = m / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; };
+const fmtAxis = v => v >= 1e6 ? (v / 1e6).toFixed(1).replace(/\.0$/, '') + 'M' : v >= 1e3 ? (v / 1e3).toFixed(1).replace(/\.0$/, '') + 'k' : String(Math.round(v * 10) / 10);
+function monthsBack(n) {
+  const out = [], now = new Date();
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1), e = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+    out.push({ label: d.toLocaleDateString(undefined, { month:'short' }) + (d.getMonth() === 0 || i === n - 1 ? ` ${String(d.getFullYear()).slice(2)}` : ''), start: localISO(d), end: localISO(e) });
+  }
+  return out;
+}
+// Was this person employed on this date? People without a hire date are left out of history.
+const employedOn = (e, date) => !!e.hire_date && e.hire_date <= date &&
+  (EXITED.includes(e.status) ? !!e.exit_date && e.exit_date > date : (!e.exit_date || e.exit_date > date));
+
+function barChart(labels, series, o = {}) {
+  const W = 680, H = 210, L = 40, R = 8, T = 14, B = 30, n = Math.max(1, labels.length);
+  const max = Math.max(1, ...series.flatMap(s => s.data));
+  const top = max <= 10 ? Math.max(2, Math.ceil(max / 2) * 2) : niceMax(max);
+  const gw = (W - L - R) / n, bw = Math.max(4, Math.min(30, (gw - 6) / series.length));
+  let g = '';
+  for (let i = 0; i <= 2; i++) {
+    const v = top * i / 2, y = T + (H - T - B) * (1 - i / 2);
+    g += `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="#E3EAEC"/><text x="${L - 6}" y="${y + 4}" text-anchor="end" font-size="11" fill="#5A6A6F">${fmtAxis(v)}</text>`;
+  }
+  series.forEach((s, si) => s.data.forEach((v, i) => {
+    const h = (H - T - B) * v / top, x = L + gw * i + (gw - bw * series.length) / 2 + bw * si;
+    g += `<rect x="${x}" y="${H - B - h}" width="${bw - 1}" height="${Math.max(h, 0)}" rx="2" fill="${s.color}"><title>${esc(labels[i])}: ${esc(s.name)} ${fmtAxis(v)}</title></rect>`;
+  }));
+  labels.forEach((l, i) => { g += `<text x="${L + gw * i + gw / 2}" y="${H - 10}" text-anchor="middle" font-size="11" fill="#5A6A6F">${esc(l)}</text>`; });
+  const legend = series.length > 1 ? `<div class="legend">${series.map(s => `<span><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join('')}</div>` : '';
+  return `${legend}<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.label || 'Chart')}">${g}</svg>`;
+}
+function hbars(pairs, empty = 'No data yet.') {
+  if (!pairs.length) return `<p class="muted">${esc(empty)}</p>`;
+  const max = Math.max(1, ...pairs.map(p => p[1]));
+  return `<div class="bars">${pairs.map(([k, n, label]) => `<div class="bar-row"><span class="lbl" title="${esc(k)}">${esc(k)}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.round(n / max * 100)}%"></div></div><span class="n">${esc(label ?? n)}</span></div>`).join('')}</div>`;
+}
+const rpanel = (title, body, note) => `<section class="panel pad"><h3 style="margin-bottom:14px">${esc(title)}</h3>${body}${note ? `<p class="muted small" style="margin-top:12px">${esc(note)}</p>` : ''}</section>`;
+function groupCount(list, keyFn) { const m = {}; list.forEach(x => { const k = keyFn(x); m[k] = (m[k] || 0) + 1; }); return Object.entries(m).sort((a, b) => b[1] - a[1]); }
+
+function viewReports() {
+  const p = perms(), today = TODAY(), months = monthsBack(12), emps = state.employees, cur = state.org.currency;
+  const current = emps.filter(e => !EXITED.includes(e.status));
+  const labels = months.map(m => m.label);
+  const counts = months.map(m => emps.filter(e => employedOn(e, m.end > today ? today : m.end)).length);
+  const joined = months.map(m => emps.filter(e => e.hire_date && e.hire_date >= m.start && e.hire_date <= m.end).length);
+  const left = months.map(m => emps.filter(e => e.exit_date && e.exit_date >= m.start && e.exit_date <= m.end && e.exit_date <= today).length);
+  const joined12 = joined.reduce((a, b) => a + b, 0), left12 = left.reduce((a, b) => a + b, 0), avgHead = counts.reduce((a, b) => a + b, 0) / counts.length;
+  const tenures = current.filter(e => e.hire_date).map(e => (new Date(today) - new Date(e.hire_date)) / (365.25 * 86400000));
+  const avgTenure = tenures.length ? tenures.reduce((a, b) => a + b, 0) / tenures.length : 0;
+  const bands = [['Under 1 year', 0, 1], ['1 to 3 years', 1, 3], ['3 to 5 years', 3, 5], ['5 to 10 years', 5, 10], ['10 years or more', 10, 999]].map(([k, a, b]) => [k, tenures.filter(t => t >= a && t < b).length]);
+
+  const kpis = `<div class="panel stat-strip">
+    <div class="stat"><b>${current.length}</b><span>People employed</span></div>
+    <div class="stat"><b>${avgHead ? pct(left12, avgHead) : 0}%</b><span>Staff turnover, last 12 months</span></div>
+    <div class="stat"><b style="font-size:28px">${avgTenure ? avgTenure.toFixed(1) : '0'} yrs</b><span>Average time with the organization</span></div>
+    <div class="stat"><b style="font-size:28px">${joined12} in, ${left12} out</b><span>Last 12 months</span></div></div>`;
+
+  const workforce = `<div class="grid-2" style="margin-top:20px">
+    ${rpanel('Headcount by month', barChart(labels, [{ name:'People employed', color:'#0E4142', data:counts }], { label:'Headcount by month' }), 'Based on hire and exit dates. Employees without a hire date are not counted in this history.')}
+    ${rpanel('People joining and leaving', barChart(labels, [{ name:'Joined', color:'#0E4142', data:joined }, { name:'Left', color:'#F0B429', data:left }], { label:'People joining and leaving by month' }))}</div>
+    <div class="grid-2" style="margin-top:20px">
+    ${rpanel('By department', hbars(groupCount(current, e => e.department_id ? deptName(e.department_id) : 'No department')))}
+    ${rpanel('By time with the organization', hbars(bands.filter(b => b[1] || true)))}</div>
+    <div class="grid-2" style="margin-top:20px">
+    ${rpanel('By employment type', hbars(groupCount(current, e => EMP_TYPES[e.employment_type] || e.employment_type)))}
+    ${rpanel('By gender', hbars(groupCount(current, e => e.gender || 'Not specified')))}</div>`;
+
+  let leaveHtml = '';
+  if (state.hasTime && p.hr) {
+    const yr = new Date().getFullYear(), ap = state.leaveRequests.filter(r => r.status === 'approved' && String(r.start_date).startsWith(String(yr)));
+    const byType = {}; ap.forEach(r => { const k = leaveTypeName(r.leave_type_id); byType[k] = (byType[k] || 0) + Number(r.days); });
+    const byMonth = Array.from({ length: 12 }, (_, i) => sumBy(ap.filter(r => Number(String(r.start_date).slice(5, 7)) === i + 1), r => r.days));
+    const mLabels = Array.from({ length: 12 }, (_, i) => new Date(yr, i, 1).toLocaleDateString(undefined, { month:'short' }));
+    const pendingN = state.leaveRequests.filter(r => r.status === 'pending').length;
+    leaveHtml = `<h2 style="margin:32px 0 12px">Leave</h2><div class="grid-2">
+      ${rpanel(`Leave taken in ${yr}`, hbars(Object.entries(byType).sort((a, b) => b[1] - a[1]).map(([k, v]) => [k, v, `${fmtDays(v)} days`]), 'No approved leave yet this year.'), `${fmtDays(sumBy(ap, r => r.days))} working days in total. ${pendingN} request${pendingN === 1 ? '' : 's'} waiting for a decision.`)}
+      ${rpanel('Leave days by month', barChart(mLabels, [{ name:'Days', color:'#0E4142', data:byMonth }], { label:'Leave days by month' }), 'Counted in the month the leave starts.')}</div>`;
+  }
+
+  let attHtml = '';
+  if (state.hasTime && (p.hr || isManager())) {
+    const R = state.rep, A = R.rows;
+    let result = '<p class="muted">Choose dates and select Show report.</p>';
+    if (A) {
+      const wd = sumBy(A, r => r.working_days), pr = sumBy(A, r => r.present_days), lt = sumBy(A, r => r.late_days), ab = sumBy(A, r => r.absent_days), lv = sumBy(A, r => r.leave_days);
+      const byDept = {}; A.forEach(r => { const k = r.department_id ? deptName(r.department_id) : 'No department'; (byDept[k] = byDept[k] || { wd:0, pr:0 }); byDept[k].wd += Number(r.working_days); byDept[k].pr += Number(r.present_days); });
+      const worst = A.slice().sort((a, b) => Number(b.minutes_late) - Number(a.minutes_late)).filter(r => Number(r.minutes_late) > 0).slice(0, 5);
+      const absent = A.slice().sort((a, b) => Number(b.absent_days) - Number(a.absent_days)).filter(r => Number(r.absent_days) > 0).slice(0, 5);
+      result = `<div class="panel stat-strip" style="margin-bottom:16px"><div class="stat"><b>${pct(pr, wd)}%</b><span>Attendance rate</span></div><div class="stat"><b>${pct(lt, pr)}%</b><span>Arrivals that were late</span></div><div class="stat"><b>${fmtDays(ab)}</b><span>Days absent without leave</span></div><div class="stat"><b>${fmtDays(lv)}</b><span>Days on approved leave</span></div></div>
+        <div class="grid-2"><div><h3 style="margin-bottom:10px;font-size:15px">Attendance rate by department</h3>${hbars(Object.entries(byDept).map(([k, v]) => [k, pct(v.pr, v.wd), `${pct(v.pr, v.wd)}%`]))}</div>
+        <div><h3 style="margin-bottom:10px;font-size:15px">Most minutes late</h3>${worst.length ? hbars(worst.map(r => [r.full_name, Number(r.minutes_late), `${r.minutes_late} min`])) : '<p class="muted">No one was late.</p>'}<h3 style="margin:16px 0 10px;font-size:15px">Most days absent</h3>${absent.length ? hbars(absent.map(r => [r.full_name, Number(r.absent_days), `${fmtDays(r.absent_days)} days`])) : '<p class="muted">No unexplained absences.</p>'}</div></div>`;
+    }
+    attHtml = `<h2 style="margin:32px 0 12px">Attendance</h2>${rpanel('Attendance for a period', `<form data-form="rep-att" class="toolbar" style="padding:0 0 14px;border:0"><div class="form-error" role="alert" hidden style="flex-basis:100%;margin:0"></div>
+      <label class="row" style="gap:8px">From <input type="date" name="from" value="${esc(R.from)}" required></label><label class="row" style="gap:8px">To <input type="date" name="to" value="${esc(R.to)}" required></label><button class="btn sm primary" type="submit">Show report</button></form>${result}`, 'Working days exclude weekends and public holidays.')}`;
+  }
+
+  let payHtml = '';
+  if (state.hasPayroll && canRunPayroll()) {
+    const runs = state.runs.filter(r => r.calculated_at && r.status !== 'draft').slice().sort((a, b) => a.period_start.localeCompare(b.period_start)).slice(-12);
+    const yr = String(new Date().getFullYear()), ytd = runs.filter(r => r.period_start.startsWith(yr));
+    payHtml = `<h2 style="margin:32px 0 12px">Payroll cost</h2><div class="grid-2">
+      ${rpanel('Cost by payroll run', runs.length ? barChart(runs.map(r => r.label.length > 9 ? r.label.slice(0, 8) + '.' : r.label), [{ name:'Gross pay', color:'#0E4142', data:runs.map(r => Number(r.total_gross)) }, { name:'Net pay', color:'#5AA7A0', data:runs.map(r => Number(r.total_net)) }, { name:'Cost to employer', color:'#F0B429', data:runs.map(r => Number(r.total_employer_cost)) }], { label:'Payroll cost by run' }) : '<p class="muted">Approved payroll runs will appear here.</p>', 'Only approved and paid runs are included.')}
+      ${rpanel(`Totals so far in ${yr}`, dl([['Payroll runs', String(ytd.length)], ['Gross pay', esc(money(sumBy(ytd, r => r.total_gross), cur))], ['Income tax withheld', esc(money(sumBy(ytd, r => r.total_tax), cur))], ['Net pay', esc(money(sumBy(ytd, r => r.total_net), cur))], ['Cost to employer', `<b>${esc(money(sumBy(ytd, r => r.total_employer_cost), cur))}</b>`]]))}</div>`;
+  }
+
+  let recHtml = '';
+  if (state.hasRecruit && p.hr) {
+    const apps = state.applicants, hires = apps.filter(a => a.stage === 'hired');
+    const days = hires.map(a => { const e = findEmp(a.hired_employee_id); return e && e.hire_date && a.applied_on ? Math.round((new Date(e.hire_date) - new Date(a.applied_on)) / 86400000) : null; }).filter(x => x != null && x >= 0);
+    const funnel = Object.entries(ALL_STAGES).map(([k, l]) => [l, apps.filter(a => a.stage === k).length]);
+    recHtml = `<h2 style="margin:32px 0 12px">Recruitment</h2><div class="grid-2">${rpanel('Applicants by stage', hbars(funnel, 'No applicants yet.'))}
+      ${rpanel('Hiring', dl([['Open jobs', String(state.jobs.filter(j => j.status === 'open').length)], ['Applicants in the pipeline', String(apps.filter(a => STAGES[a.stage]).length)], ['People hired', String(hires.length)], ['Average days from application to start', days.length ? String(Math.round(days.reduce((a, b) => a + b, 0) / days.length)) : '—']]))}</div>`;
+  }
+
+  let perfHtml = '';
+  if (state.hasPerf && p.hr) {
+    const latest = state.cycles.find(c => state.appraisals.some(a => a.cycle_id === c.id));
+    if (latest) {
+      const list = state.appraisals.filter(a => a.cycle_id === latest.id), done = list.filter(a => a.status === 'completed' && a.final_rating);
+      perfHtml = `<h2 style="margin:32px 0 12px">Performance</h2><div class="grid-2">${rpanel(`Final ratings, ${latest.name}`, (done.length ? hbars([1, 2, 3, 4, 5].map(n => [`${n} ${n === 1 ? 'star' : 'stars'}`, done.filter(a => a.final_rating === n).length])) : '<p class="muted">No completed appraisals yet.</p>'))}
+        ${rpanel('Review progress', dl([['Reviews in this cycle', String(list.length)], ['Self reviews submitted', `${list.filter(a => a.self_submitted_at).length} of ${list.length}`], ['Finalized', `${done.length} of ${list.length}`], ['Average final rating', done.length ? (sumBy(done, a => a.final_rating) / done.length).toFixed(1) : '—']]))}</div>`;
+    }
+  }
+
+  let trainHtml = '';
+  if (state.hasTrain && p.hr) {
+    const mand = state.courses.filter(c => c.is_mandatory && c.is_active), soon = addDays(today, 60), yrAgo = addDays(today, -365);
+    const ok = c => new Set(state.trainRecords.filter(r => r.course_id === c.id && r.status === 'completed' && (!r.expires_on || r.expires_on >= today)).map(r => r.employee_id));
+    const rows = mand.map(c => { const n = current.filter(e => ok(c).has(e.id)).length; return [c.title, pct(n, current.length), `${n} of ${current.length}`]; });
+    trainHtml = `<h2 style="margin:32px 0 12px">Training</h2><div class="grid-2">${rpanel('Mandatory training up to date', hbars(rows, 'No mandatory courses set up yet.'))}
+      ${rpanel('Activity', dl([['Trainings completed, last 12 months', String(state.trainRecords.filter(r => r.status === 'completed' && r.completed_on && r.completed_on >= yrAgo).length)], ['Certificates expiring within 60 days', String(state.trainRecords.filter(r => r.status === 'completed' && r.expires_on && r.expires_on >= today && r.expires_on <= soon).length)], ['Certificates already expired', String(state.trainRecords.filter(r => r.status === 'completed' && r.expires_on && r.expires_on < today).length)], ['Assigned, not yet completed', String(state.trainRecords.filter(r => r.status !== 'completed').length)]]))}</div>`;
+  }
+
+  return pageHead('Reports', `${state.org.name}, as of ${fmtDate(today)}`, `<button class="btn" data-action="print-report">${icon('download')} Print or save as PDF</button>`) + kpis + workforce + leaveHtml + attHtml + payHtml + recHtml + perfHtml + trainHtml;
+}
+
+
+/* =====================================================================
+   COMPANY HUB + EMPLOYEE SELF-SERVICE
+   ===================================================================== */
+const ANN_CAT = { news:'News', policy:'Policy', event:'Event', urgent:'Urgent' };
+const annTone = c => ({ urgent:'bad', policy:'warn', event:'ok' }[c] || 'neutral');
+const DOC_CAT = { handbook:'Handbook', policy:'Policy', form:'Form', other:'Other' };
+const annVisibleNow = a => new Date(a.publish_at) <= new Date() && (!a.expires_at || new Date(a.expires_at) > new Date());
+const annForMe = a => !a.department_id || (!!state.me && a.department_id === state.me.department_id);
+const annRead = a => !!state.me && state.reads.some(r => r.announcement_id === a.id && r.employee_id === state.me.id);
+const unreadAnn = () => state.hasCompany && state.me ? state.announcements.filter(a => annVisibleNow(a) && annForMe(a) && !annRead(a)) : [];
+const toLocalDT = iso => iso ? new Date(new Date(iso).getTime() - new Date(iso).getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
+
+async function loadCompany() {
+  const oid = state.org.id;
+  Object.assign(state, { announcements:[], reads:[], companyInfo:null, companyDocs:[] });
+  try {
+    const [announcements, reads, companyInfo, companyDocs] = await Promise.all([
+      q(hr.from('announcements').select('*').eq('org_id', oid).order('pinned', { ascending:false }).order('publish_at', { ascending:false }).limit(200)),
+      q(hr.from('announcement_reads').select('*').eq('org_id', oid)),
+      q(hr.from('company_info').select('*').eq('org_id', oid).maybeSingle()),
+      q(hr.from('company_documents').select('*').eq('org_id', oid).order('category').order('title'))
+    ]);
+    Object.assign(state, { announcements, reads, companyInfo, companyDocs, hasCompany:true, companyError:null });
+  } catch (err) {
+    state.hasCompany = false;
+    state.companyError = /PGRST205|42P01|schema cache|does not exist/i.test(`${err?.code} ${err?.message}`) ? 'missing' : friendly(err);
+  }
+}
+async function reloadCompany() { await loadCompany(); renderShell(); }
+
+/* ---------- HOME (the landing page for everyone) ---------- */
+function myTasks() {
+  const t = [], me = state.me, today = TODAY(), soon = addDays(today, 60);
+  const un = unreadAnn().length; if (un) t.push([un, un === 1 ? 'unread announcement' : 'unread announcements', 'announcements']);
+  if (state.hasPerf && me) {
+    const openC = new Set(state.cycles.filter(c => c.status === 'open').map(c => c.id));
+    const mine = state.appraisals.filter(a => a.employee_id === me.id && openC.has(a.cycle_id) && !a.self_submitted_at).length;
+    const toWrite = state.appraisals.filter(a => openC.has(a.cycle_id) && a.status !== 'completed' && !mgrReviewOf(a.id) && a.employee_id !== me.id && (perms().hr || isMgrOf(findEmp(a.employee_id)))).length;
+    if (mine) t.push([mine, mine === 1 ? 'self review to write' : 'self reviews to write', 'performance']);
+    if (toWrite) t.push([toWrite, toWrite === 1 ? 'review to write' : 'reviews to write', 'performance']);
+  }
+  if (state.hasTime) { const w = state.leaveRequests.filter(canDecide).length; if (w) t.push([w, w === 1 ? 'leave request to decide' : 'leave requests to decide', 'leave']); }
+  if (state.hasRecruit) { const n = myInterviews().filter(i => i.status === 'scheduled').length; if (n) t.push([n, n === 1 ? 'interview to give feedback on' : 'interviews to give feedback on', 'interviews']); }
+  if (state.hasTrain && me) {
+    const mineT = state.trainRecords.filter(r => r.employee_id === me.id);
+    const due = mineT.filter(r => r.status !== 'completed').length, exp = mineT.filter(r => r.status === 'completed' && r.expires_on && r.expires_on <= soon).length;
+    if (due) t.push([due, due === 1 ? 'training to complete' : 'trainings to complete', 'training']);
+    if (exp) t.push([exp, exp === 1 ? 'certificate expiring soon' : 'certificates expiring soon', 'training']);
+  }
+  return t;
+}
+function annCard(a, manage) {
+  const unread = state.me && annVisibleNow(a) && annForMe(a) && !annRead(a), read = annRead(a);
+  const now = new Date(), status = new Date(a.publish_at) > now ? chip('Scheduled', 'warn') : (a.expires_at && new Date(a.expires_at) <= now ? chip('Expired') : '');
+  const readers = state.reads.filter(r => r.announcement_id === a.id).length;
+  const audience = a.department_id ? state.employees.filter(e => e.department_id === a.department_id && !EXITED.includes(e.status)).length : state.employees.filter(e => !EXITED.includes(e.status)).length;
+  const action = !state.me || !annVisibleNow(a) || !annForMe(a) ? '' : read ? chip(a.requires_ack ? 'Acknowledged' : 'Read', 'ok') : `<button class="btn sm ${a.requires_ack ? 'primary' : ''}" data-action="read-ann" data-id="${esc(a.id)}">${a.requires_ack ? 'I have read and understood this' : 'Mark as read'}</button>`;
+  return `<article class="panel ann${unread ? ' unread' : ''}"><div class="row" style="justify-content:space-between;align-items:flex-start"><div class="row">${chip(ANN_CAT[a.category], annTone(a.category))}${a.pinned ? chip('Pinned') : ''}${status}${a.department_id ? chip(deptName(a.department_id)) : ''}</div>
+    ${manage ? `<div class="row"><button class="icon-btn" data-action="edit-ann" data-id="${esc(a.id)}" aria-label="Edit announcement">${icon('edit', 16)}</button><button class="icon-btn danger" data-action="delete-ann" data-id="${esc(a.id)}" aria-label="Delete announcement">${icon('trash', 16)}</button></div>` : ''}</div>
+    <h3 style="margin:10px 0 4px">${esc(a.title)}</h3><p class="muted small">${esc(a.author_name || 'HR')}, ${esc(fmtDate(a.publish_at))}</p><p class="annbody">${esc(a.body)}</p>
+    <div class="row" style="justify-content:space-between;margin-top:12px"><div>${action}</div>${manage ? `<span class="muted small">${readers} of ${audience} ${a.requires_ack ? 'acknowledged' : 'read'}</span>` : ''}</div></article>`;
+}
+function viewHome() {
+  const me = state.me, p = perms(), today = TODAY();
+  const first = String(me?.full_name || state.user.user_metadata?.full_name || '').split(' ')[0];
+  const h = new Date().getHours(), greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  if (state.hasTime && me) { if (!state.leave.loaded && !state.leave.loading) loadMyBalances(); if (!state.att.loaded && !state.att.loading) loadAttendance(); }
+  const anns = state.hasCompany ? state.announcements.filter(a => annVisibleNow(a) && annForMe(a)).slice(0, 4) : [];
+  const annPanel = state.hasCompany ? `<section><div class="row" style="justify-content:space-between;margin-bottom:10px"><h2>Announcements</h2><button class="btn sm ghost" data-action="nav" data-view="announcements">See all</button></div>${anns.length ? anns.map(a => annCard(a, false)).join('') : '<div class="panel empty"><p>No announcements right now.</p></div>'}</section>` : '';
+  let clock = '';
+  if (state.hasTime && me && state.att.loaded) {
+    const rec = state.att.mine.find(r => r.work_date === orgToday());
+    clock = `<section class="panel pad"><h3 style="margin-bottom:8px">Today</h3>${!rec ? `<p class="muted" style="margin-bottom:10px">You have not clocked in yet.</p><button class="btn primary" data-action="clock-in">${icon('clock')} Clock in</button>`
+      : !rec.clock_out ? `<p style="margin-bottom:10px">In since <b>${esc(fmtTime(rec.clock_in))}</b>${rec.minutes_late > 0 ? `, ${rec.minutes_late} minutes late` : ''}</p><button class="btn primary" data-action="clock-out">${icon('clock')} Clock out</button>`
+      : `<p>Done for today: ${esc(fmtTime(rec.clock_in))} to ${esc(fmtTime(rec.clock_out))}</p>`}</section>`;
+  }
+  const bal = state.hasTime && me && state.leave.loaded && !state.leave.error ? `<section class="panel pad"><div class="row" style="justify-content:space-between;margin-bottom:8px"><h3>Leave balance</h3><button class="btn sm ghost" data-action="nav" data-view="leave">Open</button></div>${state.leave.balances.slice(0, 3).map(b => `<div class="row" style="justify-content:space-between;padding:4px 0"><span>${esc(b.type_name)}</span><b>${b.remaining == null ? 'No limit' : `${fmtDays(b.remaining)} days`}</b></div>`).join('') || '<p class="muted">No leave types yet.</p>'}</section>` : '';
+  const slip = state.hasPayroll && state.payslips[0] ? `<section class="panel pad"><h3 style="margin-bottom:8px">Latest payslip</h3><p class="muted small">${esc(state.payslips[0].run_label)}</p><p style="font-size:24px;font-family:var(--font-display);font-weight:700;margin:2px 0 10px">${esc(money(state.payslips[0].net, state.payslips[0].currency))}</p><button class="btn sm" data-action="open-payslip" data-id="${esc(state.payslips[0].id)}">View payslip</button></section>` : '';
+  const tasks = myTasks();
+  const taskPanel = `<section class="panel pad"><h3 style="margin-bottom:8px">To do</h3>${tasks.length ? `<ul class="attn">${tasks.map(([n, msg, view]) => `<li><button data-action="nav" data-view="${view}"><span class="an">${n} ${esc(msg)}</span>${chip('Open', 'warn')}</button></li>`).join('')}</ul>` : '<p class="muted">You are all caught up.</p>'}</section>`;
+  const hol = state.hasTime ? state.holidays.filter(x => x.holiday_date >= today).slice(0, 3) : [];
+  const holPanel = hol.length ? `<section class="panel pad"><h3 style="margin-bottom:8px">Upcoming holidays</h3>${hol.map(x => `<div class="row" style="justify-content:space-between;padding:4px 0"><span>${esc(x.name)}</span><span class="muted">${esc(fmtDate(x.holiday_date))}</span></div>`).join('')}</section>` : '';
+  const quick = [`${state.hasTime && me ? `<button class="btn" data-action="request-leave">${icon('calendar')} Request leave</button>` : ''}`, `${me && state.hasCompany ? `<button class="btn" data-action="my-details">${icon('user')} Update my details</button>` : ''}`, `${me ? `<button class="btn" data-action="nav" data-view="me">${icon('file')} My profile</button>` : ''}`].join('');
+  if (!me && !p.hr) return pageHead(`${greet}`, state.org.name) + `<div class="panel empty"><h3>Your login is not linked to an employee record yet</h3><p>Ask HR to link it, then your leave, payslips and details will appear here.</p></div>${annPanel}`;
+  return pageHead(`${greet}${first ? ', ' + first : ''}`, state.org.name, quick) + `<div class="grid-main">${annPanel || '<div></div>'}<div class="stack">${clock}${taskPanel}${bal}${slip}${holPanel}</div></div>`;
+}
+
+/* ---------- ANNOUNCEMENTS ---------- */
+function viewAnnouncements() {
+  const p = perms(), un = unreadAnn().length;
+  const list = p.hr ? state.announcements : state.announcements.filter(a => annVisibleNow(a) && annForMe(a));
+  const acts = [];
+  if (un) acts.push(`<button class="btn" data-action="read-all-ann">Mark all as read</button>`);
+  if (p.hr) acts.push(`<button class="btn primary" data-action="add-ann">${icon('plus')} New announcement</button>`);
+  return pageHead('Announcements', 'News and notices from your organization', acts.join('')) + (list.length ? `<div class="stack">${list.map(a => annCard(a, p.hr)).join('')}</div>` : '<div class="panel empty"><h3>No announcements yet</h3><p>Company news and notices will appear here.</p></div>');
+}
+function announcementForm(a) {
+  const editing = !!a; a = a || {};
+  openModal({ title: editing ? 'Edit announcement' : 'New announcement', wide:true,
+    body: `${fld('Title', inp('title', { value:a.title, required:true }))}${fld('Message', `<textarea name="body" required style="min-height:140px">${esc(a.body || '')}</textarea>`)}
+      <div class="grid2">${fld('Type', sel('category', opts(ANN_CAT, a.category || 'news'), { required:true }))}${fld('Who should see it', sel('department_id', listOpts(state.departments, 'id', 'name', a.department_id, 'Everyone')))}</div>
+      <div class="grid2">${fld('Publish on', inp('publish', { type:'datetime-local', value:toLocalDT(a.publish_at || new Date().toISOString()), required:true }), 'A future time schedules it.')}${fld('Hide after', inp('expires', { type:'datetime-local', value:toLocalDT(a.expires_at) }), 'Optional.')}</div>
+      <label class="check"><input type="checkbox" name="pinned"${a.pinned ? ' checked' : ''}><span>Pin to the top</span></label>
+      <label class="check"><input type="checkbox" name="requires_ack"${a.requires_ack ? ' checked' : ''}><span>Ask people to acknowledge that they have read it</span></label>`,
+    onSubmit: async d => {
+      const payload = { title:d.title, body:d.body, category:d.category, department_id:d.department_id, pinned:d.pinned, requires_ack:d.requires_ack, publish_at:new Date(d.publish).toISOString(), expires_at: d.expires ? new Date(d.expires).toISOString() : null };
+      if (editing) await q(hr.from('announcements').update(payload).eq('id', a.id)); else await q(hr.from('announcements').insert({ ...payload, org_id: state.org.id }));
+      await reloadCompany(); toast('Announcement saved.');
+    } });
+}
+
+/* ---------- COMPANY HUB ---------- */
+function viewCompany() {
+  const p = perms(), tabs = [['about', 'About us'], ['documents', 'Policies and documents'], ['directory', 'Staff directory']];
+  const seg = `<div class="seg" role="tablist" style="margin-bottom:16px">${tabs.map(([k, l]) => `<button role="tab" data-action="comp-tab" data-tab="${k}" aria-pressed="${state.compTab === k}">${l}</button>`).join('')}</div>`;
+  let body = '', acts = '';
+  if (state.compTab === 'about') {
+    const c = state.companyInfo;
+    if (p.hr) acts = `<button class="btn primary" data-action="edit-company">${icon('edit')} ${c ? 'Edit' : 'Add company information'}</button>`;
+    const hol = state.hasTime ? state.holidays.filter(x => x.holiday_date >= TODAY()).slice(0, 6) : [];
+    body = c ? `<div class="grid-2"><section class="panel pad"><h3 style="margin-bottom:10px">${esc(state.org.name)}</h3>${dl([['About', nz(c.about)], ['Mission', nz(c.mission)], ['Values', nz(c.values_text)]])}</section>
+      <div class="stack"><section class="panel pad"><h3 style="margin-bottom:10px">Contact</h3>${dl([['Address', nz(c.address)], ['Phone', nz(c.phone)], ['Email', nz(c.email)], ['Website', nz(c.website)], ['Working hours', nz(c.working_hours)]])}</section>
+      ${hol.length ? `<section class="panel pad"><h3 style="margin-bottom:8px">Upcoming public holidays</h3>${hol.map(x => `<div class="row" style="justify-content:space-between;padding:4px 0"><span>${esc(x.name)}</span><span class="muted">${esc(fmtDate(x.holiday_date))}</span></div>`).join('')}</section>` : ''}</div></div>`
+      : `<div class="panel empty"><h3>No company information yet</h3><p>${p.hr ? 'Add an introduction, your mission and contact details for your team.' : 'Your HR team has not added this yet.'}</p></div>`;
+  } else if (state.compTab === 'documents') {
+    if (p.hr) acts = `<button class="btn primary" data-action="add-company-doc">${icon('plus')} Add document</button>`;
+    const rows = state.companyDocs.map(x => `<tr><td>${icon('file', 16)} <b>${esc(x.title)}</b>${x.description ? `<div class="muted small">${esc(x.description)}</div>` : ''}</td><td>${chip(DOC_CAT[x.category] || x.category)}</td><td>${esc(fmtDate(x.created_at))}</td>
+      <td class="right"><button class="btn sm" data-action="download-company-doc" data-id="${esc(x.id)}">${icon('download', 16)} Download</button>${p.hr ? `<button class="icon-btn danger" data-action="delete-company-doc" data-id="${esc(x.id)}" aria-label="Delete document">${icon('trash', 16)}</button>` : ''}</td></tr>`).join('');
+    body = `<div class="panel">${rows ? runTable('<th>Document</th><th>Type</th><th>Added</th><th></th>', rows) : '<div class="empty"><h3>No documents yet</h3><p>Handbooks, policies and forms will be listed here.</p></div>'}</div>`;
+  } else {
+    if (!state.directory.loaded && !state.directory.loading) loadDirectory();
+    body = `<div class="panel"><div class="toolbar"><input class="search" type="search" placeholder="Search by name, job title or department" value="${esc(state.directory.q)}" data-input="dir-filter" aria-label="Search the directory"></div><div id="dir-table">${state.directory.loaded ? dirTableHtml() : loadBlock('Loading directory')}</div></div>`;
+  }
+  return pageHead('Company', state.org.name, acts) + seg + body;
+}
+async function loadDirectory() {
+  const D = state.directory; D.loading = true;
+  try { D.rows = await q(hr.rpc('staff_directory', { p_org: state.org.id })); D.error = null; } catch (err) { D.error = friendly(err); }
+  D.loaded = true; D.loading = false;
+  if (state.view === 'company') renderView();
+}
+function dirTableHtml() {
+  const D = state.directory, term = (D.q || '').toLowerCase();
+  if (D.error) return `<div class="empty"><p>${esc(D.error)}</p></div>`;
+  const rows = D.rows.filter(r => !term || `${r.full_name} ${r.position_title || ''} ${r.department_name || ''}`.toLowerCase().includes(term));
+  return rows.length ? runTable('<th>Name</th><th>Job title</th><th>Department</th><th>Work email</th><th>Reports to</th>', rows.map(r => `<tr><td><div class="who">${avatar(r.full_name)}<b>${esc(r.full_name)}</b></div></td><td>${nz(r.position_title)}</td><td>${nz(r.department_name)}</td><td>${r.work_email ? `<a href="mailto:${esc(r.work_email)}">${esc(r.work_email)}</a>` : '—'}</td><td>${nz(r.manager_name)}</td></tr>`).join('')) : '<div class="empty"><p>No one matches your search.</p></div>';
+}
+function companyForm() {
+  const c = state.companyInfo || {};
+  openModal({ title: 'Company information', wide:true,
+    body: `${fld('About us', `<textarea name="about">${esc(c.about || '')}</textarea>`)}${fld('Mission', `<textarea name="mission">${esc(c.mission || '')}</textarea>`)}${fld('Values', `<textarea name="values_text">${esc(c.values_text || '')}</textarea>`)}
+      <div class="grid2">${fld('Address', inp('address', { value:c.address }))}${fld('Phone', inp('phone', { value:c.phone }))}</div><div class="grid2">${fld('Email', inp('email', { type:'email', value:c.email }))}${fld('Website', inp('website', { value:c.website }))}</div>${fld('Working hours', inp('working_hours', { value:c.working_hours }))}`,
+    onSubmit: async d => { await q(hr.from('company_info').upsert({ org_id: state.org.id, about:d.about, mission:d.mission, values_text:d.values_text, address:d.address, phone:d.phone, email:d.email, website:d.website, working_hours:d.working_hours }, { onConflict:'org_id' })); await reloadCompany(); toast('Company information saved.'); } });
+}
+function companyDocForm() {
+  openModal({ title: 'Add document', submitLabel: 'Upload',
+    body: `${fld('Title', inp('title', { required:true, placeholder:'e.g. Employee handbook 2026' }))}<div class="grid2">${fld('Type', sel('category', opts(DOC_CAT, 'policy'), { required:true }))}${fld('File', '<input type="file" name="file" required>')}</div>${fld('Description', inp('description'), 'Optional. Everyone in the organization can download it.')}`,
+    onSubmit: async d => {
+      if (!d.file) throw new Error('Choose a file to upload.'); if (d.file.size > 15 * 1024 * 1024) throw new Error('That file is larger than 15 MB.');
+      const path = `${state.org.id}/company/${Date.now()}-${d.file.name.replace(/[^\w.\-]+/g, '_')}`;
+      const up = await sb.storage.from('hr-documents').upload(path, d.file, { contentType: d.file.type || undefined, upsert:false }); if (up.error) throw up.error;
+      const ins = await hr.from('company_documents').insert({ org_id: state.org.id, title:d.title, category:d.category, description:d.description, storage_path:path });
+      if (ins.error) { await sb.storage.from('hr-documents').remove([path]); throw ins.error; }
+      await reloadCompany(); toast('Document added.');
+    } });
+}
+
+/* ---------- SELF-SERVICE: an employee edits their own contact details ---------- */
+function myDetailsForm() {
+  const me = state.me; if (!me) return;
+  const x = state.detail.id === me.id && state.detail.priv ? state.detail.priv : {};
+  openModal({ title: 'Update my details', wide:true,
+    body: `<p class="muted" style="margin-bottom:12px">You can update your contact details here. To change anything else, such as your name, job or pay, ask HR.</p>
+      <div class="grid2">${fld('Phone', inp('phone', { value:me.phone }))}${fld('Marital status', sel('marital_status', opts(MARITAL, x.marital_status, 'Not specified')))}</div>
+      ${fld('Home address', `<textarea name="home_address">${esc(x.home_address || '')}</textarea>`)}
+      <div class="grid2">${fld('Emergency contact name', inp('emergency_name', { value:x.emergency_name }))}${fld('Relationship', inp('emergency_relation', { value:x.emergency_relation }))}</div>${fld('Emergency contact phone', inp('emergency_phone', { value:x.emergency_phone }))}`,
+    onSubmit: async d => {
+      const { error } = await hr.rpc('update_my_details', { p_org: state.org.id, p_phone:d.phone, p_home_address:d.home_address, p_emergency_name:d.emergency_name, p_emergency_phone:d.emergency_phone, p_emergency_relation:d.emergency_relation, p_marital_status:d.marital_status });
+      if (error) throw error;
+      await reloadEmployees(); await loadDetail(me.id); renderShell(); toast('Your details were updated.');
+    } });
+}
+
+/* ---------- PAYSLIP PRINTING ---------- */
+function printHtmlDoc(bodyHtml) {
+  const w = window.open('', '_blank', 'width=820,height=900');
+  if (!w) { toast('Allow pop-ups for this site to print.', 'error'); return; }
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Payslips</title><style>body{font:14px/1.5 system-ui,sans-serif;color:#111;padding:28px;max-width:720px;margin:auto}table{width:100%;border-collapse:collapse;margin:8px 0 18px}td,th{padding:6px 4px;border-bottom:1px solid #ddd;text-align:left}.right{text-align:right}h2,h3{margin:0 0 6px}.tot td{font-weight:700;border-top:2px solid #111}.muted{color:#555}dl{display:grid;grid-template-columns:150px 1fr;margin:12px 0}dt{color:#555}dd{margin:0}.pg{page-break-after:always}.pg:last-child{page-break-after:auto}@media print{body{padding:0}}</style></head><body>${bodyHtml}</body></html>`);
+  w.document.close(); w.focus(); setTimeout(() => w.print(), 300);
+}
+async function printSlips(slips) {
+  const ids = slips.map(s => s.id);
+  const items = await q(hr.from('payslip_items').select('*').in('payslip_id', ids).order('sort_order'));
+  printHtmlDoc(slips.map(s => `<section class="pg">${payslipHtml(s, items.filter(i => i.payslip_id === s.id))}</section>`).join(''));
+}
+function viewMyPayslips() {
+  const list = state.payslips, yr = String(new Date().getFullYear()), ytd = list.filter(s => String(s.period_start).startsWith(yr));
+  const cur = list[0]?.currency || state.org.currency;
+  const rows = list.map(s => `<tr data-action="open-payslip" data-id="${esc(s.id)}"><td><a href="#" class="name" data-action="open-payslip" data-id="${esc(s.id)}"><b>${esc(s.run_label)}</b></a></td>
+    <td>${esc(fmtDate(s.period_start))} to ${esc(fmtDate(s.period_end))}</td><td>${esc(fmtDate(s.pay_date))}</td><td><b>${esc(money(s.net, s.currency))}</b></td>
+    <td class="right"><button class="btn sm" data-action="print-slip" data-id="${esc(s.id)}">${icon('download', 16)} Print</button></td></tr>`).join('');
+  const summary = ytd.length ? `<div class="panel stat-strip" style="margin-bottom:20px"><div class="stat"><b style="font-size:26px">${esc(money(sumBy(ytd, s => s.gross), cur))}</b><span>Gross pay so far in ${yr}</span></div><div class="stat"><b style="font-size:26px">${esc(money(sumBy(ytd, s => s.tax), cur))}</b><span>Income tax paid</span></div><div class="stat"><b style="font-size:26px">${esc(money(sumBy(ytd, s => s.net), cur))}</b><span>Net pay</span></div><div class="stat"><b>${ytd.length}</b><span>Payslips this year</span></div></div>` : '';
+  return pageHead('My payslips', 'Your pay statements appear here once payroll is approved') + summary +
+    `<div class="panel">${rows ? runTable('<th>Payslip</th><th>Period</th><th>Pay date</th><th>Net pay</th><th></th>', rows) : '<div class="empty"><h3>No payslips yet</h3><p>They will appear here after payroll is approved.</p></div>'}</div>`;
+}
+
+/* ---------- BULK INVITE ---------- */
+function bulkInviteForm() {
+  const pending = new Set(state.team.invitations.filter(i => i.status === 'pending').map(i => i.email.toLowerCase()));
+  const members = new Set(state.team.members.map(m => (m.email || '').toLowerCase()));
+  const seen = new Set(), list = state.employees.filter(e => {
+    const em = (e.work_email || '').toLowerCase();
+    if (!em || e.user_id || EXITED.includes(e.status) || pending.has(em) || members.has(em) || seen.has(em)) return false; seen.add(em); return true; });
+  if (!list.length) { toast('Everyone with a work email already has a login or a pending invitation.'); return; }
+  openModal({ title: 'Invite all employees', submitLabel: `Create ${list.length} invitation${list.length === 1 ? '' : 's'}`,
+    body: `<p style="margin-bottom:10px">This invites <b>${list.length}</b> ${list.length === 1 ? 'person' : 'people'} who have a work email but no login yet. Each is linked to their own employee record, so they see only their own information.</p>
+      <ul class="help" style="padding-left:18px;max-height:180px;overflow:auto">${list.slice(0, 40).map(e => `<li>${esc(e.full_name)}, ${esc(e.work_email)}</li>`).join('')}${list.length > 40 ? `<li>and ${list.length - 40} more</li>` : ''}</ul>`,
+    onSubmit: async () => {
+      await q(hr.from('invitations').insert(list.map(e => ({ org_id: state.org.id, email: e.work_email.toLowerCase(), role:'employee', employee_id: e.id }))));
+      state.team.loaded = false; if (state.view === 'team') renderView();
+      setTimeout(() => showBulkShare(list), 40);
+    } });
+}
+function showBulkShare(list) {
+  const msg = inviteText({ email: 'the work email address we have on file for you', expires_at: addDays(TODAY(), 14) });
+  openModal({ title: 'Invitations ready', hideFooter:true,
+    body: `<p style="margin-bottom:8px">Send this message to each person. They join automatically when they sign in with their work email.</p><textarea class="copybox" id="invite-text" readonly>${esc(msg)}</textarea>
+      <p class="help" style="margin-top:10px">Recipients: ${esc(list.map(e => e.work_email).join(', '))}</p>
+      <div class="row" style="margin-top:14px;justify-content:flex-end"><button type="button" class="btn" data-action="copy-text">${icon('copy', 16)} Copy message</button><button type="button" class="btn" data-action="copy-emails">Copy email list</button><button type="button" class="btn primary" data-action="close-modal">Done</button></div>` });
+  state.lastBulkEmails = list.map(e => e.work_email).join(', ');
+}
+
+
+/* =====================================================================
    EVENTS
    ===================================================================== */
 const copyText = async text => {
@@ -2423,6 +2811,40 @@ Object.assign(inputs, {
 
 const appById2 = id => state.appraisals.find(a => a.id === id);
 Object.assign(actions, {
+  'comp-tab': el => { state.compTab = el.dataset.tab; renderView(); },
+  'read-ann': el => act(async () => { const { error } = await hr.rpc('mark_announcement_read', { p_announcement: el.dataset.id }); if (error) throw error; await reloadCompany(); }, 'Thank you.'),
+  'read-all-ann': () => act(async () => { for (const a of unreadAnn().filter(x => !x.requires_ack)) { const { error } = await hr.rpc('mark_announcement_read', { p_announcement: a.id }); if (error) throw error; } await reloadCompany(); }, 'Marked as read.'),
+  'add-ann': () => announcementForm(),
+  'edit-ann': el => announcementForm(state.announcements.find(a => a.id === el.dataset.id)),
+  'delete-ann': el => { if (confirm('Delete this announcement?')) act(async () => { await q(hr.from('announcements').delete().eq('id', el.dataset.id)); await reloadCompany(); }, 'Announcement deleted.'); },
+  'edit-company': () => companyForm(),
+  'add-company-doc': () => companyDocForm(),
+  'download-company-doc': el => act(async () => {
+    const d = state.companyDocs.find(x => x.id === el.dataset.id); if (!d) return;
+    const { data, error } = await sb.storage.from('hr-documents').createSignedUrl(d.storage_path, 60); if (error) throw error;
+    const l = document.createElement('a'); l.href = data.signedUrl; l.target = '_blank'; l.rel = 'noopener'; document.body.appendChild(l); l.click(); l.remove();
+  }),
+  'delete-company-doc': el => { if (confirm('Delete this document?')) act(async () => {
+    const d = state.companyDocs.find(x => x.id === el.dataset.id); if (!d) return;
+    await q(hr.from('company_documents').delete().eq('id', d.id)); try { await sb.storage.from('hr-documents').remove([d.storage_path]); } catch {}
+    await reloadCompany();
+  }, 'Document deleted.'); },
+  'my-details': () => act(async () => { await loadDetail(state.me.id); myDetailsForm(); }),
+  'print-slip': el => act(() => { const s = state.payslips.find(x => x.id === el.dataset.id); return s ? printSlips([s]) : null; }),
+  'print-run': () => act(() => printSlips(state.run.slips)),
+  'bulk-invite': () => bulkInviteForm(),
+  'copy-emails': () => copyText(state.lastBulkEmails)
+});
+Object.assign(inputs, { 'dir-filter': el => { state.directory.q = el.value; const box = $('#dir-table'); if (box) box.innerHTML = dirTableHtml(); } });
+actions['print-report'] = () => window.print();
+forms['rep-att'] = async d => {
+  if (!d.from || !d.to) throw new Error('Choose both dates.');
+  if (d.to < d.from) throw new Error('The end date must be on or after the start date.');
+  state.rep.from = d.from; state.rep.to = d.to;
+  state.rep.rows = await q(hr.rpc('attendance_summary', { p_org: state.org.id, p_from: d.from, p_to: d.to }));
+  renderView();
+};
+Object.assign(actions, {
   'perf-tab': el => { state.perfTab = el.dataset.tab; renderView(); },
   'train-tab': el => { state.trainTab = el.dataset.tab; renderView(); },
   'add-goal': el => goalForm(null, el.dataset.team === '1'),
@@ -2479,11 +2901,11 @@ async function enterOrg(orgId) {
   state.audit = { rows:[], loaded:false, loading:false, error:null };
   state.filters = { q:'', dept:'', status:'current' };
   state.leave = { balances:[], loaded:false, loading:false, error:null }; state.att = freshAtt(); state.leaveFilter = 'upcoming';
-  state.run = { id:null, slips:[], loaded:false, error:null }; state.calcResult = null; state.runId = null; state.perfTab = 'mine'; state.trainTab = 'mine';
+  state.run = { id:null, slips:[], loaded:false, error:null }; state.calcResult = null; state.runId = null; state.perfTab = 'mine'; state.trainTab = 'mine'; state.compTab = 'about'; state.directory = { rows:[], loaded:false, loading:false, q:'', error:null }; state.rep = { from: TODAY().slice(0, 8) + '01', to: TODAY(), rows: null };
   if (!orgUsable(state.org)) { renderLocked(); return; }
   renderLoading('Loading your workspace');
   try { await loadOrgData(); } catch (err) { renderFatal(err); return; }
-  go(state.role === 'employee' ? 'me' : 'dashboard');
+  go(state.role === 'employee' ? 'home' : 'dashboard');
 }
 
 let booting = false, bootTimer = null;
