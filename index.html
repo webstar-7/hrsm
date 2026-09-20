@@ -200,6 +200,7 @@ textarea.copybox{width:100%;min-height:170px;padding:12px;border:1px solid #C9D3
 .clockcard .big{font-family:var(--font-display);font-size:28px;font-weight:700;line-height:1.15}
 .daypick{display:flex;gap:6px 22px;flex-wrap:wrap;margin-bottom:16px}
 .stack>*+*{margin-top:20px}
+.notice{background:#FFF3D6;color:#7F5400;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:14px}
 .ann{padding:18px 20px;margin-bottom:14px}
 .ann.unread{border-left:4px solid var(--gold)}
 .annbody{white-space:pre-wrap;margin:8px 0 0}
@@ -318,6 +319,7 @@ const state = {
   filters:{ q:'', dept:'', status:'current' },
   authMode:'signin', pendingEmail:'', joined:0,
   rep:{ from:'', to:'', rows:null },
+  loginMode:'email', lastCreds:null,
   hasCompany:false, companyError:null, announcements:[], reads:[], companyInfo:null, companyDocs:[], compTab:'about', directory:{ rows:[], loaded:false, loading:false, q:'', error:null }, lastBulkEmails:'',
   hasPerf:false, perfError:null, cycles:[], appraisals:[], mgrReviews:[], goals:[], perfTab:'mine',
   hasTrain:false, trainError:null, courses:[], trainRecords:[], trainTab:'mine',
@@ -517,13 +519,18 @@ function renderAuth() {
   if (state.recovery) state.authMode = 'recovery';
   const m = state.authMode;
   let card = '';
-  if (m === 'signin') card = `
-    <h1>Sign in</h1><p class="sub">Welcome back. Enter your details to open your workspace.</p>
+  if (m === 'signin') {
+    const staff = state.loginMode === 'staff';
+    card = `
+    <h1>Sign in</h1><p class="sub">${staff ? 'Use the organization code, staff ID and password you were given.' : 'Welcome back. Enter your details to open your workspace.'}</p>
+    <div class="seg" role="tablist" style="margin-bottom:18px"><button type="button" data-action="login-mode" data-mode="email" aria-pressed="${!staff}">Email</button><button type="button" data-action="login-mode" data-mode="staff" aria-pressed="${staff}">Staff ID</button></div>
     <form data-form="signin"><div class="form-error" role="alert" hidden></div>
-      ${fld('Email', inp('email', { type:'email', required:true, extra:'autocomplete="username"' }))}
+      ${staff ? fld('Organization code', inp('org_code', { required:true, value:savedOrgCode(), extra:'autocapitalize="none" autocomplete="organization"' })) + fld('Staff ID', inp('staff_id', { required:true, extra:'autocapitalize="none" autocomplete="username"' }))
+              : fld('Email', inp('email', { type:'email', required:true, extra:'autocomplete="username"' }))}
       ${fld('Password', inp('password', { type:'password', required:true, extra:'autocomplete="current-password"' }))}
       <button class="btn primary" type="submit">Sign in</button></form>
-    <div class="auth-links"><button data-action="auth-mode" data-mode="forgot">Forgot your password?</button><button data-action="auth-mode" data-mode="signup">Create an account</button></div>`;
+    <div class="auth-links">${staff ? '<span class="muted">Forgot your password? Ask HR to reset it.</span>' : '<button data-action="auth-mode" data-mode="forgot">Forgot your password?</button><button data-action="auth-mode" data-mode="signup">Create an account</button>'}</div>`;
+  }
   else if (m === 'signup') card = `
     <h1>Create your account</h1><p class="sub">Start with a free trial. You will set up your organization next.</p>
     <form data-form="signup"><div class="form-error" role="alert" hidden></div>
@@ -544,6 +551,13 @@ function renderAuth() {
       ${fld('New password', inp('password', { type:'password', required:true, extra:'minlength="8" autocomplete="new-password"' }))}
       ${fld('Repeat new password', inp('password2', { type:'password', required:true, extra:'minlength="8" autocomplete="new-password"' }))}
       <button class="btn primary" type="submit">Save password</button></form>`;
+  else if (m === 'setpw') card = `
+    <h1>Choose your own password</h1><p class="sub">You signed in with a temporary password. Choose a new one that only you know.</p>
+    <form data-form="setpw"><div class="form-error" role="alert" hidden></div>
+      ${fld('New password', inp('password', { type:'password', required:true, extra:'minlength="8" autocomplete="new-password"' }), 'At least 8 characters.')}
+      ${fld('Repeat new password', inp('password2', { type:'password', required:true, extra:'minlength="8" autocomplete="new-password"' }))}
+      <button class="btn primary" type="submit">Save password and continue</button></form>
+    <div class="auth-links"><button data-action="signout">Sign out</button></div>`;
   else if (m === 'check-email') card = `
     <h1>Check your inbox</h1><p class="sub">We sent a confirmation link to <b>${esc(state.pendingEmail)}</b>. Open it, then come back here and sign in.</p>
     <div class="row"><button class="btn" data-action="resend">Send the email again</button><button class="btn ghost" data-action="auth-mode" data-mode="signin">Back to sign in</button></div>`;
@@ -873,6 +887,8 @@ function viewEmployee() {
   const back = isMe ? '' : `<button class="btn ghost sm" data-action="back" style="margin-left:-12px">${icon('back')} ${state.role === 'employee' ? 'My team' : 'Employees'}</button>`;
   const acts = [];
   if (p.hr) acts.push(`<button class="btn" data-action="edit-emp" data-id="${esc(e.id)}">${icon('edit')} Edit</button>`);
+  if (p.hr && !e.user_id && !EXITED.includes(e.status)) acts.push(`<button class="btn primary" data-action="create-login" data-id="${esc(e.id)}">${icon('key')} Create login</button>`);
+  if (p.hr && e.user_id) acts.push(`<button class="btn" data-action="reset-login" data-id="${esc(e.id)}">${icon('key')} Reset password</button>`);
   if (p.admin && !e.user_id) acts.push(`<button class="btn" data-action="invite-emp" data-id="${esc(e.id)}">${icon('mail')} Invite to sign in</button>`);
   const body = { overview:tabOverview, personal:tabPersonal, contracts:tabContracts, documents:tabDocuments, leave:tabLeave, pay:tabPay }[state.tab](e, p, self);
   return `${back}<div class="profile-head">${avatar(e.full_name, 'lg')}<div class="grow"><h1>${esc(e.full_name)}</h1>
@@ -1105,7 +1121,7 @@ function viewTeam() {
     return `<tr><td>${esc(i.email)}</td><td>${esc(ROLES[i.role] || i.role)}</td><td>${i.employee_id ? esc(findEmp(i.employee_id)?.full_name || 'Employee') : '—'}</td><td>${esc(fmtDate(i.created_at))}</td><td>${chip(label, tone)}</td>
       <td class="right">${i.status === 'pending' && !expired ? `<button class="icon-btn" data-action="copy-invite" data-id="${esc(i.id)}" aria-label="Copy invitation message" title="Copy invitation message">${icon('copy', 16)}</button><button class="icon-btn danger" data-action="revoke-invite" data-id="${esc(i.id)}" aria-label="Cancel invitation" title="Cancel invitation">${icon('x', 16)}</button>` : ''}</td></tr>`;
   }).join('');
-  return pageHead('Team & access', 'Who can sign in to this organization, and what they can do', `<button class="btn" data-action="bulk-invite">${icon('users')} Invite all employees</button><button class="btn primary" data-action="invite">${icon('mail')} Invite someone</button>`) + `
+  return pageHead('Team & access', 'Who can sign in to this organization, and what they can do', `<button class="btn primary" data-action="create-logins">${icon('key')} Create logins</button><button class="btn" data-action="bulk-invite">${icon('users')} Invite all by email</button><button class="btn" data-action="invite">${icon('mail')} Invite someone</button>`) + `
   <section class="panel"><div class="panel-head"><h3>People with access</h3></div><div class="tablewrap"><table><thead><tr><th>Person</th><th>Access</th><th>Status</th><th></th></tr></thead><tbody>${members}</tbody></table></div></section>
   <section class="panel" style="margin-top:20px"><div class="panel-head"><h3>Invitations</h3></div>
     ${inv ? `<div class="tablewrap"><table><thead><tr><th>Email</th><th>Access</th><th>Employee record</th><th>Sent</th><th>Status</th><th></th></tr></thead><tbody>${inv}</tbody></table></div>` : '<div class="empty"><p>No invitations yet.</p></div>'}
@@ -1180,7 +1196,7 @@ function viewSettings() {
   <section class="panel pad"><h3 style="margin-bottom:12px">Plan</h3>${dl([
     ['Plan', esc(o.plan_key)], ['Status', chip(o.status[0].toUpperCase() + o.status.slice(1), o.status === 'active' ? 'ok' : o.status === 'trial' ? 'warn' : 'bad')],
     ['Trial ends', o.status === 'trial' && o.trial_ends_at ? `${esc(fmtDate(o.trial_ends_at))}${daysLeft != null ? ` (${daysLeft} day${daysLeft === 1 ? '' : 's'} left)` : ''}` : '—'],
-    ['Employee limit', o.max_employees ?? 'Unlimited'], ['Currency', esc(o.currency)]])}
+    ['Employee limit', o.max_employees ?? 'Unlimited'], ['Currency', esc(o.currency)], ['Organization code', o.settings?.login_code ? `<b>${esc(o.settings.login_code)}</b>` : 'Created with the first staff login']])}
     <p class="muted small" style="margin-top:14px">To change your plan or currency, contact the product team.</p></section></div>`;
 }
 
@@ -2596,6 +2612,64 @@ function showBulkShare(list) {
 
 
 /* =====================================================================
+   LOGINS FOR EMPLOYEES (created by HR, no email needed)
+   ===================================================================== */
+const normId = s => String(s || '').trim().toLowerCase().replace(/\s+/g, '');
+const savedOrgCode = () => { try { return localStorage.getItem('hrms_org_code') || ''; } catch { return ''; } };
+
+async function callLogins(body) {
+  const { data, error } = await sb.functions.invoke('hrms-create-logins', { body });
+  if (error) {
+    let msg = '';
+    try { const j = await error.context.json(); msg = (j && j.error) || ''; } catch {}
+    if (!msg) msg = /not found|404|fetch|relay|Failed to send/i.test(`${error.name} ${error.message}`)
+      ? 'The login service is not set up yet. In Supabase, deploy the "hrms-create-logins" function (see the setup steps), then try again.' : (error.message || 'Something went wrong.');
+    throw new Error(msg);
+  }
+  if (data && data.error) throw new Error(data.error);
+  return data;
+}
+async function afterLogins() {
+  await reloadEmployees(); await loadMemberships();
+  state.org = state.memberships.find(m => m.org_id === state.org.id).org;
+  state.team.loaded = false; renderShell();
+}
+function loginsForm(list) {
+  list = list.filter(Boolean);
+  if (!list.length) { toast('Everyone already has a login.'); return; }
+  openModal({
+    title: list.length === 1 ? `Create a login for ${list[0].full_name}` : 'Create logins', submitLabel: `Create ${list.length} login${list.length === 1 ? '' : 's'}`,
+    body: `<p style="margin-bottom:10px">Each person gets an account with a temporary password. They choose their own password the first time they sign in, and they see only their own information.</p>
+      <ul class="help" style="padding-left:18px;max-height:170px;overflow:auto;margin-bottom:12px">${list.slice(0, 40).map(e => `<li>${esc(e.full_name)}</li>`).join('')}${list.length > 40 ? `<li>and ${list.length - 40} more</li>` : ''}</ul>
+      <label class="check"><input type="checkbox" name="use_email"><span>Use their work email as the login where they have one</span></label>
+      <p class="help">Otherwise they sign in with the organization code and a staff ID, which works even without email.</p>`,
+    onSubmit: async d => {
+      const res = await callLogins({ action:'create', org_id: state.org.id, employee_ids: list.map(e => e.id), use_email: !!d.use_email });
+      await afterLogins(); setTimeout(() => showCredentials(res), 40);
+    }
+  });
+}
+function credText(res) {
+  const url = appUrl();
+  return res.results.filter(r => !r.error).map(r => `${r.name}\n  Website: ${url}\n  ${r.mode === 'email' ? `Email: ${r.login_id}` : `Organization code: ${res.org_code}\n  Staff ID: ${r.login_id}`}\n  Temporary password: ${r.password}`).join('\n\n');
+}
+function showCredentials(res) {
+  state.lastCreds = res;
+  const good = res.results.filter(r => !r.error), bad = res.results.filter(r => r.error);
+  openModal({ title: 'Login details', wide:true, hideFooter:true,
+    body: `<div class="notice">These passwords are shown only once. Print or copy them now and hand them out privately. Each person must choose a new password when they first sign in.</div>
+      ${good.length ? runTable('<th>Person</th><th>Organization code</th><th>Staff ID or email</th><th>Temporary password</th>', good.map(r => `<tr><td><b>${esc(r.name)}</b></td><td>${r.mode === 'email' ? '—' : esc(res.org_code)}</td><td>${esc(r.login_id)}</td><td><code style="font-size:15px">${esc(r.password)}</code></td></tr>`).join('')) : ''}
+      ${bad.length ? `<h3 style="margin:16px 0 6px">Could not complete</h3><ul class="help" style="padding-left:18px">${bad.map(r => `<li><b>${esc(r.name)}:</b> ${esc(r.error)}</li>`).join('')}</ul>` : ''}
+      <div class="row" style="margin-top:16px;justify-content:flex-end">${good.length ? `<button type="button" class="btn" data-action="copy-creds">${icon('copy', 16)} Copy</button><button type="button" class="btn" data-action="csv-creds">${icon('download', 16)} Download CSV</button><button type="button" class="btn primary" data-action="print-creds">${icon('file', 16)} Print login slips</button>` : ''}<button type="button" class="btn" data-action="close-modal">Done</button></div>` });
+}
+function printCreds() {
+  const res = state.lastCreds; if (!res) return; const url = appUrl();
+  const slips = res.results.filter(r => !r.error).map(r => `<div class="cred"><h3>${esc(res.org_name)}</h3><p><b>${esc(r.name)}</b></p><table><tbody><tr><td>Website</td><td>${esc(url)}</td></tr>${r.mode === 'email' ? `<tr><td>Email</td><td>${esc(r.login_id)}</td></tr>` : `<tr><td>Organization code</td><td><b>${esc(res.org_code)}</b></td></tr><tr><td>Staff ID</td><td><b>${esc(r.login_id)}</b></td></tr>`}<tr><td>Temporary password</td><td><b style="font-size:16px">${esc(r.password)}</b></td></tr></tbody></table><p class="muted">Sign in with these details. You will be asked to choose your own password. Keep it private.</p></div>`).join('');
+  printHtmlDoc(`<style>.cred{border:1px dashed #888;padding:14px 18px;margin:0 0 16px;break-inside:avoid}.cred td{border:0;padding:3px 10px 3px 0}</style>${slips}`);
+}
+
+
+/* =====================================================================
    EVENTS
    ===================================================================== */
 const copyText = async text => {
@@ -2669,7 +2743,18 @@ const inputs = {
 }));
 
 const forms = {
-  signin: async d => { const { error } = await sb.auth.signInWithPassword({ email: d.email, password: d.password }); if (error) throw error; },
+  signin: async d => {
+    let email = d.email;
+    if (state.loginMode === 'staff') { const code = normId(d.org_code); email = `${normId(d.staff_id)}@${code}.staff.hrms`; try { localStorage.setItem('hrms_org_code', code); } catch {} }
+    const { error } = await sb.auth.signInWithPassword({ email, password: d.password });
+    if (error) throw new Error(/invalid login/i.test(error.message) && state.loginMode === 'staff' ? 'Those details are not right. Check the organization code, staff ID and password, or ask HR to reset your password.' : error.message);
+  },
+  setpw: async d => {
+    if (d.password !== d.password2) throw new Error('The two passwords do not match.');
+    if (String(d.password).length < 8) throw new Error('Use at least 8 characters.');
+    const { error } = await sb.auth.updateUser({ password: d.password, data: { must_change_password: false } }); if (error) throw error;
+    state.authMode = 'signin'; toast('Password saved.'); scheduleBoot();
+  },
   signup: async d => {
     const { data, error } = await sb.auth.signUp({ email: d.email, password: d.password, options: { data: { app:'hrms', full_name: d.full_name }, emailRedirectTo: redirectUrl() } });
     if (error) throw error;
@@ -2811,6 +2896,15 @@ Object.assign(inputs, {
 
 const appById2 = id => state.appraisals.find(a => a.id === id);
 Object.assign(actions, {
+  'login-mode': el => { state.loginMode = el.dataset.mode; renderAuth(); },
+  'create-logins': () => loginsForm(state.employees.filter(e => !e.user_id && !EXITED.includes(e.status))),
+  'create-login': el => loginsForm([findEmp(el.dataset.id)]),
+  'reset-login': el => { const e = findEmp(el.dataset.id); if (e && confirm(`Reset the password for ${e.full_name}? Their old password will stop working.`)) act(async () => { const res = await callLogins({ action:'reset', org_id: state.org.id, employee_ids:[e.id] }); showCredentials(res); }); },
+  'copy-creds': () => copyText(credText(state.lastCreds)),
+  'csv-creds': () => { const r = state.lastCreds; if (r) downloadCsv('logins.csv', ['Name','Organization code','Staff ID or email','Temporary password'], r.results.filter(x => !x.error).map(x => [x.name, x.mode === 'email' ? '' : r.org_code, x.login_id, x.password])); },
+  'print-creds': () => printCreds()
+});
+Object.assign(actions, {
   'comp-tab': el => { state.compTab = el.dataset.tab; renderView(); },
   'read-ann': el => act(async () => { const { error } = await hr.rpc('mark_announcement_read', { p_announcement: el.dataset.id }); if (error) throw error; await reloadCompany(); }, 'Thank you.'),
   'read-all-ann': () => act(async () => { for (const a of unreadAnn().filter(x => !x.requires_ack)) { const { error } = await hr.rpc('mark_announcement_read', { p_announcement: a.id }); if (error) throw error; } await reloadCompany(); }, 'Marked as read.'),
@@ -2918,6 +3012,7 @@ async function boot() {
     state.user = session?.user || null;
     if (!state.user) { renderAuth(); return; }
     if (state.recovery) { renderAuth(); return; }
+    if (state.user.user_metadata?.must_change_password) { state.authMode = 'setpw'; renderAuth(); return; }
     renderLoading('Loading your workspace');
     try {
       const inv = await hr.rpc('accept_invitations');
