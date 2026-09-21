@@ -6,7 +6,7 @@
 <title>PeopleDesk</title>
 <meta name="theme-color" content="#0E4142">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="PeopleDesk">
@@ -3547,7 +3547,15 @@ Object.assign(actions, {
   'meeting-new': () => meetingForm(),
   'meeting-join': el => act(async () => { const r = await callRpc('join_meeting', { p_meeting: el.dataset.id }); await enterCall(r.call_id); }),
   'meeting-cancel': el => { if (confirm('Cancel this meeting?')) act(async () => { await callRpc('cancel_meeting', { p_id: el.dataset.id }); await reloadCalls(); }, 'Meeting cancelled.'); },
-  'call-check-relay': async () => { const out = $('#relay-status'); if (!out) return; out.textContent = 'Checking...'; try { const { data, error } = await sb.functions.invoke('hrms-ice-servers'); out.textContent = error ? 'The relay function is not installed yet. Calls will still work on friendly networks.' : data.relay ? 'A relay server is set up. Calls should connect on most networks.' : 'No relay server is set up. Calls work on most home and office networks, but some mobile and strict office networks will not connect.'; } catch { out.textContent = 'Could not check.'; } },
+  'call-check-relay': async () => { const out = $('#relay-status'); if (!out) return; out.textContent = 'Checking...';
+    try { const { data, error } = await sb.functions.invoke('hrms-ice-servers');
+      if (error) { const st = error.context && error.context.status;
+        out.textContent = st === 403 ? 'Calls are not switched on yet. Tick "Switch on calls and meetings", save, then check again.'
+          : (st === 404 || /not found/i.test(error.message || '')) ? 'The relay function is not installed yet. Deploy the function named hrms-ice-servers. Calls will still work on friendly networks.'
+          : error.name === 'FunctionsFetchError' ? 'Could not reach the relay function. Check your internet connection.'
+          : 'The relay function gave an error. Check it is deployed with Verify JWT on.'; }
+      else out.textContent = data.relay ? 'A relay server is set up. Calls should connect on most networks.' : 'The function works, but no relay server is set up yet. Add the TURN_ICE_SERVERS secret. Calls work on most home and office networks, but some mobile and strict office networks will not connect.';
+    } catch { out.textContent = 'Could not check.'; } },
   'gate-page-tab': el => { state.gateTab = el.dataset.tab; renderView(); },
   'add-gate': () => gateForm(),
   'edit-gate': el => gateForm(state.gates.find(g => g.id === el.dataset.id)),
