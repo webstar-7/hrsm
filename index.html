@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PeopleDesk</title>
 <meta name="theme-color" content="#0E4142">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="PeopleDesk">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230E4142'/%3E%3Cpath d='M7 11h7l2 2.4h9V24H7z' fill='%23F0B429'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -200,6 +206,29 @@ textarea.copybox{width:100%;min-height:170px;padding:12px;border:1px solid #C9D3
 .clockcard .big{font-family:var(--font-display);font-size:28px;font-weight:700;line-height:1.15}
 .daypick{display:flex;gap:6px 22px;flex-wrap:wrap;margin-bottom:16px}
 .stack>*+*{margin-top:20px}
+.photo-box{text-align:center}
+#photo-video,#photo-preview{width:100%;max-width:320px;aspect-ratio:1/1;object-fit:cover;border-radius:16px;background:#000;display:block;margin:0 auto 10px}
+.photo-box .row{justify-content:center}
+[hidden]{display:none!important}
+.overlay{z-index:900}
+#call-root{position:fixed;z-index:800;left:0;top:0;pointer-events:none}
+#call-root>*{pointer-events:auto}
+#incoming-call{position:fixed;top:18px;right:18px;width:300px;background:var(--spruce-deep);color:#fff;border-radius:16px;padding:18px;box-shadow:0 12px 40px rgba(0,0,0,.35);animation:ring 1.2s ease-in-out infinite}
+@keyframes ring{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.ic-name{font-family:var(--font-display);font-size:22px;font-weight:700}.ic-sub{color:#B9D0CC;font-size:14px;margin-top:2px}
+#rejoin-call{position:fixed;top:18px;right:18px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.18)}
+#callscreen{position:fixed;inset:0;width:100vw;height:100vh;background:#0B2A2B;color:#fff;display:flex;flex-direction:column}
+.call-top{display:flex;justify-content:space-between;padding:14px 20px;font-size:16px}
+.tiles{flex:1;display:grid;gap:10px;padding:0 14px;min-height:0;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));grid-auto-rows:1fr}
+.tile{position:relative;background:#000;border-radius:14px;overflow:hidden;min-height:0}
+.tile video{width:100%;height:100%;object-fit:cover;background:#123}
+.tname{position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,.55);padding:4px 10px;border-radius:8px;font-size:14px}
+.tstat{display:block;font-size:12px;color:#F2C462}.tstat:empty{display:none}
+.thost{position:absolute;right:8px;top:8px;display:flex;gap:6px}
+.call-bar{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding:14px}
+.cbtn{border:1px solid #2E6465;background:#123A3B;color:#fff;padding:11px 18px;border-radius:12px;cursor:pointer;font-weight:600}
+.cbtn.off{background:#5B2A22;border-color:#8A3B2E}.cbtn.leave{background:#B3382A;border-color:#B3382A}.cbtn:disabled{opacity:.4;cursor:not-allowed}
+.meet{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:12px}
 .xbtn{border:0;background:none;color:var(--muted);cursor:pointer;font-size:15px;padding:0 2px;line-height:1}
 .xbtn:hover{color:var(--bad)}
 .gate{min-height:100vh;background:var(--spruce-deep);color:#fff;padding:20px;display:grid;gap:18px;align-content:start}
@@ -339,6 +368,7 @@ const state = {
   authMode:'signin', pendingEmail:'', joined:0,
   rep:{ from:'', to:'', rows:null },
   loginMode:'email', lastCreds:null,
+  hasCalls:false, callsError:null, callSettings:null, callDir:[], callHist:[], meetings:[], canSchedule:false, callTab:'meetings', callSel:{}, callFilter:'',
   hasGate:false, gateError:null, attSettings:null, gates:[], creds:[], scans:[], myScans:[], onSite:[], gateTab:'live', gateSel:{}, gateFilter:'', logFilter:'all', photoCache:{}, liveTimer:null,
   hasCompany:false, companyError:null, announcements:[], reads:[], companyInfo:null, companyDocs:[], compTab:'about', directory:{ rows:[], loaded:false, loading:false, q:'', error:null }, lastBulkEmails:'',
   hasPerf:false, perfError:null, cycles:[], appraisals:[], mgrReviews:[], goals:[], perfTab:'mine',
@@ -402,6 +432,7 @@ const ICONS = {
   home:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
   megaphone:'<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
   globe:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+  video:'<path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/>',
   scan:'<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/>',
   briefcase:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
   banknote:'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>',
@@ -508,7 +539,7 @@ function openModal(o) {
     </form></div></div>`;
   $('#modal-root input:not([type=hidden]), #modal-root select, #modal-root textarea')?.focus();
 }
-function closeModal() { $('#modal-root').innerHTML = ''; modalSubmit = null; }
+function closeModal() { stopPhotoStream(); PHOTO.blob = null; $('#modal-root').innerHTML = ''; modalSubmit = null; }
 
 /* =====================================================================
    AUTH SCREENS
@@ -633,6 +664,7 @@ function navItems() {
   const list = [N('home', 'Home', 'home', 'Overview')];
   if (!isEmp) list.push(N('dashboard', 'Dashboard', 'grid', 'Overview'));
   if (!isEmp && p.pay) list.push(N('analytics', 'Reports', 'chart', 'Overview'));
+  if (state.hasCalls && (callsOn() || perms().hr)) list.push(N('meetings', 'Calls and meetings', 'video', 'Company'));
   if (state.hasCompany) list.push(N('announcements', 'Announcements', 'megaphone', 'Company', unreadAnn().length), N('company', 'Company', 'globe', 'Company'));
   if (!isEmp) list.push(N('employees', 'Employees', 'users', 'People'));
   if (isEmp && state.me && state.employees.some(e => e.manager_id === state.me.id)) list.push(N('reports', 'My team', 'users', 'People'));
@@ -678,7 +710,7 @@ function renderView() {
     payroll:viewPayroll, payrun:viewRun, paysetup:viewPaySetup, payslips:viewMyPayslips,
     recruitment:viewRecruitment, interviews:viewMyInterviews,
     performance:viewPerformance, training:viewTraining, analytics:viewReports,
-    home:viewHome, announcements:viewAnnouncements, company:viewCompany, gate:viewGate };
+    home:viewHome, announcements:viewAnnouncements, company:viewCompany, gate:viewGate, meetings:viewMeetings };
   v.innerHTML = (fns[state.view] || (() => ''))();
   hydratePhotos();
 }
@@ -725,6 +757,7 @@ async function loadOrgData() {
   await loadTrain();
   await loadCompany();
   await loadGate();
+  await loadCalls();
 }
 async function reloadEmployees() {
   state.employees = await q(hr.from('employees').select('*').eq('org_id', state.org.id).order('full_name'));
@@ -827,7 +860,7 @@ function viewDashboard() {
   if (newApps) attItems.unshift(`<li><button data-action="nav" data-view="recruitment"><span><span class="an">${newApps} new applicant${newApps === 1 ? '' : 's'} to review</span><br><span class="muted small">Open the recruitment pipeline</span></span>${chip('Review', 'warn')}</button></li>`);
   const attn = attItems.length ? `<ul class="attn">${attItems.join('')}</ul>` : `<p class="muted">Nothing needs attention right now.</p>`;
   const setupNote = (file, what) => `<div class="panel pad" style="margin-bottom:20px;border-color:#E8C56A;background:#FFF8E6"><b>${what} are in the app but not switched on yet.</b><p class="muted" style="margin-top:4px">Run <code>${file}</code> in the Supabase SQL Editor to add them.</p></div>`;
-  const banner = p.admin ? (state.timeError === 'missing' ? setupNote('hrms_phase2_leave_attendance.sql', 'Leave and attendance') : (state.payError === 'missing' ? setupNote('hrms_phase3_payroll.sql', 'Payroll and payslips') : (state.recruitError === 'missing' ? setupNote('hrms_phase4_recruitment.sql', 'Recruitment tools') : ((state.perfError === 'missing' || state.trainError === 'missing') ? setupNote('hrms_phase5_performance_training.sql', 'Performance and training tools') : (state.companyError === 'missing' ? setupNote('hrms_phase6_company_selfservice.sql', 'Announcements and the company hub') : (state.gateError === 'missing' ? setupNote('hrms_phase7_gate_attendance.sql', 'Gate attendance') : '')))))) : '';
+  const banner = p.admin ? (state.timeError === 'missing' ? setupNote('hrms_phase2_leave_attendance.sql', 'Leave and attendance') : (state.payError === 'missing' ? setupNote('hrms_phase3_payroll.sql', 'Payroll and payslips') : (state.recruitError === 'missing' ? setupNote('hrms_phase4_recruitment.sql', 'Recruitment tools') : ((state.perfError === 'missing' || state.trainError === 'missing') ? setupNote('hrms_phase5_performance_training.sql', 'Performance and training tools') : (state.companyError === 'missing' ? setupNote('hrms_phase6_company_selfservice.sql', 'Announcements and the company hub') : (state.gateError === 'missing' ? setupNote('hrms_phase7_gate_attendance.sql', 'Gate attendance') : (state.callsError === 'missing' ? setupNote('hrms_phase8_calls_meetings.sql', 'Calls and meetings') : ''))))))) : '';
 
   const o = state.org;
   const cap = o.max_employees;
@@ -2749,16 +2782,38 @@ async function resizeImage(file, max) {
     return await new Promise(res => c.toBlob(b => res(b || file), 'image/jpeg', 0.85));
   } catch { return file; }
 }
+const PHOTO = { stream:null, blob:null };
+function stopPhotoStream() { if (PHOTO.stream) { try { PHOTO.stream.getTracks().forEach(t => t.stop()); } catch {} } PHOTO.stream = null; }
+function setPhotoButtons(st) { const b = a => document.querySelector(`[data-action="${a}"]`); if (!b('photo-start')) return; b('photo-start').hidden = st !== 'idle'; b('photo-snap').hidden = st !== 'live'; b('photo-retake').hidden = st !== 'taken'; }
 function photoForm(emp) {
+  PHOTO.blob = null;
   openModal({ title: `Photo: ${emp.full_name}`, submitLabel: 'Save photo',
-    body: fld('Photo', '<input type="file" name="file" accept="image/*" required>', 'A clear, front-facing photo. The guard sees it when the card is scanned.'),
+    body: `<div class="photo-box"><video id="photo-video" autoplay playsinline muted hidden></video><img id="photo-preview" alt="Photo preview" hidden>
+      <div class="row" style="margin-bottom:14px"><button type="button" class="btn primary" data-action="photo-start">Take a photo</button><button type="button" class="btn primary" data-action="photo-snap" hidden>Capture</button><button type="button" class="btn" data-action="photo-retake" hidden>Retake</button></div></div>
+      ${fld('Or choose a photo from this device', '<input type="file" name="file" accept="image/*" capture="user">', 'A clear, front-facing photo. The guard sees it when the card is scanned.')}`,
     onSubmit: async d => {
-      if (!d.file) throw new Error('Choose a photo.'); if (d.file.size > 12 * 1024 * 1024) throw new Error('That photo is too large.');
-      const blob = await resizeImage(d.file, 480), path = `${state.org.id}/photos/${emp.id}.jpg`;
+      const src = PHOTO.blob || (d.file && d.file.size ? d.file : null);
+      if (!src) throw new Error('Take a photo or choose one first.'); if (src.size > 12 * 1024 * 1024) throw new Error('That photo is too large.');
+      const blob = PHOTO.blob ? src : await resizeImage(src, 480), path = `${state.org.id}/photos/${emp.id}.jpg`;
       const up = await sb.storage.from('hr-documents').upload(path, blob, { contentType:'image/jpeg', upsert:true }); if (up.error) throw up.error;
       await q(hr.from('employees').update({ photo_url: path }).eq('id', emp.id)); delete state.photoCache[path];
-      await reloadEmployees(); renderShell(); toast('Photo saved.');
+      stopPhotoStream(); await reloadEmployees(); renderShell(); toast('Photo saved.');
     } });
+}
+async function photoStart() {
+  const v = $('#photo-video'); if (!v) return;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { toast('This browser cannot open the camera here. Use "choose a photo" below (on a phone this opens the camera).', 'error'); return; }
+  try {
+    PHOTO.blob = null; PHOTO.stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'user', width:{ ideal:960 }, height:{ ideal:960 } }, audio:false });
+    v.srcObject = PHOTO.stream; v.hidden = false; $('#photo-preview').hidden = true; setPhotoButtons('live');
+  } catch { toast('The camera could not be opened. Allow camera access in your browser, or choose a photo instead.', 'error'); }
+}
+async function photoSnap() {
+  const v = $('#photo-video'); if (!v || !v.videoWidth) { toast('The camera is still starting. Try again in a second.', 'error'); return; }
+  const side = Math.min(v.videoWidth, v.videoHeight), c = document.createElement('canvas'); c.width = c.height = Math.min(side, 640);
+  c.getContext('2d').drawImage(v, (v.videoWidth - side) / 2, (v.videoHeight - side) / 2, side, side, 0, 0, c.width, c.height);
+  PHOTO.blob = await new Promise(res => c.toBlob(res, 'image/jpeg', 0.88)); stopPhotoStream(); v.hidden = true;
+  const im = $('#photo-preview'); im.src = URL.createObjectURL(PHOTO.blob); im.hidden = false; setPhotoButtons('taken');
 }
 
 /* ---------- barcodes and QR for ID cards ---------- */
@@ -3002,6 +3057,252 @@ function myScansHtml() {
 
 
 /* =====================================================================
+   CALLS, CONFERENCES AND MEETINGS  (peer-to-peer, browser to browser)
+   ===================================================================== */
+const callsOn = () => !!(state.hasCalls && state.callSettings && state.callSettings.enabled);
+const myUid = () => state.user && state.user.id;
+const CALL = { on:false, id:null, kind:null, title:'', local:null, screenTrack:null, pcs:{}, remote:{}, lastSig:0, sigTimer:null, sigBusy:false, parts:[], myJoined:null, moderator:false,
+  muted:false, camOff:false, sharing:false, ice:null, tickTimer:null, ringTimer:null, incomingKey:'', sig:'', since:0, clock:null, noCam:false };
+
+async function loadCalls() {
+  Object.assign(state, { callSettings:null, callDir:[], callHist:[], meetings:[], canSchedule:false });
+  try {
+    state.callSettings = await q(hr.from('call_settings').select('*').eq('org_id', state.org.id).maybeSingle());
+    state.hasCalls = true; state.callsError = null;
+    if (state.callSettings && state.callSettings.enabled) {
+      const o = state.org.id;
+      const [dir, hist, mts, cs] = await Promise.all([callRpc('call_directory', { p_org:o }), callRpc('call_history', { p_org:o }), callRpc('my_meetings', { p_org:o }), callRpc('can_schedule_meetings', { p_org:o })]);
+      Object.assign(state, { callDir: dir || [], callHist: hist || [], meetings: mts || [], canSchedule: !!cs });
+    }
+  } catch (err) {
+    state.hasCalls = false;
+    state.callsError = /PGRST205|42P01|schema cache|does not exist/i.test(`${err?.code} ${err?.message}`) ? 'missing' : friendly(err);
+  }
+}
+async function reloadCalls() { await loadCalls(); if (state.view === 'meetings') renderShell(); }
+function startCallLoop() {
+  clearInterval(CALL.tickTimer); CALL.tickTimer = null;
+  if (!callsOn()) return;
+  CALL.tickTimer = setInterval(callTick, 3000); callTick();
+}
+function stopCallLoop() { clearInterval(CALL.tickTimer); CALL.tickTimer = null; hideIncoming(); }
+
+/* ---------- ringing ---------- */
+function ensureCallRoot() { let r = document.getElementById('call-root'); if (!r) { r = document.createElement('div'); r.id = 'call-root'; document.body.appendChild(r); } return r; }
+function ringOnce() { try { const C = window.AudioContext || window.webkitAudioContext, a = CALL.audio = CALL.audio || new C(); [0, 0.25].forEach(d => { const o = a.createOscillator(), g = a.createGain(); o.frequency.value = 660; g.gain.value = 0.07; o.connect(g); g.connect(a.destination); o.start(a.currentTime + d); o.stop(a.currentTime + d + 0.18); }); } catch {} }
+function hideIncoming() { clearInterval(CALL.ringTimer); CALL.ringTimer = null; CALL.incomingKey = ''; const b = document.getElementById('incoming-call'); if (b) b.remove(); if (document.title.startsWith('Incoming')) document.title = state.baseTitle || 'PeopleDesk'; }
+function showIncoming(list) {
+  const key = list.map(x => x.call_id).join(',');
+  if (key === CALL.incomingKey) return; hideIncoming(); if (!list.length) return; CALL.incomingKey = key;
+  const c = list[0], label = c.kind === 'meeting' ? 'Meeting' : c.kind === 'conference' ? 'Conference call' : 'Call';
+  state.baseTitle = state.baseTitle || document.title; document.title = 'Incoming call from ' + c.from_name;
+  const el = document.createElement('div'); el.id = 'incoming-call'; el.setAttribute('role', 'alertdialog'); el.setAttribute('aria-label', 'Incoming call');
+  el.innerHTML = `<div class="ic-name">${esc(c.from_name)}</div><div class="ic-sub">${esc(c.title ? label + ': ' + c.title : label)} is ringing you</div><div class="row" style="margin-top:12px"><button class="btn primary" data-action="call-accept" data-id="${esc(c.call_id)}">Accept</button><button class="btn" data-action="call-decline" data-id="${esc(c.call_id)}">Decline</button></div>${list.length > 1 ? `<div class="ic-sub" style="margin-top:8px">+${list.length - 1} more calling</div>` : ''}`;
+  ensureCallRoot().appendChild(el); ringOnce(); CALL.ringTimer = setInterval(ringOnce, 2500);
+}
+async function callTick(fast) {
+  if (CALL.busy && !fast) return; CALL.busy = true;
+  try {
+    const r = await callRpc('call_poll', { p_org: state.org.id }); if (!r || r.enabled === false) return;
+    if (!CALL.on) showIncoming(r.incoming || []); else hideIncoming();
+    if (CALL.on) {
+      if (!r.active || r.active.call_id !== CALL.id) { toast('The call has ended.'); await leaveLocal(); return; }
+      CALL.parts = r.active.participants || []; CALL.myJoined = r.active.my_joined_at; CALL.moderator = !!r.active.moderator; CALL.kind = r.active.kind; CALL.title = r.active.title || '';
+      syncPeers(); const sig = CALL.parts.map(p => p.user_id + p.state).join('|') + CALL.moderator; if (sig !== CALL.sig) { CALL.sig = sig; renderCall(); }
+    } else if (r.active && !document.getElementById('rejoin-call')) {
+      const el = document.createElement('div'); el.id = 'rejoin-call'; el.innerHTML = `<b>You are in a call.</b> <button class="btn sm primary" data-action="call-rejoin" data-id="${esc(r.active.call_id)}">Rejoin</button> <button class="btn sm" data-action="call-leave-remote" data-id="${esc(r.active.call_id)}">Leave</button>`; ensureCallRoot().appendChild(el);
+    } else if (!r.active) { const b = document.getElementById('rejoin-call'); if (b) b.remove(); }
+  } catch {} finally { CALL.busy = false; }
+}
+
+/* ---------- media + peers ---------- */
+async function getIce() {
+  if (CALL.ice) return CALL.ice;
+  try { const { data, error } = await sb.functions.invoke('hrms-ice-servers'); if (!error && data && Array.isArray(data.iceServers)) return (CALL.ice = data.iceServers); } catch {}
+  return (CALL.ice = [{ urls: ['stun:stun.l.google.com:19302'] }]);
+}
+async function getLocalMedia() {
+  const md = navigator.mediaDevices; if (!md || !md.getUserMedia || !window.RTCPeerConnection) throw new Error('unsupported');
+  try { CALL.noCam = false; return await md.getUserMedia({ audio:true, video:{ width:{ ideal:640 }, height:{ ideal:480 }, facingMode:'user' } }); }
+  catch { CALL.noCam = true; CALL.camOff = true; return await md.getUserMedia({ audio:true }); }
+}
+async function enterCall(callId) {
+  if (CALL.on) return;
+  Object.assign(CALL, { on:true, id:callId, pcs:{}, remote:{}, lastSig:0, muted:false, camOff:false, sharing:false, parts:[], sig:'', since:Date.now(), busy:false });
+  hideIncoming(); const rj = document.getElementById('rejoin-call'); if (rj) rj.remove(); renderCall();
+  try { CALL.local = await getLocalMedia(); CALL.ice = await getIce(); }
+  catch (e) { toast(e.message === 'unsupported' ? 'This browser cannot make calls. Use a recent Chrome, Edge, Firefox or Safari.' : 'Could not use your microphone. Allow access in the browser and try again.', 'error'); try { await callRpc('leave_call', { p_call: callId }); } catch {} await leaveLocal(); return; }
+  if (CALL.noCam) toast('No camera found. You are joining with audio only.');
+  renderCall(); clearInterval(CALL.sigTimer); CALL.sigTimer = setInterval(sigTick, 1000); clearInterval(CALL.clock); CALL.clock = setInterval(paintClock, 1000);
+  await callTick(true); sigTick();
+}
+const iAmInitiator = p => { const mine = String(CALL.myJoined || ''), theirs = String(p.joined_at || ''); return mine > theirs || (mine === theirs && String(myUid()) > String(p.user_id)); };
+function syncPeers() {
+  if (!CALL.on || !CALL.local || !CALL.ice) return;
+  const joined = CALL.parts.filter(p => p.state === 'joined' && p.user_id !== myUid());
+  joined.forEach(p => { if (!CALL.pcs[p.user_id] && iAmInitiator(p)) { ensurePc(p.user_id); makeOffer(p.user_id); } });
+  Object.keys(CALL.pcs).forEach(uid => { if (!joined.some(p => p.user_id === uid)) closePeer(uid); });
+}
+function sendSig(to, kind, payload) { return hr.rpc('send_signal', { p_call: CALL.id, p_to: to, p_kind: kind, p_payload: payload || {} }).then(() => {}, () => {}); }
+function ensurePc(uid) {
+  if (CALL.pcs[uid]) return CALL.pcs[uid].pc;
+  const pc = new RTCPeerConnection({ iceServers: CALL.ice }), rec = CALL.pcs[uid] = { pc, pending:[], haveRemote:false, stream:new MediaStream(), tries: (CALL.pcs[uid] && CALL.pcs[uid].tries) || 0, at: Date.now() };
+  (CALL.local ? CALL.local.getTracks() : []).forEach(t => pc.addTrack(t, CALL.local));
+  if (CALL.screenTrack && CALL.sharing) { const s = pc.getSenders().find(x => x.track && x.track.kind === 'video'); if (s) s.replaceTrack(CALL.screenTrack); }
+  if (!pc.getSenders().some(s => s.track && s.track.kind === 'video')) { try { pc.addTransceiver('video', { direction:'recvonly' }); } catch {} }
+  pc.ontrack = ev => { if (ev.streams && ev.streams[0]) CALL.remote[uid] = ev.streams[0]; else { rec.stream.addTrack(ev.track); CALL.remote[uid] = rec.stream; } paintTile(uid); };
+  pc.onicecandidate = ev => { if (ev.candidate) sendSig(uid, 'ice', ev.candidate.toJSON ? ev.candidate.toJSON() : ev.candidate); };
+  pc.onconnectionstatechange = () => { paintTile(uid); if (pc.connectionState === 'failed') retryPeer(uid); };
+  return pc;
+}
+async function makeOffer(uid) { try { const pc = CALL.pcs[uid].pc, off = await pc.createOffer(); await pc.setLocalDescription(off); await sendSig(uid, 'offer', { type:'offer', sdp: pc.localDescription.sdp }); } catch {} }
+function closePeer(uid) { const r = CALL.pcs[uid]; if (r) { try { r.pc.ontrack = r.pc.onicecandidate = r.pc.onconnectionstatechange = null; r.pc.close(); } catch {} delete CALL.pcs[uid]; } delete CALL.remote[uid]; }
+function retryPeer(uid) { const r = CALL.pcs[uid], p = CALL.parts.find(x => x.user_id === uid); if (!r || !p || !iAmInitiator(p) || r.tries >= 2) return; const tries = r.tries + 1; closePeer(uid); setTimeout(() => { if (!CALL.on) return; syncPeers(); if (CALL.pcs[uid]) CALL.pcs[uid].tries = tries; }, 1500); }
+async function flushIce(rec) { for (const c of rec.pending.splice(0)) { try { await rec.pc.addIceCandidate(c); } catch {} } }
+async function handleSignal(s) {
+  const uid = s.from_user; let rec = CALL.pcs[uid];
+  try {
+    if (s.kind === 'offer') {
+      if (rec && rec.haveRemote) { closePeer(uid); rec = null; }
+      const pc = ensurePc(uid); rec = CALL.pcs[uid];
+      await pc.setRemoteDescription({ type:'offer', sdp: s.payload.sdp }); rec.haveRemote = true; await flushIce(rec);
+      const ans = await pc.createAnswer(); await pc.setLocalDescription(ans); await sendSig(uid, 'answer', { type:'answer', sdp: pc.localDescription.sdp });
+    } else if (s.kind === 'answer' && rec) { await rec.pc.setRemoteDescription({ type:'answer', sdp: s.payload.sdp }); rec.haveRemote = true; await flushIce(rec); }
+    else if (s.kind === 'ice' && rec) { if (rec.haveRemote) { try { await rec.pc.addIceCandidate(s.payload); } catch {} } else rec.pending.push(s.payload); }
+    else if (s.kind === 'mute') { CALL.muted = true; applyMedia(); toast('The host muted your microphone.'); renderCall(); }
+  } catch {}
+}
+async function sigTick() {
+  if (!CALL.on || CALL.sigBusy) return; CALL.sigBusy = true;
+  try { const rows = await callRpc('get_signals', { p_call: CALL.id, p_after: CALL.lastSig }); for (const s of rows || []) { CALL.lastSig = Math.max(CALL.lastSig, s.id); await handleSignal(s); } } catch {} finally { CALL.sigBusy = false; }
+}
+function applyMedia() { if (!CALL.local) return; CALL.local.getAudioTracks().forEach(t => { t.enabled = !CALL.muted; }); CALL.local.getVideoTracks().forEach(t => { t.enabled = !CALL.camOff; }); }
+async function toggleShare() {
+  if (CALL.sharing) { stopShare(); return; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) { toast('Screen sharing is not available in this browser.', 'error'); return; }
+  try {
+    const d = await navigator.mediaDevices.getDisplayMedia({ video:true }); CALL.screenTrack = d.getVideoTracks()[0]; CALL.sharing = true;
+    Object.values(CALL.pcs).forEach(r => { const s = r.pc.getSenders().find(x => x.track && x.track.kind === 'video') || r.pc.getSenders().find(x => !x.track); if (s) s.replaceTrack(CALL.screenTrack); });
+    CALL.screenTrack.onended = stopShare; paintTile(myUid()); renderCall();
+  } catch {}
+}
+function stopShare() {
+  if (!CALL.sharing) return; const cam = CALL.local && CALL.local.getVideoTracks()[0];
+  Object.values(CALL.pcs).forEach(r => { const s = r.pc.getSenders().find(x => x.track && x.track === CALL.screenTrack); if (s) s.replaceTrack(cam || null); });
+  try { CALL.screenTrack.stop(); } catch {} CALL.screenTrack = null; CALL.sharing = false; paintTile(myUid()); renderCall();
+}
+async function leaveLocal() {
+  clearInterval(CALL.sigTimer); clearInterval(CALL.clock); Object.keys(CALL.pcs).forEach(closePeer);
+  if (CALL.local) CALL.local.getTracks().forEach(t => { try { t.stop(); } catch {} }); if (CALL.screenTrack) { try { CALL.screenTrack.stop(); } catch {} }
+  Object.assign(CALL, { on:false, id:null, local:null, screenTrack:null, remote:{}, pcs:{}, parts:[], sig:'', sharing:false });
+  const r = document.getElementById('callscreen'); if (r) r.remove(); await loadCalls(); if (state.view === 'meetings') renderShell();
+}
+async function leaveCall() { const id = CALL.id; if (id) { try { await callRpc('leave_call', { p_call: id }); } catch {} } await leaveLocal(); }
+
+/* ---------- the call screen ---------- */
+function paintClock() { const c = document.getElementById('call-clock'); if (c) { const s = Math.floor((Date.now() - CALL.since) / 1000); c.textContent = `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; } }
+function tileState(uid) {
+  const r = CALL.pcs[uid]; if (!r) return CALL.parts.find(p => p.user_id === uid)?.state === 'ringing' ? 'Ringing' : 'Connecting';
+  const st = r.pc.connectionState; if (st === 'connected') return ''; if (st === 'failed') return "Can't connect. Your network may block direct calls."; if (Date.now() - r.at > 20000) return 'Still trying to connect. A relay server may be needed.'; return 'Connecting';
+}
+function paintTile(uid) {
+  const tile = document.querySelector(`#callscreen .tile[data-uid="${CSS.escape(String(uid))}"]`); if (!tile) return;
+  const v = tile.querySelector('video'), stream = uid === myUid() ? (CALL.sharing && CALL.screenTrack ? new MediaStream([CALL.screenTrack]) : CALL.local) : CALL.remote[uid];
+  if (v && stream && v.srcObject !== stream && !(uid === myUid() && CALL.sharing && v.srcObject)) { v.srcObject = stream; v.play && v.play().catch(() => {}); }
+  const t = tile.querySelector('.tstat'); if (t && uid !== myUid()) t.textContent = tileState(uid);
+}
+function renderCall() {
+  if (!CALL.on) return; let root = document.getElementById('callscreen');
+  if (!root) { root = document.createElement('div'); root.id = 'callscreen'; ensureCallRoot().appendChild(root); }
+  const me = { user_id: myUid(), name: 'You', state:'joined' }, others = CALL.parts.filter(p => p.user_id !== myUid() && (p.state === 'joined' || p.state === 'ringing'));
+  const tiles = [me, ...others].map(p => `<div class="tile" data-uid="${esc(p.user_id)}"><video autoplay playsinline ${p.user_id === myUid() ? 'muted' : ''}></video><div class="tname">${esc(p.name)}${p.is_host ? ' (host)' : ''}<span class="tstat"></span></div>
+    ${CALL.moderator && p.user_id !== myUid() && p.state === 'joined' ? `<div class="thost"><button class="btn sm" data-action="call-mute-one" data-id="${esc(p.user_id)}">Mute</button><button class="btn sm" data-action="call-remove" data-id="${esc(p.user_id)}">Remove</button></div>` : ''}</div>`).join('');
+  const title = CALL.title || (CALL.kind === 'call' ? 'Call' : CALL.kind === 'meeting' ? 'Meeting' : 'Conference call');
+  root.innerHTML = `<div class="call-top"><b>${esc(title)}</b><span id="call-clock">00:00</span></div><div class="tiles n${Math.min(tilesCount(others.length + 1), 9)}">${tiles}</div>
+    <div class="call-bar"><button class="cbtn${CALL.muted ? ' off' : ''}" data-action="call-mic">${CALL.muted ? 'Unmute' : 'Mute'}</button><button class="cbtn${CALL.camOff ? ' off' : ''}" data-action="call-cam"${CALL.noCam ? ' disabled' : ''}>${CALL.camOff ? 'Camera on' : 'Camera off'}</button>
+    <button class="cbtn${CALL.sharing ? ' off' : ''}" data-action="call-share">${CALL.sharing ? 'Stop sharing' : 'Share screen'}</button><button class="cbtn" data-action="call-add">Add people</button>
+    ${CALL.moderator && others.length ? '<button class="cbtn" data-action="call-mute-all">Mute everyone</button>' : ''}<button class="cbtn leave" data-action="call-leave">Leave</button></div>`;
+  [myUid(), ...others.map(p => p.user_id)].forEach(paintTile); paintClock();
+}
+const tilesCount = n => n;
+function addPeopleForm() {
+  const inCall = new Set(CALL.parts.filter(p => p.state === 'joined' || p.state === 'ringing').map(p => p.user_id));
+  const people = state.callDir.filter(p => !p.is_me && !inCall.has(p.user_id));
+  openModal({ title: 'Add people to this call', submitLabel: 'Ring them',
+    body: people.length ? people.map(p => `<label class="check"><input type="checkbox" name="u_${esc(p.user_id)}"><span>${esc(p.full_name)} ${p.online ? chip('Online', 'ok') : '<span class="muted small">Offline</span>'}</span></label>`).join('') : '<p class="muted">There is no one else to add.</p>',
+    onSubmit: async d => { const ids = Object.keys(d).filter(k => k.startsWith('u_') && d[k]).map(k => k.slice(2)); if (!ids.length) throw new Error('Choose at least one person.'); await callRpc('invite_to_call', { p_call: CALL.id, p_users: ids }); toast('Ringing them now.'); } });
+}
+
+/* ---------- starting calls ---------- */
+async function startCallTo(uid) { const r = await callRpc('start_call', { p_org: state.org.id, p_user: uid }); await enterCall(r.call_id); }
+async function startConference(ids, title) { const r = await callRpc('start_conference', { p_org: state.org.id, p_title: title || null, p_users: ids }); await enterCall(r.call_id); }
+const staffCallsAllowed = () => perms().hr || !!(state.callSettings && state.callSettings.allow_staff_calls);
+const staffConfAllowed = () => perms().hr || !!(state.callSettings && state.callSettings.allow_staff_conferences);
+
+/* ---------- pages ---------- */
+function viewMeetings() {
+  const tabs = [['meetings', 'Meetings'], ['people', 'Call someone'], ['history', 'History']]; if (perms().hr) tabs.push(['settings', 'Settings']);
+  if (!tabs.some(t => t[0] === state.callTab)) state.callTab = 'meetings';
+  const seg = `<div class="seg" role="tablist" style="margin-bottom:16px">${tabs.map(([k, l]) => `<button role="tab" data-action="call-page-tab" data-tab="${k}" aria-pressed="${state.callTab === k}">${l}</button>`).join('')}</div>`;
+  const off = !callsOn() && state.callTab !== 'settings' ? `<div class="notice">Calls and meetings are switched off. ${perms().hr ? 'Turn them on under <b>Settings</b>.' : 'Ask your administrator to turn them on.'}</div>` : '';
+  const body = !callsOn() && state.callTab !== 'settings' ? '' : { meetings:callMeetings, people:callPeople, history:callHistory, settings:callSettingsPage }[state.callTab]();
+  return pageHead('Calls and meetings', 'Video calls, conference calls and scheduled meetings') + seg + off + body;
+}
+function callMeetings() {
+  const cards = state.meetings.map(m => `<div class="panel pad meet"><div><h3>${esc(m.title)}</h3><div class="muted small">${esc(fmtDate(m.starts_at))} at ${esc(fmtTime(m.starts_at))} · ${m.duration_minutes} min · Host: ${esc(m.host_name || '')}</div>${m.description ? `<p style="margin-top:6px">${esc(m.description)}</p>` : ''}
+    <div style="margin-top:8px">${chip(m.audience === 'all' ? 'Everyone' : m.audience === 'department' ? 'A department' : 'Invited people')}${m.live ? ' ' + chip(`Live now, ${m.live_count} in the room`, 'ok') : ''}</div></div>
+    <div class="row">${m.can_join ? `<button class="btn primary" data-action="meeting-join" data-id="${esc(m.id)}">Join</button>` : `<span class="muted small">Opens 10 minutes before</span>`}${m.can_cancel ? `<button class="btn" data-action="meeting-cancel" data-id="${esc(m.id)}">Cancel</button>` : ''}</div></div>`).join('');
+  return `${state.canSchedule ? `<div class="row" style="margin-bottom:14px"><button class="btn primary" data-action="meeting-new">${icon('plus', 16)} Schedule a meeting</button></div>` : ''}${cards || '<div class="panel"><div class="empty"><h3>No meetings coming up</h3><p>Meetings scheduled by management will appear here.</p></div></div>'}`;
+}
+function callPeople() {
+  const f = (state.callFilter || '').toLowerCase(), list = state.callDir.filter(p => !p.is_me && (!f || p.full_name.toLowerCase().includes(f)));
+  const rows = list.map(p => `<tr><td><input type="checkbox" data-input="call-sel" data-id="${esc(p.user_id)}" aria-label="Select ${esc(p.full_name)}"${state.callSel[p.user_id] ? ' checked' : ''}></td><td><div class="who">${faceOrInitials({ full_name: p.full_name, photo_url: p.photo_url })}<div><b>${esc(p.full_name)}</b><div class="muted small">${esc(p.department_name || '')}</div></div></div></td>
+    <td>${p.online ? chip('Online', 'ok') : '<span class="muted small">Offline</span>'}</td><td class="right">${staffCallsAllowed() ? `<button class="btn sm primary" data-action="call-user" data-id="${esc(p.user_id)}">Call</button>` : ''}</td></tr>`).join('');
+  return `<div class="panel"><div class="toolbar"><input class="search" type="search" placeholder="Search people" value="${esc(state.callFilter || '')}" data-input="call-filter" aria-label="Search people">${staffConfAllowed() ? '<button class="btn sm" data-action="call-conference">Start a conference call with selected</button>' : ''}</div>
+    ${!staffCallsAllowed() ? '<div class="panel-body muted small">Calls between staff are switched off by your administrator.</div>' : ''}<div id="call-people">${rows ? runTable('<th></th><th>Person</th><th>Status</th><th></th>', rows) : '<div class="empty"><p>No one else to call yet.</p></div>'}</div>
+    <div class="panel-body muted small">Calls ring while the other person has PeopleDesk open in their browser. A green "Online" tag means they can be reached right now.</div></div>`;
+}
+function callHistory() {
+  const rows = state.callHist.map(h => { const missed = h.my_state === 'missed' || h.my_state === 'declined'; const kind = h.is_host ? 'Outgoing' : missed ? 'Missed' : 'Received';
+    return `<tr><td>${esc(fmtDate(h.at))} ${esc(fmtTime(h.at))}</td><td><b>${esc(h.title || h.others || 'Call')}</b>${h.title && h.others ? `<div class="muted small">${esc(h.others)}</div>` : ''}</td><td>${missed && !h.is_host ? chip('Missed', 'bad') : chip(kind)}</td><td>${h.seconds ? Math.max(1, Math.round(h.seconds / 60)) + ' min' : '—'}</td></tr>`; }).join('');
+  return `<div class="panel">${rows ? runTable('<th>When</th><th>With</th><th></th><th>Length</th>', rows) : '<div class="empty"><p>No calls yet.</p></div>'}</div>`;
+}
+function callSettingsPage() {
+  const s = state.callSettings || { enabled:false, schedule_who:'management', allow_staff_calls:true, allow_staff_conferences:true, max_participants:6, ring_timeout_seconds:45 };
+  const radio = (v, t) => `<label class="check"><input type="radio" name="schedule_who" value="${v}"${s.schedule_who === v ? ' checked' : ''}><span>${t}</span></label>`;
+  return `<section class="panel pad"><form data-form="call-settings"><div class="form-error" role="alert" hidden></div>
+    <label class="check"><input type="checkbox" name="enabled"${s.enabled ? ' checked' : ''}><span><b>Switch on calls and meetings</b></span></label>
+    <h3 style="margin:20px 0 10px">Who can schedule meetings</h3>${radio('management', 'Owners, admins and HR officers only')}${radio('management_managers', 'Also people who manage a team')}
+    <h3 style="margin:20px 0 10px">What staff can do</h3>
+    <label class="check"><input type="checkbox" name="allow_staff_calls"${s.allow_staff_calls ? ' checked' : ''}><span>Staff can call each other</span></label>
+    <label class="check"><input type="checkbox" name="allow_staff_conferences"${s.allow_staff_conferences ? ' checked' : ''}><span>Staff can start conference calls</span></label>
+    <div class="grid2">${fld('Most people in one call', inp('max_participants', { type:'number', value:s.max_participants, required:true, extra:'min="2" max="8"' }), 'Video goes straight between browsers, so 6 or fewer works best.')}${fld('Ring for (seconds)', inp('ring_timeout_seconds', { type:'number', value:s.ring_timeout_seconds, required:true, extra:'min="15" max="120"' }), 'After this a call counts as missed.')}</div>
+    <div class="row"><button class="btn primary" type="submit">Save settings</button><button class="btn" type="button" data-action="call-check-relay">Check the relay server</button></div><p class="muted small" id="relay-status" style="margin-top:10px"></p></form></section>`;
+}
+function meetingForm() {
+  const people = state.callDir.filter(p => !p.is_me), start = new Date(Date.now() + 3600e3); start.setMinutes(0, 0, 0);
+  openModal({ title: 'Schedule a meeting', wide:true, submitLabel: 'Schedule',
+    body: `${fld('Title', inp('title', { required:true, placeholder:'e.g. Monthly all-hands' }))}${fld('Details', inp('description', { placeholder:'Optional' }))}
+      <div class="grid2">${fld('Starts', inp('when', { type:'datetime-local', value: toLocalInput(start.toISOString()), required:true }))}${fld('Length', sel('duration', opts({ 15:'15 minutes', 30:'30 minutes', 45:'45 minutes', 60:'1 hour', 90:'1 hour 30', 120:'2 hours' }, '30'), { required:true }))}</div>
+      ${fld('Who is invited', sel('audience', opts({ all:'Everyone', department:'A department', people:'Chosen people' }, 'all'), { required:true }))}
+      ${fld('Department (if a department)', sel('department_id', listOpts(state.departments, 'id', 'name', null, 'Choose')))}
+      <div class="fld"><span>People (if chosen people)</span><div style="max-height:160px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:8px">${people.map(p => `<label class="check"><input type="checkbox" name="u_${esc(p.user_id)}"><span>${esc(p.full_name)}</span></label>`).join('')}</div></div>`,
+    onSubmit: async d => {
+      const ids = Object.keys(d).filter(k => k.startsWith('u_') && d[k]).map(k => k.slice(2));
+      await callRpc('schedule_meeting', { p_org: state.org.id, p_title: d.title, p_description: d.description, p_starts_at: new Date(d.when).toISOString(), p_duration: Number(d.duration), p_audience: d.audience, p_department: d.audience === 'department' ? d.department_id : null, p_people: d.audience === 'people' ? ids : null });
+      await reloadCalls(); toast('Meeting scheduled.');
+    } });
+}
+
+function hardStopCall() {
+  clearInterval(CALL.sigTimer); clearInterval(CALL.clock); Object.keys(CALL.pcs).forEach(closePeer);
+  if (CALL.local) CALL.local.getTracks().forEach(t => { try { t.stop(); } catch {} });
+  Object.assign(CALL, { on:false, id:null, local:null, screenTrack:null, pcs:{}, remote:{}, parts:[], sig:'', incomingKey:'' });
+  const r = document.getElementById('call-root'); if (r) r.innerHTML = '';
+}
+
+
+/* =====================================================================
    EVENTS
    ===================================================================== */
 const copyText = async text => {
@@ -3228,6 +3529,25 @@ Object.assign(inputs, {
 
 const appById2 = id => state.appraisals.find(a => a.id === id);
 Object.assign(actions, {
+  'call-page-tab': el => { state.callTab = el.dataset.tab; renderView(); },
+  'call-user': el => act(() => startCallTo(el.dataset.id)),
+  'call-conference': () => { const ids = Object.keys(state.callSel).filter(k => state.callSel[k]); if (!ids.length) { toast('Tick the people you want to call first.', 'error'); return; } act(() => startConference(ids, null)); },
+  'call-accept': el => act(async () => { await callRpc('answer_call', { p_call: el.dataset.id }); await enterCall(el.dataset.id); }),
+  'call-decline': el => act(async () => { hideIncoming(); await callRpc('decline_call', { p_call: el.dataset.id }); }),
+  'call-rejoin': el => act(() => enterCall(el.dataset.id)),
+  'call-leave-remote': el => act(async () => { await callRpc('leave_call', { p_call: el.dataset.id }); const b = document.getElementById('rejoin-call'); if (b) b.remove(); }),
+  'call-leave': () => leaveCall(),
+  'call-mic': () => { CALL.muted = !CALL.muted; applyMedia(); renderCall(); },
+  'call-cam': () => { CALL.camOff = !CALL.camOff; applyMedia(); renderCall(); },
+  'call-share': () => toggleShare(),
+  'call-add': () => addPeopleForm(),
+  'call-mute-one': el => sendSig(el.dataset.id, 'mute'),
+  'call-mute-all': () => CALL.parts.filter(p => p.state === 'joined' && p.user_id !== myUid()).forEach(p => sendSig(p.user_id, 'mute')),
+  'call-remove': el => { if (confirm('Remove this person from the call?')) act(async () => { await callRpc('remove_from_call', { p_call: CALL.id, p_user: el.dataset.id }); }); },
+  'meeting-new': () => meetingForm(),
+  'meeting-join': el => act(async () => { const r = await callRpc('join_meeting', { p_meeting: el.dataset.id }); await enterCall(r.call_id); }),
+  'meeting-cancel': el => { if (confirm('Cancel this meeting?')) act(async () => { await callRpc('cancel_meeting', { p_id: el.dataset.id }); await reloadCalls(); }, 'Meeting cancelled.'); },
+  'call-check-relay': async () => { const out = $('#relay-status'); if (!out) return; out.textContent = 'Checking...'; try { const { data, error } = await sb.functions.invoke('hrms-ice-servers'); out.textContent = error ? 'The relay function is not installed yet. Calls will still work on friendly networks.' : data.relay ? 'A relay server is set up. Calls should connect on most networks.' : 'No relay server is set up. Calls work on most home and office networks, but some mobile and strict office networks will not connect.'; } catch { out.textContent = 'Could not check.'; } },
   'gate-page-tab': el => { state.gateTab = el.dataset.tab; renderView(); },
   'add-gate': () => gateForm(),
   'edit-gate': el => gateForm(state.gates.find(g => g.id === el.dataset.id)),
@@ -3244,6 +3564,9 @@ Object.assign(actions, {
   'add-cred': el => credForm(findEmp(el.dataset.id)),
   'revoke-cred': el => { if (confirm('Remove this card? It stops working immediately.')) act(async () => { await callRpc('revoke_credential', { p_id: el.dataset.id }); await reloadGate(); }, 'Card removed.'); },
   'upload-photo': el => photoForm(findEmp(el.dataset.id)),
+  'photo-start': () => photoStart(),
+  'photo-snap': () => photoSnap(),
+  'photo-retake': () => photoStart(),
   'gate-tab': el => { DEV.tab = el.dataset.tab; if (DEV.camera) stopCamera(); if (DEV.tab === 'onsite') callRpc('on_site_now', { p_org: state.org.id }).then(r => { DEV.onsite = r; renderGate(); }).catch(() => {}); renderGate(); },
   'gate-dir': el => { DEV.dir = el.dataset.dir; renderGate(); },
   'gate-camera': () => DEV.camera ? stopCamera() : startCamera(),
@@ -3251,11 +3574,17 @@ Object.assign(actions, {
   'gate-out': () => { if (confirm('Sign this gate out?')) actions.signout(); }
 });
 Object.assign(inputs, {
+  'call-sel': el => { state.callSel[el.dataset.id] = el.checked; },
+  'call-filter': el => { state.callFilter = el.value; const box = $('#call-people'); if (box) { const t = document.createElement('div'); t.innerHTML = callPeople(); box.innerHTML = t.querySelector('#call-people').innerHTML; hydratePhotos(); } },
   'card-sel': el => { state.gateSel[el.dataset.id] = el.checked; },
   'cards-filter': el => { state.gateFilter = el.value; const box = $('#cards-table'); if (box) { const t = document.createElement('div'); t.innerHTML = gateCards(); box.innerHTML = t.querySelector('#cards-table').innerHTML; hydratePhotos(); } },
   'log-filter': el => { state.logFilter = el.value; renderView(); }
 });
 Object.assign(forms, {
+  'call-settings': async d => {
+    await q(hr.from('call_settings').upsert({ org_id: state.org.id, enabled: !!d.enabled, schedule_who: d.schedule_who || 'management', allow_staff_calls: !!d.allow_staff_calls, allow_staff_conferences: !!d.allow_staff_conferences, max_participants: Number(d.max_participants), ring_timeout_seconds: Number(d.ring_timeout_seconds) }, { onConflict:'org_id' }));
+    await loadCalls(); startCallLoop(); renderShell(); toast('Settings saved.');
+  },
   'gate-scan': async d => { const i = $('#gate-input'); if (i) i.value = ''; await submitScan(d.code); },
   'gate-settings': async d => {
     await q(hr.from('attendance_settings').upsert({ org_id: state.org.id, mode: d.mode || 'self', allow_qr: !!d.allow_qr, allow_rfid: !!d.allow_rfid, allow_biometric: !!d.allow_biometric, show_photo: !!d.show_photo, duplicate_window_seconds: Number(d.duplicate_window_seconds), session_max_hours: Number(d.session_max_hours) }, { onConflict:'org_id' }));
@@ -3348,7 +3677,7 @@ document.addEventListener('submit', async e => {
 function resetSession() {
   Object.assign(state, { user:null, memberships:[], org:null, role:null, me:null, employees:[], departments:[], positions:[], contracts:[], view:'dashboard', authMode:'signin', menuOpen:false });
   closeModal();
-  clearInterval(state.liveTimer); state.liveTimer = null; DEV.timers.forEach(clearInterval); DEV.timers = []; if (DEV.stream) { try { DEV.stream.getTracks().forEach(t => t.stop()); } catch {} } DEV.camera = false;
+  stopCallLoop(); hardStopCall(); clearInterval(state.liveTimer); state.liveTimer = null; DEV.timers.forEach(clearInterval); DEV.timers = []; if (DEV.stream) { try { DEV.stream.getTracks().forEach(t => t.stop()); } catch {} } DEV.camera = false;
 }
 function renderChooser() {
   $('#app').innerHTML = `<div class="center-screen"><div class="panel pad"><h2>Choose an organization</h2>${state.memberships.map(m => `<button class="btn" data-action="pick-org" data-id="${esc(m.org_id)}">${esc(m.org.name)}</button>`).join('')}</div></div>`;
@@ -3368,6 +3697,7 @@ async function enterOrg(orgId) {
   if (state.role === 'gate') { await enterGateDevice(); return; }
   renderLoading('Loading your workspace');
   try { await loadOrgData(); } catch (err) { renderFatal(err); return; }
+  startCallLoop();
   go(state.role === 'employee' ? 'home' : 'dashboard');
 }
 
@@ -3403,6 +3733,44 @@ sb.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_IN' && session && !booting && state.user?.id !== session.user.id) scheduleBoot();
 });
 boot();
+})();
+</script>
+
+<script>
+/* INSTALL AS AN APP: registers the offline helper and offers an "Install" button */
+(() => {
+  const KEY = 'hrms_install_dismissed'; let deferred = null;
+  const isIos = ua => /iphone|ipad|ipod/i.test(ua || navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const standalone = () => { try { return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch { return false; } };
+  const dismissed = () => { try { return localStorage.getItem(KEY) === '1'; } catch { return false; } };
+  const remove = () => { const p = document.getElementById('install-pill'); if (p) p.remove(); };
+  function show() {
+    if (standalone() || dismissed() || document.getElementById('install-pill')) return;
+    const el = document.createElement('div'); el.id = 'install-pill';
+    el.style.cssText = 'position:fixed;left:16px;bottom:16px;z-index:700;display:flex;align-items:center;gap:4px;background:#0E4142;color:#fff;border-radius:999px;box-shadow:0 8px 28px rgba(0,0,0,.28);padding:4px 6px 4px 4px;font:600 14px system-ui,sans-serif';
+    el.innerHTML = '<button id="install-go" style="border:0;background:#F0B429;color:#0E4142;border-radius:999px;padding:9px 16px;font:inherit;cursor:pointer">Install PeopleDesk</button><button id="install-x" aria-label="Hide" style="border:0;background:none;color:#fff;font-size:18px;padding:4px 10px;cursor:pointer">\u00d7</button>';
+    document.body.appendChild(el);
+    el.querySelector('#install-go').onclick = install;
+    el.querySelector('#install-x').onclick = () => { try { localStorage.setItem(KEY, '1'); } catch {} remove(); };
+  }
+  function help() {
+    if (document.getElementById('install-help')) return;
+    const m = document.createElement('div'); m.id = 'install-help'; m.setAttribute('role', 'dialog');
+    m.style.cssText = 'position:fixed;inset:0;z-index:950;background:rgba(0,0,0,.5);display:grid;place-items:center;padding:20px';
+    m.innerHTML = '<div style="background:#fff;color:#12302f;border-radius:16px;padding:22px;max-width:360px;font:15px/1.5 system-ui,sans-serif"><h3 style="margin:0 0 8px;font-size:18px">Install PeopleDesk</h3><ol style="padding-left:20px;margin:0 0 14px"><li>Tap the <b>Share</b> button in Safari.</li><li>Choose <b>Add to Home Screen</b>.</li><li>Tap <b>Add</b>.</li></ol><button id="install-close" style="border:0;background:#0E4142;color:#fff;border-radius:10px;padding:10px 18px;font:inherit;cursor:pointer">Got it</button></div>';
+    document.body.appendChild(m); m.querySelector('#install-close').onclick = () => m.remove();
+  }
+  async function install() {
+    if (deferred) { const d = deferred; deferred = null; remove(); try { await d.prompt(); await d.userChoice; } catch {} return; }
+    help();
+  }
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; show(); });
+  window.addEventListener('appinstalled', () => { deferred = null; remove(); });
+  window.hrmsInstall = install; window.hrmsInstallHelp = help; window.hrmsIsIos = isIos;
+  window.addEventListener('load', () => {
+    if (isIos() && !standalone()) setTimeout(show, 2500);
+    if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
 })();
 </script>
 </body>
