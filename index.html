@@ -200,6 +200,25 @@ textarea.copybox{width:100%;min-height:170px;padding:12px;border:1px solid #C9D3
 .clockcard .big{font-family:var(--font-display);font-size:28px;font-weight:700;line-height:1.15}
 .daypick{display:flex;gap:6px 22px;flex-wrap:wrap;margin-bottom:16px}
 .stack>*+*{margin-top:20px}
+.xbtn{border:0;background:none;color:var(--muted);cursor:pointer;font-size:15px;padding:0 2px;line-height:1}
+.xbtn:hover{color:var(--bad)}
+.gate{min-height:100vh;background:var(--spruce-deep);color:#fff;padding:20px;display:grid;gap:18px;align-content:start}
+.gate-top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.gate-org{font-family:var(--font-display);font-size:24px;font-weight:700}
+.muted-light{color:#9DBBB6;font-size:14px}
+.gate-clock{font-family:var(--font-display);font-size:clamp(34px,6vw,72px);font-weight:700;letter-spacing:.02em}
+.gbtn{border:1px solid #2E6465;background:transparent;color:#fff;padding:9px 16px;border-radius:10px;cursor:pointer;font-weight:600}
+.gbtn[aria-pressed=true]{background:var(--spruce-hi)}
+.gseg{border-color:#2E6465;background:transparent}.gseg button{background:transparent;color:#D5E4E1}.gseg button+button{border-color:#2E6465}.gseg button[aria-pressed=true]{background:var(--gold);color:var(--spruce-deep)}
+.gate-result{min-height:230px;border-radius:20px;display:grid;place-items:center;text-align:center;padding:26px;gap:14px;grid-auto-flow:column;grid-auto-columns:auto}
+.gate-result h2{font-size:clamp(26px,4vw,44px);color:#fff}.gate-result p{font-size:20px;margin-top:4px}
+.gate-result.idle{background:rgba(255,255,255,.07)}.gate-result.ok{background:#1E7A4C}.gate-result.dup{background:#8A5A00}.gate-result.bad{background:#A3392B}
+.gate-result img{width:150px;height:150px;border-radius:50%;object-fit:cover;border:4px solid #fff;background:#fff}
+.gate-dir{font-family:var(--font-display);font-size:clamp(34px,6vw,64px);font-weight:700;letter-spacing:.06em}
+.gate-input{font-size:28px;padding:16px 20px;border-radius:14px;border:0;width:100%;background:#fff;color:var(--ink)}
+.gate-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.gate-list li{display:grid;grid-template-columns:90px 1fr auto;gap:12px;padding:9px 14px;background:rgba(255,255,255,.06);border-radius:10px}
+.gate-panel h2{color:#fff;margin-bottom:10px}
 .notice{background:#FFF3D6;color:#7F5400;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:14px}
 .ann{padding:18px 20px;margin-bottom:14px}
 .ann.unread{border-left:4px solid var(--gold)}
@@ -320,6 +339,7 @@ const state = {
   authMode:'signin', pendingEmail:'', joined:0,
   rep:{ from:'', to:'', rows:null },
   loginMode:'email', lastCreds:null,
+  hasGate:false, gateError:null, attSettings:null, gates:[], creds:[], scans:[], myScans:[], onSite:[], gateTab:'live', gateSel:{}, gateFilter:'', logFilter:'all', photoCache:{}, liveTimer:null,
   hasCompany:false, companyError:null, announcements:[], reads:[], companyInfo:null, companyDocs:[], compTab:'about', directory:{ rows:[], loaded:false, loading:false, q:'', error:null }, lastBulkEmails:'',
   hasPerf:false, perfError:null, cycles:[], appraisals:[], mgrReviews:[], goals:[], perfTab:'mine',
   hasTrain:false, trainError:null, courses:[], trainRecords:[], trainTab:'mine',
@@ -382,6 +402,7 @@ const ICONS = {
   home:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
   megaphone:'<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
   globe:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+  scan:'<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/>',
   briefcase:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
   banknote:'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>',
   gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'
@@ -621,6 +642,7 @@ function navItems() {
     list.push(N('leave', 'Leave', 'calendar', 'Time', pending), N('attendance', 'Attendance', 'clock', 'Time'));
     if (!isEmp && p.hr) list.push(N('timesettings', 'Leave & work hours', 'sliders', 'Time'));
   }
+  if (!isEmp && p.hr && state.hasGate) list.push(N('gate', 'Gate and cards', 'scan', 'Time'));
   if (!isEmp && state.hasPayroll && canRunPayroll()) list.push(N('payroll', 'Payroll', 'banknote', 'Pay'), N('paysetup', 'Pay setup', 'sliders', 'Pay'));
   if (state.hasPerf && (state.me || p.hr)) list.push(N('performance', 'Performance', 'trending', 'Growth'));
   if (state.hasTrain && (state.me || p.hr)) list.push(N('training', 'Training', 'book', 'Growth'));
@@ -656,8 +678,9 @@ function renderView() {
     payroll:viewPayroll, payrun:viewRun, paysetup:viewPaySetup, payslips:viewMyPayslips,
     recruitment:viewRecruitment, interviews:viewMyInterviews,
     performance:viewPerformance, training:viewTraining, analytics:viewReports,
-    home:viewHome, announcements:viewAnnouncements, company:viewCompany };
+    home:viewHome, announcements:viewAnnouncements, company:viewCompany, gate:viewGate };
   v.innerHTML = (fns[state.view] || (() => ''))();
+  hydratePhotos();
 }
 function go(view, extra = {}) {
   state.view = view; Object.assign(state, extra); state.menuOpen = false;
@@ -701,6 +724,7 @@ async function loadOrgData() {
   await loadPerf();
   await loadTrain();
   await loadCompany();
+  await loadGate();
 }
 async function reloadEmployees() {
   state.employees = await q(hr.from('employees').select('*').eq('org_id', state.org.id).order('full_name'));
@@ -803,7 +827,7 @@ function viewDashboard() {
   if (newApps) attItems.unshift(`<li><button data-action="nav" data-view="recruitment"><span><span class="an">${newApps} new applicant${newApps === 1 ? '' : 's'} to review</span><br><span class="muted small">Open the recruitment pipeline</span></span>${chip('Review', 'warn')}</button></li>`);
   const attn = attItems.length ? `<ul class="attn">${attItems.join('')}</ul>` : `<p class="muted">Nothing needs attention right now.</p>`;
   const setupNote = (file, what) => `<div class="panel pad" style="margin-bottom:20px;border-color:#E8C56A;background:#FFF8E6"><b>${what} are in the app but not switched on yet.</b><p class="muted" style="margin-top:4px">Run <code>${file}</code> in the Supabase SQL Editor to add them.</p></div>`;
-  const banner = p.admin ? (state.timeError === 'missing' ? setupNote('hrms_phase2_leave_attendance.sql', 'Leave and attendance') : (state.payError === 'missing' ? setupNote('hrms_phase3_payroll.sql', 'Payroll and payslips') : (state.recruitError === 'missing' ? setupNote('hrms_phase4_recruitment.sql', 'Recruitment tools') : ((state.perfError === 'missing' || state.trainError === 'missing') ? setupNote('hrms_phase5_performance_training.sql', 'Performance and training tools') : (state.companyError === 'missing' ? setupNote('hrms_phase6_company_selfservice.sql', 'Announcements and the company hub') : ''))))) : '';
+  const banner = p.admin ? (state.timeError === 'missing' ? setupNote('hrms_phase2_leave_attendance.sql', 'Leave and attendance') : (state.payError === 'missing' ? setupNote('hrms_phase3_payroll.sql', 'Payroll and payslips') : (state.recruitError === 'missing' ? setupNote('hrms_phase4_recruitment.sql', 'Recruitment tools') : ((state.perfError === 'missing' || state.trainError === 'missing') ? setupNote('hrms_phase5_performance_training.sql', 'Performance and training tools') : (state.companyError === 'missing' ? setupNote('hrms_phase6_company_selfservice.sql', 'Announcements and the company hub') : (state.gateError === 'missing' ? setupNote('hrms_phase7_gate_attendance.sql', 'Gate attendance') : '')))))) : '';
 
   const o = state.org;
   const cap = o.max_employees;
@@ -1417,7 +1441,8 @@ function viewAttendance() {
   const acts = p.hr ? `<button class="btn" data-action="record-att">${icon('edit')} Record a day</button>` : '';
 
   let clock = '';
-  if (me) {
+  if (me && !selfClockOn()) clock = `<div class="panel clockcard"><div><div class="big">Attendance is recorded at the gate</div><div class="muted">Scan your card when you arrive and when you leave. Your record appears below.</div></div></div>`;
+  else if (me) {
     if (!a.loaded) clock = `<div class="panel clockcard">${loadBlock()}</div>`;
     else {
       const rec = a.mine.find(r => r.work_date === today);
@@ -1461,7 +1486,7 @@ function viewAttendance() {
         <button class="btn sm primary" type="submit">Show report</button></form>${body}</section>`;
   }
   const note = !me && !p.hr && !isMgr ? '<div class="panel empty"><h3>Your login is not linked to an employee record yet</h3><p>Ask HR to link it, then you can clock in here.</p></div>' : '';
-  return pageHead('Attendance', 'Clock in, and see who is in today', acts) + clock + `<div class="stack">${note}${mineHtml}${todayHtml}${reportHtml}</div>`;
+  return pageHead('Attendance', 'Clock in, and see who is in today', acts) + clock + `<div class="stack">${note}${mineHtml}${myScansHtml()}${todayHtml}${reportHtml}</div>`;
 }
 function recordForm() {
   const people = state.employees.filter(e => !EXITED.includes(e.status));
@@ -2448,7 +2473,8 @@ function viewHome() {
   const anns = state.hasCompany ? state.announcements.filter(a => annVisibleNow(a) && annForMe(a)).slice(0, 4) : [];
   const annPanel = state.hasCompany ? `<section><div class="row" style="justify-content:space-between;margin-bottom:10px"><h2>Announcements</h2><button class="btn sm ghost" data-action="nav" data-view="announcements">See all</button></div>${anns.length ? anns.map(a => annCard(a, false)).join('') : '<div class="panel empty"><p>No announcements right now.</p></div>'}</section>` : '';
   let clock = '';
-  if (state.hasTime && me && state.att.loaded) {
+  if (state.hasTime && me && !selfClockOn()) clock = `<section class="panel pad"><h3 style="margin-bottom:6px">Today</h3><p class="muted">Your attendance is recorded at the gate. Scan your card when you arrive and leave.</p></section>`;
+  else if (state.hasTime && me && state.att.loaded) {
     const rec = state.att.mine.find(r => r.work_date === orgToday());
     clock = `<section class="panel pad"><h3 style="margin-bottom:8px">Today</h3>${!rec ? `<p class="muted" style="margin-bottom:10px">You have not clocked in yet.</p><button class="btn primary" data-action="clock-in">${icon('clock')} Clock in</button>`
       : !rec.clock_out ? `<p style="margin-bottom:10px">In since <b>${esc(fmtTime(rec.clock_in))}</b>${rec.minutes_late > 0 ? `, ${rec.minutes_late} minutes late` : ''}</p><button class="btn primary" data-action="clock-out">${icon('clock')} Clock out</button>`
@@ -2666,6 +2692,312 @@ function printCreds() {
   const res = state.lastCreds; if (!res) return; const url = appUrl();
   const slips = res.results.filter(r => !r.error).map(r => `<div class="cred"><h3>${esc(res.org_name)}</h3><p><b>${esc(r.name)}</b></p><table><tbody><tr><td>Website</td><td>${esc(url)}</td></tr>${r.mode === 'email' ? `<tr><td>Email</td><td>${esc(r.login_id)}</td></tr>` : `<tr><td>Organization code</td><td><b>${esc(res.org_code)}</b></td></tr><tr><td>Staff ID</td><td><b>${esc(r.login_id)}</b></td></tr>`}<tr><td>Temporary password</td><td><b style="font-size:16px">${esc(r.password)}</b></td></tr></tbody></table><p class="muted">Sign in with these details. You will be asked to choose your own password. Keep it private.</p></div>`).join('');
   printHtmlDoc(`<style>.cred{border:1px dashed #888;padding:14px 18px;margin:0 0 16px;break-inside:avoid}.cred td{border:0;padding:3px 10px 3px 0}</style>${slips}`);
+}
+
+
+/* =====================================================================
+   GATE ATTENDANCE
+   ===================================================================== */
+const KIND_LABEL = { qr:'QR / barcode', rfid:'RFID card', biometric:'Fingerprint or face terminal' };
+const KIND_SHORT = { qr:'QR', rfid:'RFID', biometric:'Terminal' };
+const gateName = id => state.gates.find(g => g.id === id)?.name || '—';
+const selfClockOn = () => !state.hasGate || !state.attSettings || state.attSettings.mode !== 'gate';
+const maskCred = c => String(c).length > 6 ? String(c).slice(0, 2) + '…' + String(c).slice(-3) : String(c);
+const activeCreds = id => state.creds.filter(c => c.employee_id === id && c.is_active);
+const activeCard = id => state.creds.find(c => c.employee_id === id && c.is_active && c.kind === 'qr' && c.label === 'ID card');
+const callRpc = async (name, args) => { const { data, error } = await hr.rpc(name, args); if (error) throw error; return data; };
+const dirChip = d => d === 'in' ? chip('In', 'ok') : d === 'out' ? chip('Out', 'warn') : '';
+
+async function loadGate() {
+  const oid = state.org.id, p = perms();
+  Object.assign(state, { attSettings:null, gates:[], creds:[], scans:[], myScans:[], onSite:[] });
+  try {
+    state.attSettings = await q(hr.from('attendance_settings').select('*').eq('org_id', oid).maybeSingle());
+    if (p.hr) {
+      const [gates, creds, scans] = await Promise.all([
+        q(hr.from('gates').select('*').eq('org_id', oid).order('name')),
+        q(hr.from('attendance_credentials').select('*').eq('org_id', oid).order('created_at', { ascending:false }).limit(3000)),
+        q(hr.from('attendance_scans').select('*').eq('org_id', oid).order('scanned_at', { ascending:false }).limit(300))
+      ]);
+      Object.assign(state, { gates, creds, scans });
+      try { state.onSite = await callRpc('on_site_now', { p_org: oid }); } catch {}
+    } else if (state.me) {
+      state.myScans = await q(hr.from('attendance_scans').select('*').eq('employee_id', state.me.id).order('scanned_at', { ascending:false }).limit(30));
+    }
+    state.hasGate = true; state.gateError = null;
+  } catch (err) {
+    state.hasGate = false;
+    state.gateError = /PGRST205|42P01|schema cache|does not exist/i.test(`${err?.code} ${err?.message}`) ? 'missing' : friendly(err);
+  }
+}
+async function reloadGate() { await loadGate(); renderShell(); }
+
+/* ---------- photos ---------- */
+async function photoUrl(path) {
+  if (!path) return null;
+  const c = state.photoCache[path]; if (c && c.exp > Date.now()) return c.url;
+  const { data, error } = await sb.storage.from('hr-documents').createSignedUrl(path, 3600);
+  if (error || !data) return null;
+  state.photoCache[path] = { url: data.signedUrl, exp: Date.now() + 3000e3 }; return data.signedUrl;
+}
+async function hydratePhotos() { for (const img of document.querySelectorAll('img[data-photo]:not([data-ok])')) { img.dataset.ok = '1'; img.onerror = () => { img.style.display = 'none'; }; const u = await photoUrl(img.dataset.photo); if (u) img.src = u; } }
+const faceOrInitials = (e, size = 36) => e.photo_url ? `<img data-photo="${esc(e.photo_url)}" alt="" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;background:var(--sage)">` : avatar(e.full_name);
+async function resizeImage(file, max) {
+  try {
+    const bmp = await createImageBitmap(file), k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+    const c = document.createElement('canvas'); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k); c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    return await new Promise(res => c.toBlob(b => res(b || file), 'image/jpeg', 0.85));
+  } catch { return file; }
+}
+function photoForm(emp) {
+  openModal({ title: `Photo: ${emp.full_name}`, submitLabel: 'Save photo',
+    body: fld('Photo', '<input type="file" name="file" accept="image/*" required>', 'A clear, front-facing photo. The guard sees it when the card is scanned.'),
+    onSubmit: async d => {
+      if (!d.file) throw new Error('Choose a photo.'); if (d.file.size > 12 * 1024 * 1024) throw new Error('That photo is too large.');
+      const blob = await resizeImage(d.file, 480), path = `${state.org.id}/photos/${emp.id}.jpg`;
+      const up = await sb.storage.from('hr-documents').upload(path, blob, { contentType:'image/jpeg', upsert:true }); if (up.error) throw up.error;
+      await q(hr.from('employees').update({ photo_url: path }).eq('id', emp.id)); delete state.photoCache[path];
+      await reloadEmployees(); renderShell(); toast('Photo saved.');
+    } });
+}
+
+/* ---------- barcodes and QR for ID cards ---------- */
+const C39 = { '0':'nnnwwnwnn','1':'wnnwnnnnw','2':'nnwwnnnnw','3':'wnwwnnnnn','4':'nnnwwnnnw','5':'wnnwwnnnn','6':'nnwwwnnnn','7':'nnnwnnwnw','8':'wnnwnnwnn','9':'nnwwnnwnn',
+  A:'wnnnnwnnw',B:'nnwnnwnnw',C:'wnwnnwnnn',D:'nnnnwwnnw',E:'wnnnwwnnn',F:'nnwnwwnnn','*':'nwnnwnwnn' };
+function code39Svg(text) {
+  let x = 0, bars = ''; const N = 2, W = 5;
+  for (const ch of '*' + String(text).toUpperCase() + '*') { const p = C39[ch]; if (!p) continue; for (let i = 0; i < 9; i++) { const w = p[i] === 'w' ? W : N; if (i % 2 === 0) bars += `<rect x="${x}" y="0" width="${w}" height="50" fill="#000"/>`; x += w; } x += N; }
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${x} 50" preserveAspectRatio="none" style="width:100%;height:14mm">${bars}</svg>`;
+}
+function codeSvg(token) {
+  try { if (window.qrcode) { const qr = window.qrcode(0, 'M'); qr.addData('HRMS:' + token); qr.make(); return qr.createSvgTag({ cellSize: 3, margin: 0, scalable: true }); } } catch {}
+  return code39Svg(token);
+}
+async function printCards(ids) {
+  ids = ids.filter(Boolean); if (!ids.length) { toast('Select at least one person.', 'error'); return; }
+  const need = ids.filter(id => !activeCard(id));
+  if (need.length) { await callRpc('issue_cards', { p_employees: need }); await loadGate(); }
+  const cards = [];
+  for (const id of ids) {
+    const e = findEmp(id), c = activeCard(id); if (!e || !c) continue;
+    const ph = e.photo_url ? await photoUrl(e.photo_url) : null;
+    cards.push(`<div class="card"><div class="ph">${ph ? `<img src="${esc(ph)}" alt="">` : `<div class="ini">${esc(initials(e.full_name))}</div>`}</div>
+      <div><div class="org">${esc(state.org.name)}</div><div class="nm">${esc(e.full_name)}</div><div class="sub">${esc(posTitle(e.position_id) !== '—' ? posTitle(e.position_id) : '')}${e.employee_no ? ` · No. ${esc(e.employee_no)}` : ''}</div></div>
+      <div class="code" style="grid-column:1/3">${codeSvg(c.credential)}<div class="tok">${esc(c.credential)}</div></div></div>`);
+  }
+  printHtmlDoc(`<style>@page{size:A4;margin:10mm}body{max-width:none;padding:0}.sheet{display:grid;grid-template-columns:repeat(2,85.6mm);gap:6mm 8mm}.card{width:85.6mm;height:54mm;border:1px solid #888;border-radius:3mm;padding:3.5mm 4mm;display:grid;grid-template-columns:20mm 1fr;grid-template-rows:auto 1fr;gap:2mm 3mm;break-inside:avoid;overflow:hidden}.ph img,.ini{width:20mm;height:24mm;object-fit:cover;border-radius:2mm;background:#e5ecec;display:grid;place-items:center;font:700 20px system-ui}.org{font:600 9px system-ui;color:#0E4142;text-transform:none}.nm{font:700 14px/1.15 system-ui;margin-top:1mm}.sub{font:10px system-ui;color:#444;margin-top:.5mm}.code{text-align:center}.code svg{width:auto;max-width:100%;height:14mm}.tok{font:9px monospace;letter-spacing:1px;margin-top:.5mm}</style><div class="sheet">${cards.join('')}</div>`);
+}
+
+/* ---------- HR PAGE ---------- */
+function viewGate() {
+  const tabs = [['live', 'Live'], ['cards', 'People and cards'], ['devices', 'Gates and devices'], ['log', 'Scan log'], ['settings', 'Settings']];
+  const seg = `<div class="seg" role="tablist" style="margin-bottom:16px">${tabs.map(([k, l]) => `<button role="tab" data-action="gate-page-tab" data-tab="${k}" aria-pressed="${state.gateTab === k}">${l}</button>`).join('')}</div>`;
+  const s = state.attSettings, on = s && s.mode !== 'self';
+  const banner = !on ? `<div class="notice">Gate scanning is switched off. Turn it on under <b>Settings</b> when your gate is ready. Staff can keep clocking in from their own portal until then.</div>` : '';
+  const body = { live:gateLive, cards:gateCards, devices:gateDevices, log:gateLog, settings:gateSettings }[state.gateTab]();
+  if (state.gateTab === 'live') ensureLiveTimer();
+  return pageHead('Gate and cards', 'Gate scanning, ID cards and who is on site') + seg + banner + body;
+}
+function ensureLiveTimer() {
+  if (state.liveTimer) return;
+  state.liveTimer = setInterval(async () => {
+    if (state.view !== 'gate' || state.gateTab !== 'live') { clearInterval(state.liveTimer); state.liveTimer = null; return; }
+    await loadGate(); if (state.view === 'gate' && state.gateTab === 'live') renderView();
+  }, 20000);
+}
+function scanRows(list) {
+  return list.map(x => `<tr><td style="white-space:nowrap">${esc(fmtDate(x.scanned_at))} ${esc(fmtTime(x.scanned_at))}</td><td>${x.employee_name ? `<b>${esc(x.employee_name)}</b>` : '<span class="muted">Unknown card</span>'}</td><td>${dirChip(x.direction)}</td>
+    <td>${esc(x.method ? (KIND_SHORT[x.method] || 'Manual') : '—')}</td><td>${esc(x.gate_id ? gateName(x.gate_id) : '—')}</td>
+    <td>${x.status === 'accepted' ? chip('Accepted', 'ok') : x.status === 'duplicate' ? chip('Repeat', 'warn') : chip('Refused', 'bad')}${x.reason ? `<div class="muted small">${esc(x.reason)}</div>` : ''}</td></tr>`).join('');
+}
+function gateLive() {
+  const today = orgToday(), day = x => { try { return new Date(x.scanned_at).toLocaleDateString('en-CA', { timeZone: state.org.timezone }); } catch { return ''; } };
+  const t = state.scans.filter(x => day(x) === today), acc = t.filter(x => x.status === 'accepted');
+  const late = state.employees.filter(e => state.att.today.some(r => r.employee_id === e.id && r.minutes_late > 0)).length;
+  const on = state.onSite.map(r => `<tr><td><b>${esc(r.full_name)}</b></td><td>${nz(r.department_name)}</td><td>${esc(fmtTime(r.since))}</td></tr>`).join('');
+  return `<div class="panel stat-strip"><div class="stat"><b>${state.onSite.length}</b><span>On site now</span></div><div class="stat"><b>${acc.filter(x => x.direction === 'in').length}</b><span>Arrivals today</span></div><div class="stat"><b>${acc.filter(x => x.direction === 'out').length}</b><span>Departures today</span></div><div class="stat"><b>${t.filter(x => x.status === 'denied').length}</b><span>Refused scans today</span></div></div>
+    <div class="grid-main"><section class="panel"><div class="panel-head"><h3>Today's scans</h3><span class="muted small">Updates every 20 seconds</span></div>${t.length ? runTable('<th>Time</th><th>Person</th><th></th><th>Type</th><th>Gate</th><th>Result</th>', scanRows(t.slice(0, 60))) : '<div class="empty"><p>No scans yet today.</p></div>'}</section>
+    <section class="panel"><div class="panel-head"><h3>On site now</h3></div>${on ? runTable('<th>Person</th><th>Department</th><th>Since</th>', on) : '<div class="empty"><p>No one is on site.</p></div>'}</section></div>`;
+}
+function gateCards() {
+  const q0 = (state.gateFilter || '').toLowerCase(), people = state.employees.filter(e => !EXITED.includes(e.status) && (!q0 || e.full_name.toLowerCase().includes(q0)));
+  const rows = people.map(e => { const cs = activeCreds(e.id);
+    return `<tr><td><input type="checkbox" data-input="card-sel" data-id="${esc(e.id)}" aria-label="Select ${esc(e.full_name)}"${state.gateSel[e.id] ? ' checked' : ''}></td>
+      <td><div class="who">${faceOrInitials(e)}<div><b>${esc(e.full_name)}</b><div class="muted small">${esc(e.employee_no || '')}${e.department_id ? ` ${esc(deptName(e.department_id))}` : ''}</div></div></div></td>
+      <td>${cs.length ? cs.map(c => `<span class="chip neutral" title="${esc(KIND_LABEL[c.kind])}">${esc(KIND_SHORT[c.kind])} ${esc(maskCred(c.credential))} <button class="xbtn" data-action="revoke-cred" data-id="${esc(c.id)}" aria-label="Remove this card">×</button></span> `).join('') : '<span class="muted small">No card yet</span>'}</td>
+      <td class="right"><button class="btn sm" data-action="print-card" data-id="${esc(e.id)}">${activeCard(e.id) ? 'Print card' : 'Issue and print card'}</button> <button class="btn sm" data-action="add-cred" data-id="${esc(e.id)}">Add ID</button> <button class="btn sm" data-action="upload-photo" data-id="${esc(e.id)}">Photo</button></td></tr>`; }).join('');
+  return `<div class="panel"><div class="toolbar"><input class="search" type="search" placeholder="Search people" value="${esc(state.gateFilter || '')}" data-input="cards-filter" aria-label="Search people">
+    <button class="btn sm" data-action="print-cards-sel">Print cards for selected</button><button class="btn sm primary" data-action="print-cards-all">Print cards for everyone without one</button></div>
+    <div id="cards-table">${rows ? runTable('<th></th><th>Person</th><th>Cards and IDs</th><th></th>', rows) : '<div class="empty"><p>No one matches.</p></div>'}</div>
+    <div class="panel-body muted small">A QR or barcode card is made for each person. RFID tags and fingerprint or face terminal IDs are added with "Add ID". Removing a card stops it working at once.</div></div>`;
+}
+function gateDevices() {
+  const rows = state.gates.map(g => `<tr><td><b>${esc(g.name)}</b>${g.location ? `<div class="muted small">${esc(g.location)}</div>` : ''}</td><td>${g.is_active ? chip('Active', 'ok') : chip('Off')}</td>
+    <td>${g.device_user_id ? chip('Login created', 'ok') : chip('No login yet', 'warn')}</td><td>${g.last_seen_at ? esc(fmtDate(g.last_seen_at)) + ' ' + esc(fmtTime(g.last_seen_at)) : '—'}</td>
+    <td class="right"><button class="btn sm" data-action="${g.device_user_id ? 'gate-login-reset' : 'gate-login'}" data-id="${esc(g.id)}">${g.device_user_id ? 'Reset password' : 'Create gate login'}</button> <button class="btn sm" data-action="gate-token" data-id="${esc(g.id)}">Terminal key</button>
+    <button class="icon-btn" data-action="edit-gate" data-id="${esc(g.id)}" aria-label="Edit gate">${icon('edit', 16)}</button><button class="icon-btn danger" data-action="delete-gate" data-id="${esc(g.id)}" aria-label="Delete gate">${icon('trash', 16)}</button></td></tr>`).join('');
+  return `<section class="panel"><div class="panel-head"><h3>Gates</h3><div class="row"><button class="btn sm" data-action="import-log">${icon('download', 16)} Import a terminal log</button><button class="btn sm primary" data-action="add-gate">${icon('plus', 16)} Add gate</button></div></div>
+    ${rows ? runTable('<th>Gate</th><th>Status</th><th>Device login</th><th>Last scan</th><th></th>', rows) : '<div class="empty"><h3>No gates yet</h3><p>Add each entrance where you scan, for example "Main gate".</p></div>'}</section>
+    <section class="panel pad" style="margin-top:20px"><h3 style="margin-bottom:8px">Setting up a gate</h3><ol class="help" style="padding-left:20px;line-height:1.7"><li>Add the gate, then select <b>Create gate login</b> and print or note the details.</li>
+    <li>On the gate computer or tablet, open this website and sign in with the <b>Staff ID</b> option using those details. The screen becomes the scanning screen.</li>
+    <li>Plug in a USB barcode or RFID reader (it works like a keyboard), or use the camera on a tablet.</li>
+    <li>For a fingerprint or face terminal: use <b>Terminal key</b> if it can send scans to a web address, or export its log and use <b>Import a terminal log</b>.</li></ol></section>`;
+}
+function gateLog() {
+  const f = state.logFilter || 'all', list = state.scans.filter(x => f === 'all' || x.status === f);
+  return `<div class="panel"><div class="toolbar"><select data-input="log-filter" aria-label="Filter scans">${opts({ all:'All scans', accepted:'Accepted', duplicate:'Repeats', denied:'Refused' }, f)}</select>
+    <button class="btn sm" data-action="add-correction">${icon('edit', 16)} Add a correction</button><button class="btn sm" data-action="export-scans">${icon('download', 16)} Export CSV</button></div>
+    ${list.length ? runTable('<th>Time</th><th>Person</th><th></th><th>Type</th><th>Gate</th><th>Result</th>', scanRows(list)) : '<div class="empty"><p>No scans to show.</p></div>'}
+    <div class="panel-body muted small">Every scan is kept exactly as it happened. Corrections are added as new entries with a reason, never by changing an old one. The latest 300 scans are shown.</div></div>`;
+}
+function gateSettings() {
+  const s = state.attSettings || { mode:'self', allow_qr:true, allow_rfid:true, allow_biometric:false, show_photo:true, duplicate_window_seconds:60, session_max_hours:16 };
+  const radio = (v, t, d) => `<label class="check" style="align-items:flex-start"><input type="radio" name="mode" value="${v}"${s.mode === v ? ' checked' : ''}><span><b>${t}</b><br><span class="muted small">${d}</span></span></label>`;
+  return `<section class="panel pad"><form data-form="gate-settings"><div class="form-error" role="alert" hidden></div>
+    <h3 style="margin-bottom:10px">How attendance is recorded</h3>${radio('self', 'Staff clock in on their own portal', 'The gate is off.')}${radio('gate', 'At the gate only', 'The clock buttons disappear from the staff portal.')}${radio('both', 'Both', 'Staff can scan at the gate or clock in on the portal.')}
+    <h3 style="margin:22px 0 10px">Ways of identifying staff</h3>
+    <label class="check"><input type="checkbox" name="allow_qr"${s.allow_qr ? ' checked' : ''}><span>QR codes and barcodes (printed ID cards)</span></label>
+    <label class="check"><input type="checkbox" name="allow_rfid"${s.allow_rfid ? ' checked' : ''}><span>RFID tap cards</span></label>
+    <label class="check"><input type="checkbox" name="allow_biometric"${s.allow_biometric ? ' checked' : ''}><span>Fingerprint and face terminals</span></label>
+    <h3 style="margin:22px 0 10px">At the gate</h3>
+    <label class="check"><input type="checkbox" name="show_photo"${s.show_photo ? ' checked' : ''}><span>Show the person's photo so the guard can check it is really them</span></label>
+    <div class="grid2">${fld('Ignore a repeat scan within (seconds)', inp('duplicate_window_seconds', { type:'number', value:s.duplicate_window_seconds, required:true, extra:'min="0" max="3600"' }), 'The same card twice in a moment counts once.')}${fld('Longest shift (hours)', inp('session_max_hours', { type:'number', value:s.session_max_hours, required:true, extra:'min="1" max="48"' }), 'A scan this long after arriving still counts as leaving, so night shifts work.')}</div>
+    <button class="btn primary" type="submit">Save settings</button></form></section>`;
+}
+
+/* ---------- HR forms ---------- */
+function gateForm(g) {
+  const editing = !!g; g = g || {};
+  openModal({ title: editing ? 'Edit gate' : 'Add gate', body: `${fld('Name', inp('name', { value:g.name, required:true, placeholder:'e.g. Main gate' }))}${fld('Location', inp('location', { value:g.location }))}<label class="check"><input type="checkbox" name="is_active"${g.is_active === false ? '' : ' checked'}><span>Active</span></label>`,
+    onSubmit: async d => { const payload = { name:d.name, location:d.location, is_active:d.is_active };
+      if (editing) await q(hr.from('gates').update(payload).eq('id', g.id)); else await q(hr.from('gates').insert({ ...payload, org_id: state.org.id }));
+      await reloadGate(); toast('Gate saved.'); } });
+}
+function credForm(emp) {
+  openModal({ title: `Add an ID for ${emp.full_name}`, submitLabel: 'Add',
+    body: `${fld('Type', sel('kind', opts(KIND_LABEL, 'rfid'), { required:true }))}${fld('Card number or ID', inp('credential', { required:true }), 'Tap the card on a USB reader or scan the barcode while this box is selected. For a terminal, enter the person\'s user ID as enrolled on the terminal.')}${fld('Label', inp('label', { placeholder:'Optional, e.g. Blue tag' }))}`,
+    onSubmit: async d => { await callRpc('assign_credential', { p_employee: emp.id, p_kind:d.kind, p_credential:d.credential, p_label:d.label }); await reloadGate(); toast('ID added.'); } });
+}
+function correctionForm() {
+  const people = state.employees.filter(e => !EXITED.includes(e.status));
+  openModal({ title: 'Add a correction', submitLabel: 'Save correction',
+    body: `<p class="muted" style="margin-bottom:12px">Use this when someone forgot to scan. It is added to the log with your reason.</p>${fld('Person', sel('employee_id', listOpts(people, 'id', 'full_name', null), { required:true }))}
+      <div class="grid2">${fld('Date and time', inp('when', { type:'datetime-local', value:toLocalInput(new Date().toISOString()), required:true }))}${fld('Direction', sel('direction', opts({ in:'Arrived', out:'Left' }, 'in'), { required:true }))}</div>${fld('Reason', inp('reason', { required:true, placeholder:'e.g. Card was lost, guard let them in' }))}`,
+    onSubmit: async d => { await callRpc('add_manual_scan', { p_employee:d.employee_id, p_at:new Date(d.when).toISOString(), p_direction:d.direction, p_reason:d.reason }); await reloadGate(); toast('Correction added.'); } });
+}
+function parseTerminalCsv(text) {
+  const rows = [];
+  String(text).split(/\r?\n/).forEach(line => {
+    const p = line.split(/[;,\t]/).map(x => x.trim().replace(/^"|"$/g, '')); if (p.length < 2) return;
+    const [cred, ts, dir] = p; if (/^(id|user|credential|employee|no)/i.test(cred)) return;
+    const d = new Date(String(ts).replace(' ', 'T')); if (isNaN(d)) return;
+    rows.push({ credential: cred, at: d.toISOString(), direction: /^(in|out)$/i.test(dir || '') ? dir.toLowerCase() : null });
+  });
+  return rows;
+}
+function importForm() {
+  openModal({ title: 'Import a terminal log', submitLabel: 'Import',
+    body: `<p class="muted" style="margin-bottom:12px">Upload the log exported from your fingerprint or face terminal. Each line needs the person's terminal ID and the time, for example <code>1042,2026-09-21 07:58:00</code>. A third column with "in" or "out" is optional. Times are read in this computer's time zone. Fingerprint and face terminals must be switched on in Settings.</p>
+      ${fld('Gate', sel('gate_id', listOpts(state.gates, 'id', 'name', null, 'No particular gate')))}${fld('Log file (CSV or text)', '<input type="file" name="file" accept=".csv,.txt,text/csv,text/plain" required>')}`,
+    onSubmit: async d => {
+      if (!d.file) throw new Error('Choose a file.');
+      const rows = parseTerminalCsv(await d.file.text()); if (!rows.length) throw new Error('No usable lines were found. Each line needs an ID and a time.');
+      const res = await callRpc('import_scans', { p_org: state.org.id, p_gate: d.gate_id, p_rows: rows });
+      await reloadGate(); toast(`Imported ${res.rows} lines: ${res.accepted} recorded, ${res.duplicates} repeats, ${res.denied} not recognised or refused.`);
+    } });
+}
+function tokenModal(token) {
+  const url = `${CONFIG.SUPABASE_URL}/functions/v1/hrms-gate-scan`;
+  openModal({ title: 'Terminal key', hideFooter:true, body: `<div class="notice">This key is shown only once. Anyone with it can send scans for this gate. Creating a new key stops the old one working.</div>
+    <label class="fld"><span>Key</span><textarea class="copybox" style="min-height:60px" readonly id="invite-text">${esc(token)}</textarea></label>
+    <p class="help" style="margin-bottom:6px">Send each scan to this address as a POST request with a JSON body:</p><textarea class="copybox" style="min-height:120px" readonly>${esc(`${url}\n\n{ "token": "${token}", "credential": "<terminal user id>", "direction": "in" }`)}</textarea>
+    <div class="row" style="margin-top:12px;justify-content:flex-end"><button type="button" class="btn" data-action="copy-text">${icon('copy', 16)} Copy key</button><button type="button" class="btn primary" data-action="close-modal">Done</button></div>` });
+}
+
+/* ---------- THE GATE DEVICE (a "gate" login sees only this) ---------- */
+const DEV = { cfg:null, recent:[], onsite:[], tab:'scan', dir:'auto', camera:false, sound:true, queue:[], timers:[], stream:null, resultTimer:null };
+const qKey = () => 'hrms_gate_queue_' + state.org.id;
+const loadQueue = () => { try { return JSON.parse(localStorage.getItem(qKey()) || '[]'); } catch { return []; } };
+const saveQueue = () => { try { localStorage.setItem(qKey(), JSON.stringify(DEV.queue)); } catch {} };
+function beep(ok) { if (!DEV.sound) return; try { const C = window.AudioContext || window.webkitAudioContext, a = DEV.audio = DEV.audio || new C(), o = a.createOscillator(), g = a.createGain(); o.frequency.value = ok ? 880 : 220; g.gain.value = 0.08; o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime + (ok ? 0.12 : 0.35)); } catch {} }
+async function enterGateDevice() {
+  renderLoading('Starting the gate');
+  try { DEV.cfg = await callRpc('gate_config', { p_org: state.org.id }); } catch (err) { renderFatal(err); return; }
+  DEV.queue = loadQueue(); DEV.tab = 'scan';
+  await refreshRecent(); renderGate();
+  DEV.timers.forEach(clearInterval);
+  DEV.timers = [setInterval(tickClock, 1000), setInterval(flushQueue, 15000), setInterval(() => { if (document.activeElement === document.body) focusScan(); }, 1500)];
+  window.addEventListener('online', flushQueue);
+}
+async function refreshRecent() { try { DEV.recent = await callRpc('gate_recent_scans', { p_org: state.org.id, p_limit: 8 }); } catch {} }
+function paintQueue() { const q1 = $('#gate-queue'); if (q1) q1.textContent = DEV.queue.length ? ` · ${DEV.queue.length} waiting to send` : ''; }
+function focusScan() { const i = $('#gate-input'); if (i && !DEV.camera) i.focus(); }
+function tickClock() { const c = $('#gate-clock'); if (c) c.textContent = new Date().toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit', second:'2-digit', timeZone: state.org.timezone }); }
+function recentHtml() {
+  return DEV.recent.length ? DEV.recent.map(r => `<li><span>${esc(fmtTime(r.at))}</span><b>${esc(r.employee_name || 'Unknown card')}</b><span>${r.status === 'accepted' ? (r.direction === 'in' ? 'In' : 'Out') : r.status === 'duplicate' ? 'Repeat' : 'Refused'}</span></li>`).join('') : '<li class="muted-light">No scans yet.</li>';
+}
+function renderGate() {
+  const c = DEV.cfg, on = c.mode !== 'self', queued = DEV.queue.length;
+  const scan = !on ? `<div class="gate-result idle"><div><h2>Gate scanning is switched off</h2><p>Ask HR to turn it on in Gate and cards, Settings.</p></div></div>` : `
+    <div class="gate-result idle" id="gate-result" aria-live="polite"><div><h2>Ready</h2><p>Scan a card, tap a tag, or type a code.</p></div></div>
+    <form data-form="gate-scan"><input id="gate-input" class="gate-input" name="code" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Scan or type a code, then press Enter"></form>
+    <div class="row"><span class="muted-light">Direction</span><div class="seg gseg"><button type="button" data-action="gate-dir" data-dir="auto" aria-pressed="${DEV.dir === 'auto'}">Automatic</button><button type="button" data-action="gate-dir" data-dir="in" aria-pressed="${DEV.dir === 'in'}">In</button><button type="button" data-action="gate-dir" data-dir="out" aria-pressed="${DEV.dir === 'out'}">Out</button></div>
+      <button class="gbtn" data-action="gate-camera">${DEV.camera ? 'Stop camera' : 'Use camera'}</button><button class="gbtn" data-action="gate-sound">${DEV.sound ? 'Sound on' : 'Sound off'}</button></div>
+    ${DEV.camera ? '<video id="gate-video" autoplay playsinline muted style="width:100%;max-width:420px;border-radius:12px"></video>' : ''}
+    <ul class="gate-list" id="gate-recent">${recentHtml()}</ul>`;
+  const onsite = `<div class="gate-panel"><h2>On site now (${DEV.onsite.length})</h2><ul class="gate-list">${DEV.onsite.map(r => `<li><span>${esc(fmtTime(r.since))}</span><b>${esc(r.full_name)}</b><span>${esc(r.department_name || '')}</span></li>`).join('') || '<li class="muted-light">No one is on site.</li>'}</ul></div>`;
+  $('#app').innerHTML = `<div class="gate"><header class="gate-top"><div><div class="gate-org">${esc(c.org_name)}</div><div class="muted-light">${esc(c.gate_name || 'Gate')}<span id="gate-queue">${queued ? ` · ${queued} waiting to send` : ''}</span></div></div><div class="gate-clock" id="gate-clock"></div>
+    <div class="row"><button class="gbtn" data-action="gate-tab" data-tab="scan" aria-pressed="${DEV.tab === 'scan'}">Scan</button><button class="gbtn" data-action="gate-tab" data-tab="onsite" aria-pressed="${DEV.tab === 'onsite'}">On site now</button><button class="gbtn" data-action="gate-out">Sign out</button></div></header>
+    ${DEV.tab === 'scan' ? scan : onsite}</div>`;
+  tickClock(); focusScan();
+}
+async function showResult(res) {
+  const box = $('#gate-result'); if (!box) return;
+  const ok = res.status === 'accepted', dup = res.status === 'duplicate', queued = res.status === 'queued';
+  const cls = ok ? 'ok' : dup || queued ? 'dup' : 'bad';
+  const dir = res.direction === 'in' ? 'IN' : res.direction === 'out' ? 'OUT' : '';
+  const when = res.at ? fmtTime(res.at) : '';
+  box.className = 'gate-result ' + cls;
+  box.innerHTML = ok || dup ? `${DEV.cfg.show_photo ? `<img data-photo="${esc(res.photo || '')}" alt="" style="${res.photo ? '' : 'display:none'}">` : ''}<div><div class="gate-dir">${ok ? dir : 'ALREADY SCANNED'}</div><h2>${esc(res.employee_name || '')}</h2><p>${esc(res.department || '')}</p><p>${ok ? `${esc(when)}${res.direction === 'in' && res.minutes_late > 0 ? `, ${res.minutes_late} minutes late` : res.direction === 'in' ? ', on time' : ''}` : esc(res.message || '')}</p></div>`
+    : `<div><div class="gate-dir">${queued ? 'SAVED' : 'REFUSED'}</div><h2>${esc(res.message || 'Not recognised')}</h2>${res.employee_name ? `<p>${esc(res.employee_name)}</p>` : ''}</div>`;
+  beep(ok); if (ok || dup) hydratePhotos();
+  clearTimeout(DEV.resultTimer); DEV.resultTimer = setTimeout(() => { const b = $('#gate-result'); if (b) { b.className = 'gate-result idle'; b.innerHTML = '<div><h2>Ready</h2><p>Scan a card, tap a tag, or type a code.</p></div>'; } }, 7000);
+}
+async function submitScan(raw) {
+  const code = String(raw || '').trim().replace(/^HRMS:/i, ''); if (code.length < 3) return;
+  const dir = DEV.dir === 'auto' ? null : DEV.dir;
+  try {
+    const { data, error } = await hr.rpc('record_scan', { p_org: state.org.id, p_gate: DEV.cfg.gate_id, p_credential: code, p_direction: dir, p_scanned_at: null });
+    if (error) { if (!error.code && /fetch|network|failed/i.test(error.message || '')) throw new TypeError('offline'); showResult({ status:'denied', message: friendly(error) }); return; }
+    await showResult(data); await refreshRecent(); const r = $('#gate-recent'); if (r) r.innerHTML = recentHtml();
+  } catch { DEV.queue.push({ code, dir, at: new Date().toISOString() }); saveQueue(); paintQueue(); showResult({ status:'queued', message:'No connection. Saved on this device and will be sent automatically.' }); }
+  focusScan();
+}
+async function flushQueue() {
+  if (!DEV.queue.length || !DEV.cfg) return;
+  while (DEV.queue.length) {
+    const it = DEV.queue[0];
+    try { const { error } = await hr.rpc('record_scan', { p_org: state.org.id, p_gate: DEV.cfg.gate_id, p_credential: it.code, p_direction: it.dir, p_scanned_at: it.at }); if (error && !error.code && /fetch|network|failed/i.test(error.message || '')) return; }
+    catch { return; }
+    DEV.queue.shift(); saveQueue(); paintQueue();
+  }
+  if (state.view !== 'x' && DEV.tab === 'scan') { await refreshRecent(); const r = $('#gate-recent'); if (r) r.innerHTML = recentHtml(); }
+}
+async function startCamera() {
+  if (!('BarcodeDetector' in window)) { toast('This browser cannot read codes with the camera. Use a USB scanner or type the code.', 'error'); return; }
+  try {
+    DEV.camera = true; renderGate();
+    const v = $('#gate-video'); DEV.stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' } }); v.srcObject = DEV.stream;
+    const det = new window.BarcodeDetector({ formats:['qr_code', 'code_39', 'code_128', 'ean_13'] }); let last = '', lastAt = 0;
+    const loop = async () => { if (!DEV.camera) return; try { const found = await det.detect(v); const f = found[0]; if (f && (f.rawValue !== last || Date.now() - lastAt > 3000)) { last = f.rawValue; lastAt = Date.now(); submitScan(f.rawValue); } } catch {} setTimeout(loop, 400); };
+    loop();
+  } catch { stopCamera(); toast('The camera could not be started.', 'error'); }
+}
+function stopCamera() { DEV.camera = false; if (DEV.stream) DEV.stream.getTracks().forEach(t => t.stop()); DEV.stream = null; renderGate(); }
+
+function myScansHtml() {
+  if (!state.hasGate || !state.me || !state.myScans.length || (state.attSettings && state.attSettings.mode === 'self')) return '';
+  return `<section class="panel"><div class="panel-head"><h3>My gate scans</h3></div>${runTable('<th>Time</th><th></th><th>Result</th>', state.myScans.slice(0, 14).map(x => `<tr><td>${esc(fmtDate(x.scanned_at))} ${esc(fmtTime(x.scanned_at))}</td><td>${dirChip(x.direction)}</td><td>${x.status === 'accepted' ? chip('Recorded', 'ok') : x.status === 'duplicate' ? chip('Repeat', 'warn') : chip('Refused', 'bad')}</td></tr>`).join(''))}</section>`;
 }
 
 
@@ -2896,6 +3228,41 @@ Object.assign(inputs, {
 
 const appById2 = id => state.appraisals.find(a => a.id === id);
 Object.assign(actions, {
+  'gate-page-tab': el => { state.gateTab = el.dataset.tab; renderView(); },
+  'add-gate': () => gateForm(),
+  'edit-gate': el => gateForm(state.gates.find(g => g.id === el.dataset.id)),
+  'delete-gate': el => { if (confirm('Delete this gate? Its past scans are kept.')) act(async () => { await q(hr.from('gates').delete().eq('id', el.dataset.id)); await reloadGate(); }, 'Gate deleted.'); },
+  'gate-login': el => act(async () => { const res = await callLogins({ action:'gate_create', org_id: state.org.id, gate_id: el.dataset.id }); await loadGate(); renderShell(); showCredentials(res); }),
+  'gate-login-reset': el => { if (confirm("Reset this gate's password? The gate needs the new one to sign in.")) act(async () => { const res = await callLogins({ action:'gate_reset', org_id: state.org.id, gate_id: el.dataset.id }); showCredentials(res); }); },
+  'gate-token': el => { if (confirm('Create a new terminal key for this gate? A previous key stops working.')) act(async () => { tokenModal(await callRpc('rotate_device_token', { p_gate: el.dataset.id })); }); },
+  'import-log': () => importForm(),
+  'add-correction': () => correctionForm(),
+  'export-scans': () => downloadCsv(`scans-${TODAY()}.csv`, ['Time','Person','Direction','Type','Gate','Result','Reason'], state.scans.map(x => [x.scanned_at, x.employee_name || 'Unknown card', x.direction || '', x.method || '', x.gate_id ? gateName(x.gate_id) : '', x.status, x.reason || ''])),
+  'print-card': el => act(() => printCards([el.dataset.id])),
+  'print-cards-sel': () => act(() => printCards(Object.keys(state.gateSel).filter(k => state.gateSel[k]))),
+  'print-cards-all': () => act(() => printCards(state.employees.filter(e => !EXITED.includes(e.status) && !activeCard(e.id)).map(e => e.id))),
+  'add-cred': el => credForm(findEmp(el.dataset.id)),
+  'revoke-cred': el => { if (confirm('Remove this card? It stops working immediately.')) act(async () => { await callRpc('revoke_credential', { p_id: el.dataset.id }); await reloadGate(); }, 'Card removed.'); },
+  'upload-photo': el => photoForm(findEmp(el.dataset.id)),
+  'gate-tab': el => { DEV.tab = el.dataset.tab; if (DEV.camera) stopCamera(); if (DEV.tab === 'onsite') callRpc('on_site_now', { p_org: state.org.id }).then(r => { DEV.onsite = r; renderGate(); }).catch(() => {}); renderGate(); },
+  'gate-dir': el => { DEV.dir = el.dataset.dir; renderGate(); },
+  'gate-camera': () => DEV.camera ? stopCamera() : startCamera(),
+  'gate-sound': () => { DEV.sound = !DEV.sound; renderGate(); },
+  'gate-out': () => { if (confirm('Sign this gate out?')) actions.signout(); }
+});
+Object.assign(inputs, {
+  'card-sel': el => { state.gateSel[el.dataset.id] = el.checked; },
+  'cards-filter': el => { state.gateFilter = el.value; const box = $('#cards-table'); if (box) { const t = document.createElement('div'); t.innerHTML = gateCards(); box.innerHTML = t.querySelector('#cards-table').innerHTML; hydratePhotos(); } },
+  'log-filter': el => { state.logFilter = el.value; renderView(); }
+});
+Object.assign(forms, {
+  'gate-scan': async d => { const i = $('#gate-input'); if (i) i.value = ''; await submitScan(d.code); },
+  'gate-settings': async d => {
+    await q(hr.from('attendance_settings').upsert({ org_id: state.org.id, mode: d.mode || 'self', allow_qr: !!d.allow_qr, allow_rfid: !!d.allow_rfid, allow_biometric: !!d.allow_biometric, show_photo: !!d.show_photo, duplicate_window_seconds: Number(d.duplicate_window_seconds), session_max_hours: Number(d.session_max_hours) }, { onConflict:'org_id' }));
+    await reloadGate(); toast('Settings saved.');
+  }
+});
+Object.assign(actions, {
   'login-mode': el => { state.loginMode = el.dataset.mode; renderAuth(); },
   'create-logins': () => loginsForm(state.employees.filter(e => !e.user_id && !EXITED.includes(e.status))),
   'create-login': el => loginsForm([findEmp(el.dataset.id)]),
@@ -2981,6 +3348,7 @@ document.addEventListener('submit', async e => {
 function resetSession() {
   Object.assign(state, { user:null, memberships:[], org:null, role:null, me:null, employees:[], departments:[], positions:[], contracts:[], view:'dashboard', authMode:'signin', menuOpen:false });
   closeModal();
+  clearInterval(state.liveTimer); state.liveTimer = null; DEV.timers.forEach(clearInterval); DEV.timers = []; if (DEV.stream) { try { DEV.stream.getTracks().forEach(t => t.stop()); } catch {} } DEV.camera = false;
 }
 function renderChooser() {
   $('#app').innerHTML = `<div class="center-screen"><div class="panel pad"><h2>Choose an organization</h2>${state.memberships.map(m => `<button class="btn" data-action="pick-org" data-id="${esc(m.org_id)}">${esc(m.org.name)}</button>`).join('')}</div></div>`;
@@ -2997,6 +3365,7 @@ async function enterOrg(orgId) {
   state.leave = { balances:[], loaded:false, loading:false, error:null }; state.att = freshAtt(); state.leaveFilter = 'upcoming';
   state.run = { id:null, slips:[], loaded:false, error:null }; state.calcResult = null; state.runId = null; state.perfTab = 'mine'; state.trainTab = 'mine'; state.compTab = 'about'; state.directory = { rows:[], loaded:false, loading:false, q:'', error:null }; state.rep = { from: TODAY().slice(0, 8) + '01', to: TODAY(), rows: null };
   if (!orgUsable(state.org)) { renderLocked(); return; }
+  if (state.role === 'gate') { await enterGateDevice(); return; }
   renderLoading('Loading your workspace');
   try { await loadOrgData(); } catch (err) { renderFatal(err); return; }
   go(state.role === 'employee' ? 'home' : 'dashboard');
