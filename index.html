@@ -229,6 +229,7 @@ textarea.copybox{width:100%;min-height:170px;padding:12px;border:1px solid #C9D3
 .cbtn{border:1px solid #2E6465;background:#123A3B;color:#fff;padding:11px 18px;border-radius:12px;cursor:pointer;font-weight:600}
 .cbtn.off{background:#5B2A22;border-color:#8A3B2E}.cbtn.leave{background:#B3382A;border-color:#B3382A}.cbtn:disabled{opacity:.4;cursor:not-allowed}
 .meet{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:12px}
+.checklist{list-style:none;margin:0;padding:0;display:grid;gap:10px}.chk{padding:10px 12px;border-radius:10px;background:var(--sage);line-height:1.5}.chk.ok{border-left:4px solid #1E7A4C}.chk.warn{border-left:4px solid #E0A400;background:#FFF8E6}
 .xbtn{border:0;background:none;color:var(--muted);cursor:pointer;font-size:15px;padding:0 2px;line-height:1}
 .xbtn:hover{color:var(--bad)}
 .gate{min-height:100vh;background:var(--spruce-deep);color:#fff;padding:20px;display:grid;gap:18px;align-content:start}
@@ -368,6 +369,7 @@ const state = {
   authMode:'signin', pendingEmail:'', joined:0,
   rep:{ from:'', to:'', rows:null },
   loginMode:'email', lastCreds:null,
+  hasAdvances:false, advances:[], advRepay:[], payContracts:null,
   hasCalls:false, callsError:null, callSettings:null, callDir:[], callHist:[], meetings:[], canSchedule:false, callTab:'meetings', callSel:{}, callFilter:'',
   hasGate:false, gateError:null, attSettings:null, gates:[], creds:[], scans:[], myScans:[], onSite:[], gateTab:'live', gateSel:{}, gateFilter:'', logFilter:'all', photoCache:{}, liveTimer:null,
   hasCompany:false, companyError:null, announcements:[], reads:[], companyInfo:null, companyDocs:[], compTab:'about', directory:{ rows:[], loaded:false, loading:false, q:'', error:null }, lastBulkEmails:'',
@@ -674,6 +676,7 @@ function navItems() {
     list.push(N('leave', 'Leave', 'calendar', 'Time', pending), N('attendance', 'Attendance', 'clock', 'Time'));
     if (!isEmp && p.hr) list.push(N('timesettings', 'Leave & work hours', 'sliders', 'Time'));
   }
+  if (!isEmp && state.hasPayroll && canRunPayroll() && state.hasAdvances) list.push(N('advances', 'Advances and loans', 'banknote', 'Pay'));
   if (!isEmp && p.hr && state.hasGate) list.push(N('gate', 'Gate and cards', 'scan', 'Time'));
   if (!isEmp && state.hasPayroll && canRunPayroll()) list.push(N('payroll', 'Payroll', 'banknote', 'Pay'), N('paysetup', 'Pay setup', 'sliders', 'Pay'));
   if (state.hasPerf && (state.me || p.hr)) list.push(N('performance', 'Performance', 'trending', 'Growth'));
@@ -710,7 +713,7 @@ function renderView() {
     payroll:viewPayroll, payrun:viewRun, paysetup:viewPaySetup, payslips:viewMyPayslips,
     recruitment:viewRecruitment, interviews:viewMyInterviews,
     performance:viewPerformance, training:viewTraining, analytics:viewReports,
-    home:viewHome, announcements:viewAnnouncements, company:viewCompany, gate:viewGate, meetings:viewMeetings };
+    home:viewHome, announcements:viewAnnouncements, company:viewCompany, gate:viewGate, meetings:viewMeetings, advances:viewAdvances };
   v.innerHTML = (fns[state.view] || (() => ''))();
   hydratePhotos();
 }
@@ -980,7 +983,7 @@ function tabPersonal(e, p, self) {
   const x = d.priv;
   return `<div class="sect-head"><h3>Personal details</h3>${edit}</div>` + dl([
     ['Date of birth', esc(fmtDate(x.date_of_birth))], ['Marital status', nz(x.marital_status)],
-    ['National ID number', nz(x.national_id_no)], ['Tax ID number', nz(x.tax_id_no)], ['Social security number', nz(x.social_security_no)],
+    ...(state.hasAdvances ? [['National ID type', nz(ID_TYPES[x.national_id_type])]] : []), ['National ID number', nz(x.national_id_no)], ['Tax ID number', nz(x.tax_id_no)], ['Social security number', nz(x.social_security_no)],
     ['Home address', nz(x.home_address)],
     ['Emergency contact', x.emergency_name ? `${esc(x.emergency_name)}${x.emergency_relation ? ` (${esc(x.emergency_relation)})` : ''}<br><span class="muted">${esc(x.emergency_phone || '')}</span>` : '—']
   ]);
@@ -1022,14 +1025,22 @@ function employeeForm(e) {
     <div class="grid2">${fld('Employment type', sel('employment_type', opts(EMP_TYPES, e.employment_type || 'full_time'), { required:true }))}${fld('Status', sel('status', opts(STATUSES, e.status || 'active'), { required:true }))}</div>
     <div class="grid2">${fld('Hire date', inp('hire_date', { type:'date', value:e.hire_date }))}${fld('Exit date', inp('exit_date', { type:'date', value:e.exit_date }))}</div>
     ${fld('Reason for leaving', inp('exit_reason', { value:e.exit_reason }))}
-    ${state.hasTime ? fld('Working hours', sel('shift_id', listOpts(state.shifts, 'id', 'name', e.shift_id, 'Organization default'))) : ''}`,
+    ${state.hasTime ? fld('Working hours', sel('shift_id', listOpts(state.shifts, 'id', 'name', e.shift_id, 'Organization default'))) : ''}
+    ${editing ? '' : `<h3 style="margin:18px 0 8px">Personal and statutory details <span class="muted small">(optional, can be added later under Personal)</span></h3>
+      <div class="grid2">${fld('Date of birth', inp('date_of_birth', { type:'date' }))}${state.hasAdvances ? fld('National ID type', sel('national_id_type', opts(ID_TYPES, null, 'Not specified'))) : ''}</div>
+      <div class="grid2">${fld('National ID number', inp('national_id_no'))}${fld('Social security number (SSNIT)', inp('social_security_no'))}</div>${fld('Tax ID number (TIN)', inp('tax_id_no'))}`}`,
     onSubmit: async d => {
       const payload = { full_name:d.full_name, employee_no:d.employee_no, gender:d.gender, work_email:d.work_email, phone:d.phone,
         department_id:d.department_id, position_id:d.position_id, manager_id:d.manager_id, employment_type:d.employment_type,
         status:d.status, hire_date:d.hire_date, exit_date:d.exit_date, exit_reason:d.exit_reason };
       if (state.hasTime) payload.shift_id = d.shift_id;
       if (editing) await q(hr.from('employees').update(payload).eq('id', e.id));
-      else await q(hr.from('employees').insert({ ...payload, org_id: state.org.id }));
+      else {
+        const row = await q(hr.from('employees').insert({ ...payload, org_id: state.org.id }).select('id').maybeSingle());
+        const priv = { date_of_birth:d.date_of_birth, national_id_no:d.national_id_no, social_security_no:d.social_security_no, tax_id_no:d.tax_id_no };
+        if (state.hasAdvances && d.national_id_type) priv.national_id_type = d.national_id_type;
+        if (row && row.id && Object.values(priv).some(v => v)) await q(hr.from('employee_private').insert({ ...priv, employee_id: row.id }));
+      }
       await reloadEmployees();
       toast(editing ? 'Changes saved.' : 'Employee added.');
       renderShell();
@@ -1041,12 +1052,13 @@ function privateForm() {
   openModal({
     title: 'Personal details', wide: true,
     body: `<div class="grid2">${fld('Date of birth', inp('date_of_birth', { type:'date', value:x.date_of_birth }))}${fld('Marital status', sel('marital_status', opts(MARITAL, x.marital_status, 'Not specified')))}</div>
-    <div class="grid2">${fld('National ID number', inp('national_id_no', { value:x.national_id_no }))}${fld('Tax ID number', inp('tax_id_no', { value:x.tax_id_no }))}</div>
-    ${fld('Social security number', inp('social_security_no', { value:x.social_security_no }))}
+    <div class="grid2">${state.hasAdvances ? fld('National ID type', sel('national_id_type', opts(ID_TYPES, x.national_id_type, 'Not specified'))) : ''}${fld('National ID number', inp('national_id_no', { value:x.national_id_no }))}${fld('Tax ID number (TIN)', inp('tax_id_no', { value:x.tax_id_no }))}</div>
+    ${fld('Social security number (SSNIT)', inp('social_security_no', { value:x.social_security_no }))}
     ${fld('Home address', `<textarea name="home_address">${esc(x.home_address || '')}</textarea>`)}
     <div class="grid2">${fld('Emergency contact name', inp('emergency_name', { value:x.emergency_name }))}${fld('Relationship', inp('emergency_relation', { value:x.emergency_relation }))}</div>
     ${fld('Emergency contact phone', inp('emergency_phone', { value:x.emergency_phone }))}`,
     onSubmit: async d => {
+      if (state.hasAdvances) d.national_id_type = d.national_id_type || null; else delete d.national_id_type;
       if (x.id) await q(hr.from('employee_private').update(d).eq('id', x.id));
       else await q(hr.from('employee_private').insert({ ...d, employee_id: id }));
       await loadDetail(id);
@@ -1633,6 +1645,8 @@ async function loadPayroll() {
       Object.assign(state, { runs, payComponents, taxBands, payItems });
     }
     if (state.me) state.payslips = await q(hr.from('payslips').select('*').eq('employee_id', state.me.id).order('period_start', { ascending:false }));
+    if (canRunPayroll()) { try { state.payContracts = await q(hr.from('contracts').select('employee_id,status,basic_salary,pay_frequency').eq('org_id', oid).eq('status', 'active')); } catch { state.payContracts = null; } }
+    await loadAdvances();
     state.hasPayroll = true; state.payError = null;
   } catch (err) {
     state.hasPayroll = false;
@@ -1754,6 +1768,7 @@ function viewPaySetup() {
   const bandRows = state.taxBands.map(b => `<tr><td>${esc(money(b.from_amount))}</td><td>${b.to_amount == null ? 'and above' : esc(money(b.to_amount))}</td><td>${Number(b.rate_percent)}%</td>
     <td class="right"><button class="icon-btn" data-action="edit-band" data-id="${esc(b.id)}" aria-label="Edit tax band">${icon('edit', 16)}</button><button class="icon-btn danger" data-action="delete-band" data-id="${esc(b.id)}" aria-label="Delete tax band">${icon('trash', 16)}</button></td></tr>`).join('');
   return pageHead('Pay setup', 'The rules payroll follows') + `<div class="stack">
+  ${payReadiness()}
   <section class="panel"><div class="panel-head"><h3>Pay items</h3><button class="btn sm" data-action="add-comp">${icon('plus', 16)} Add pay item</button></div>
     ${compRows ? runTable('<th>Name</th><th>Type</th><th>Amount</th><th>Tax treatment</th><th>Applies to</th><th></th>', compRows) : '<div class="empty"><p>No pay items yet. Examples: a transport allowance (earning), a pension contribution (deduction, before tax), an employer pension contribution.</p></div>'}</section>
   <section class="panel"><div class="panel-head"><h3>Income tax bands (per month)</h3><button class="btn sm" data-action="add-band">${icon('plus', 16)} Add band</button></div>
@@ -3303,6 +3318,81 @@ function hardStopCall() {
 
 
 /* =====================================================================
+   PAYROLL EXTRAS: advances and loans, readiness checklist, Ghana quick setup
+   ===================================================================== */
+const ADV_KIND = { salary_advance:'Salary advance', rent_advance:'Rent advance', loan:'Staff loan', other:'Other advance' };
+const ID_TYPES = { national_id:'National ID card (for example Ghana Card)', passport:'Passport', drivers_license:"Driver's licence", voter_id:'Voter ID', residence_permit:'Residence permit', other:'Other' };
+const GH_ITEMS = [
+  { name:'SSNIT (employee 5.5%)', kind:'deduction', calc:'percent_of_basic', amount:5.5, reduces_taxable:true, applies_to:'all', sort_order:10 },
+  { name:'SSNIT (employer 13%)', kind:'employer_contribution', calc:'percent_of_basic', amount:13, applies_to:'all', sort_order:20 }];
+const GH_BANDS = [[0, 490, 0], [490, 600, 5], [600, 730, 10], [730, 3896.67, 17.5], [3896.67, 19896.67, 25], [19896.67, 50416.67, 30], [50416.67, null, 35]];
+const monthYear = iso => { try { return new Date(iso + 'T00:00:00').toLocaleDateString(undefined, { month:'long', year:'numeric' }); } catch { return iso; } };
+const advRepaid = a => state.advRepay.filter(r => r.advance_id === a.id).reduce((s, r) => s + Number(r.amount), 0);
+const advBalance = a => Math.max(0, Number(a.principal) - advRepaid(a));
+
+async function loadAdvances() {
+  const oid = state.org.id; Object.assign(state, { hasAdvances:false, advances:[], advRepay:[] });
+  try {
+    state.advances = await q(hr.from('employee_advances').select('*').eq('org_id', oid).order('created_at', { ascending:false }));
+    state.advRepay = await q(hr.from('advance_repayments').select('*').eq('org_id', oid).order('paid_on', { ascending:false }).limit(3000));
+    state.hasAdvances = true;
+  } catch { state.hasAdvances = false; }
+}
+function payReadiness() {
+  const active = state.employees.filter(e => !EXITED.includes(e.status)); const rows = [];
+  if (state.payContracts) {
+    const ok = new Set(state.payContracts.filter(c => c.basic_salary != null && c.pay_frequency === 'monthly').map(c => c.employee_id));
+    const missing = active.filter(e => !ok.has(e.id));
+    rows.push(missing.length
+      ? `<li class="chk warn"><b>Basic salary.</b> ${active.length - missing.length} of ${active.length} people have an active monthly contract with a basic salary. These people will be <b>skipped</b> in payroll until they do: ${missing.slice(0, 10).map(e => `<a href="#" data-action="open-emp" data-id="${esc(e.id)}">${esc(e.full_name)}</a>`).join(', ')}${missing.length > 10 ? ` and ${missing.length - 10} more` : ''}.<div class="muted small">Open the person, go to <b>Contracts</b>, add a contract with status <b>Active</b> and their <b>Basic salary</b>.</div></li>`
+      : `<li class="chk ok"><b>Basic salary.</b> Everyone (${active.length}) has an active monthly contract with a basic salary.</li>`);
+  } else rows.push('<li class="chk"><b>Basic salary</b> comes from each person\'s contract: open the person, go to <b>Contracts</b>, and add an <b>Active</b> contract with their <b>Basic salary</b>.</li>');
+  const hasSsnit = state.payComponents.some(c => /ssnit|social security|pension/i.test(c.name)), hasTax = state.taxBands.length > 0;
+  rows.push(hasSsnit && hasTax ? '<li class="chk ok"><b>Statutory deductions.</b> Pension and income tax bands are set up.</li>'
+    : `<li class="chk warn"><b>Statutory deductions.</b> ${hasSsnit ? '' : 'No pension (SSNIT) item yet. '}${hasTax ? '' : 'No income tax bands yet. '}<button class="btn sm primary" data-action="quick-ghana" style="margin-left:6px">Quick setup for Ghana (SSNIT and PAYE)</button></li>`);
+  rows.push(state.hasAdvances ? '<li class="chk ok"><b>Advances and rent advances</b> have their own page: <a href="#" data-action="nav" data-view="advances">Advances and loans</a>. They are deducted automatically.</li>'
+    : '<li class="chk warn"><b>Advances and loans</b> need the database update <code>hrms_phase9_advances.sql</code>. Run it in the SQL Editor to switch them on.</li>');
+  return `<section class="panel pad"><h3 style="margin-bottom:8px">Payroll setup checklist</h3><ul class="checklist">${rows.join('')}</ul></section>`;
+}
+function viewAdvances() {
+  const list = state.advances, active = list.filter(a => a.status === 'active');
+  const owed = active.reduce((s, a) => s + advBalance(a), 0);
+  const rows = list.map(a => { const emp = findEmp(a.employee_id), bal = advBalance(a);
+    return `<tr><td><b>${esc(emp ? emp.full_name : '—')}</b></td><td>${esc(a.label)}<div class="muted small">${esc(ADV_KIND[a.kind])}, given ${esc(fmtDate(a.given_on))}</div></td><td>${esc(money(a.principal))}</td>
+      <td>${esc(money(a.monthly_deduction))}<div class="muted small">from ${esc(monthYear(a.first_deduction))}</div></td><td>${esc(money(advRepaid(a)))}</td><td><b>${esc(money(bal))}</b></td>
+      <td>${a.status === 'active' ? chip('Active', 'ok') : a.status === 'paid_off' ? chip('Paid off') : chip('Cancelled', 'bad')}</td>
+      <td class="right"><button class="btn sm" data-action="adv-history" data-id="${esc(a.id)}">History</button>${a.status === 'active' ? ` <button class="btn sm" data-action="adv-repay" data-id="${esc(a.id)}">Record repayment</button> <button class="btn sm" data-action="adv-cancel" data-id="${esc(a.id)}">Cancel</button>` : ''}</td></tr>`; }).join('');
+  return pageHead('Advances and loans', 'Salary advances, rent advances and staff loans', `<button class="btn primary" data-action="adv-new">${icon('plus')} Give an advance or loan</button>`)
+    + `<div class="panel stat-strip"><div class="stat"><b>${active.length}</b><span>Active</span></div><div class="stat"><b>${esc(money(owed))}</b><span>Still owed by staff</span></div><div class="stat"><b>${list.filter(a => a.status === 'paid_off').length}</b><span>Paid off</span></div></div>
+    <section class="panel">${rows ? runTable('<th>Employee</th><th>Advance</th><th>Amount given</th><th>Monthly deduction</th><th>Repaid</th><th>Still owed</th><th>Status</th><th></th>', rows) : '<div class="empty"><h3>No advances yet</h3><p>Record a salary advance, rent advance or loan and it is taken from pay automatically each month until it is repaid.</p></div>'}
+    <div class="panel-body muted small">The monthly deduction is taken <b>after tax</b> on each payslip and never takes pay below zero. It is recorded as repaid when you <b>approve</b> the payroll (and taken back if you reopen it). If someone pays back in cash, use "Record repayment". A person can see these deductions on their payslip.</div></section>`;
+}
+function advanceForm() {
+  const people = state.employees.filter(e => !EXITED.includes(e.status));
+  openModal({ title:'Give an advance or loan', wide:true, submitLabel:'Save',
+    body:`${fld('Employee', sel('employee_id', listOpts(people, 'id', 'full_name', null, 'Choose'), { required:true }))}
+      <div class="grid2">${fld('Type', sel('kind', opts(ADV_KIND, 'salary_advance'), { required:true }))}${fld('Description', inp('label', { placeholder:'Optional, e.g. Rent advance (6 months)' }), 'This is the name shown on the payslip.')}</div>
+      <div class="grid2">${fld('Amount given', inp('principal', { type:'number', required:true, extra:'min="0.01" step="0.01"' }))}${fld('Deducted each month', inp('monthly', { type:'number', required:true, extra:'min="0.01" step="0.01"' }), 'The last month takes only what is left.')}</div>
+      <div class="grid2">${fld('First deducted in', inp('first_month', { type:'month', value:TODAY().slice(0, 7), required:true }))}${fld('Date given', inp('given_on', { type:'date', value:TODAY(), required:true }))}</div>${fld('Note', inp('note', { placeholder:'Optional' }))}`,
+    onSubmit: async d => { await callRpc('give_advance', { p_employee:d.employee_id, p_kind:d.kind, p_label:d.label, p_principal:Number(d.principal), p_monthly:Number(d.monthly), p_first_month:d.first_month + '-01', p_given_on:d.given_on, p_note:d.note });
+      await loadAdvances(); renderShell(); toast('Advance recorded. It will be deducted from the next payroll you calculate.'); } });
+}
+function repayForm(a) {
+  openModal({ title:`Record a repayment`, submitLabel:'Save',
+    body:`<p class="muted" style="margin-bottom:12px">${esc(a.label)} for ${esc(findEmp(a.employee_id)?.full_name || '')}. Still owed: <b>${esc(money(advBalance(a)))}</b>.</p>
+      <div class="grid2">${fld('Amount repaid', inp('amount', { type:'number', required:true, extra:`min="0.01" max="${advBalance(a)}" step="0.01"` }))}${fld('Date', inp('paid_on', { type:'date', value:TODAY(), required:true }))}</div>${fld('Note', inp('note', { placeholder:'e.g. Paid in cash' }))}`,
+    onSubmit: async d => { await callRpc('record_advance_repayment', { p_advance:a.id, p_amount:Number(d.amount), p_paid_on:d.paid_on, p_note:d.note }); await loadAdvances(); renderShell(); toast('Repayment recorded.'); } });
+}
+function advHistory(a) {
+  const reps = state.advRepay.filter(r => r.advance_id === a.id);
+  openModal({ title:`${a.label}: history`, hideFooter:true,
+    body:`<p class="muted" style="margin-bottom:10px">Given ${esc(money(a.principal))} on ${esc(fmtDate(a.given_on))}. Still owed <b>${esc(money(advBalance(a)))}</b>.</p>
+      ${reps.length ? runTable('<th>Date</th><th>Amount</th><th>How</th>', reps.map(r => `<tr><td>${esc(fmtDate(r.paid_on))}</td><td>${esc(money(r.amount))}</td><td>${r.source === 'payroll' ? 'Taken from payroll' : 'Paid back directly'}${r.note ? `<div class="muted small">${esc(r.note)}</div>` : ''}</td></tr>`).join('')) : '<p class="muted">Nothing has been repaid yet.</p>'}
+      <div class="row" style="margin-top:12px;justify-content:flex-end"><button type="button" class="btn primary" data-action="close-modal">Close</button></div>` });
+}
+
+
+/* =====================================================================
    EVENTS
    ===================================================================== */
 const copyText = async text => {
@@ -3529,6 +3619,15 @@ Object.assign(inputs, {
 
 const appById2 = id => state.appraisals.find(a => a.id === id);
 Object.assign(actions, {
+  'adv-new': () => advanceForm(),
+  'adv-repay': el => repayForm(state.advances.find(a => a.id === el.dataset.id)),
+  'adv-history': el => advHistory(state.advances.find(a => a.id === el.dataset.id)),
+  'adv-cancel': el => { if (confirm('Cancel this advance? Nothing more will be deducted from pay, and the balance still owed is written off.')) act(async () => { await callRpc('cancel_advance', { p_advance: el.dataset.id }); await loadAdvances(); renderShell(); }, 'Advance cancelled.'); },
+  'quick-ghana': () => { if (!confirm('Add the standard Ghana items?\n\n• SSNIT employee 5.5% (taken before tax)\n• SSNIT employer 13%\n• The monthly PAYE income tax bands\n\nRates were checked against published GRA and SSNIT figures in 2026, but tax rules change. Please confirm them with GRA, SSNIT or your accountant before your first payroll. SSNIT has a maximum insurable earnings cap that this app does not apply.')) return;
+    act(async () => { const oid = state.org.id, have = new Set(state.payComponents.map(c => c.name)), add = GH_ITEMS.filter(i => !have.has(i.name)).map(i => ({ ...i, org_id: oid }));
+      if (add.length) await q(hr.from('pay_components').insert(add));
+      if (!state.taxBands.length) await q(hr.from('tax_bands').insert(GH_BANDS.map(([f, t, r]) => ({ org_id: oid, from_amount: f, to_amount: t, rate_percent: r }))));
+      await loadPayroll(); renderShell(); }, 'Ghana SSNIT and PAYE items added.'); },
   'call-page-tab': el => { state.callTab = el.dataset.tab; renderView(); },
   'call-user': el => act(() => startCallTo(el.dataset.id)),
   'call-conference': () => { const ids = Object.keys(state.callSel).filter(k => state.callSel[k]); if (!ids.length) { toast('Tick the people you want to call first.', 'error'); return; } act(() => startConference(ids, null)); },
