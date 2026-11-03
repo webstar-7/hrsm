@@ -498,7 +498,7 @@ const perms = () => {
 const deptName = id => state.departments.find(d => d.id === id)?.name || '—';
 const posTitle = id => state.positions.find(p => p.id === id)?.title || '—';
 const findEmp = id => state.employees.find(e => e.id === id);
-const orgUsable = o => o.status === 'active' || (o.status === 'trial' && (!o.trial_ends_at || new Date(o.trial_ends_at) > new Date()));
+const orgUsable = o => o.status === 'active' || o.status === 'trial';
 const appUrl = () => location.href.split('#')[0].split('?')[0];
 const redirectUrl = () => /^https?:$/.test(location.protocol) ? location.origin + location.pathname : undefined;
 
@@ -586,7 +586,7 @@ function renderAuth() {
     <div class="auth-links">${staff ? '<span class="muted">Forgot your password? Ask HR to reset it.</span>' : '<button data-action="auth-mode" data-mode="forgot">Forgot your password?</button><button data-action="auth-mode" data-mode="signup">Create an account</button>'}</div>`;
   }
   else if (m === 'signup') card = `
-    <h1>Create your account</h1><p class="sub">Start with a free trial. You will set up your organization next.</p>
+    <h1>Create your account</h1><p class="sub">Free to use. You will set up your organization next.</p>
     <form data-form="signup"><div class="form-error" role="alert" hidden></div>
       ${fld('Your name', inp('full_name', { required:true, extra:'autocomplete="name"' }))}
       ${fld('Work email', inp('email', { type:'email', required:true, extra:'autocomplete="email"' }))}
@@ -627,7 +627,7 @@ function renderFatal(err) {
 }
 function renderLocked() {
   const o = state.org;
-  const why = o.status === 'trial' ? 'Your free trial has ended.' : o.status === 'suspended' ? 'This workspace is suspended.' : 'This workspace has been cancelled.';
+  const why = o.status === 'suspended' ? 'This workspace is suspended.' : 'This workspace has been cancelled.';
   const contact = CONFIG.SUPPORT_EMAIL ? `Contact <a href="mailto:${esc(CONFIG.SUPPORT_EMAIL)}">${esc(CONFIG.SUPPORT_EMAIL)}</a> to activate a plan.` : 'Contact the product team to activate a plan.';
   $('#app').innerHTML = `<div class="center-screen"><div class="panel pad"><h2>${esc(o.name)} is locked</h2>
     <p>${esc(why)} Your data is safe and will be available again once a plan is active.</p><p class="muted">${contact}</p>
@@ -868,9 +868,8 @@ function viewDashboard() {
   const o = state.org;
   const cap = o.max_employees;
   const used = current.length;
-  const daysLeft = o.trial_ends_at ? Math.max(0, Math.ceil((new Date(o.trial_ends_at) - new Date()) / 86400000)) : null;
   const plan = p.admin ? `<div class="panel pad" style="margin-top:20px"><h3 style="margin-bottom:6px">Your plan</h3>
-    <p>${o.status === 'trial' ? `Free trial${daysLeft != null ? `, ${daysLeft} day${daysLeft === 1 ? '' : 's'} left` : ''}` : esc(o.plan_key)}</p>
+    <p>Free and open to use</p>
     <div class="meter" role="img" aria-label="${used} of ${cap ?? 'unlimited'} employees"><i style="width:${cap ? Math.min(100, Math.round(used / cap * 100)) : 0}%"></i></div>
     <p class="muted small">${used} of ${cap ?? 'unlimited'} employees used</p></div>` : '';
 
@@ -1254,7 +1253,6 @@ function viewAudit() {
    ===================================================================== */
 function viewSettings() {
   const o = state.org, p = perms(), dis = p.owner ? '' : ' disabled';
-  const daysLeft = o.trial_ends_at ? Math.max(0, Math.ceil((new Date(o.trial_ends_at) - new Date()) / 86400000)) : null;
   return pageHead('Settings', p.owner ? 'Your organization' : 'Only the owner can change these settings') + `
   <div class="two-col"><section class="panel pad"><form data-form="settings"><div class="form-error" role="alert" hidden></div>
     ${fld('Organization name', inp('name', { value:o.name, required:true, extra: dis }))}
@@ -1263,10 +1261,9 @@ function viewSettings() {
     ${fld('Time zone', sel('timezone', tzOptions(o.timezone), { extra: dis }))}
     ${p.owner ? '<button class="btn primary" type="submit">Save changes</button>' : ''}</form></section>
   <section class="panel pad"><h3 style="margin-bottom:12px">Plan</h3>${dl([
-    ['Plan', esc(o.plan_key)], ['Status', chip(o.status[0].toUpperCase() + o.status.slice(1), o.status === 'active' ? 'ok' : o.status === 'trial' ? 'warn' : 'bad')],
-    ['Trial ends', o.status === 'trial' && o.trial_ends_at ? `${esc(fmtDate(o.trial_ends_at))}${daysLeft != null ? ` (${daysLeft} day${daysLeft === 1 ? '' : 's'} left)` : ''}` : '—'],
+    ['Plan', 'Free'], ['Status', chip(o.status === 'trial' ? 'Active' : o.status[0].toUpperCase() + o.status.slice(1), o.status === 'active' || o.status === 'trial' ? 'ok' : 'bad')],
     ['Employee limit', o.max_employees ?? 'Unlimited'], ['Currency', esc(o.currency)], ['Organization code', o.settings?.login_code ? `<b>${esc(o.settings.login_code)}</b>` : 'Created with the first staff login']])}
-    <p class="muted small" style="margin-top:14px">To change your plan or currency, contact the product team.</p></section></div>`;
+    <p class="muted small" style="margin-top:14px">To change your currency, contact the product team.</p></section></div>`;
 }
 
 /* =====================================================================
