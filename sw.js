@@ -2,7 +2,7 @@
    - lets the app be installed and start even when the internet is slow or down
    - the app page is fetched from the network first, so updates arrive straight away
    - it NEVER stores anything from your database, sign-in, storage or functions */
-const VERSION = 'peopledesk-v1';
+const VERSION = 'peopledesk-v2';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 const LIBS = /(^|\.)(cdn\.jsdelivr\.net|cdnjs\.cloudflare\.com|fonts\.googleapis\.com|fonts\.gstatic\.com)$/;
 const DATA = /\.supabase\.(co|in)$/;
