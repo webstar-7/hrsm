@@ -3,15 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PeopleDesk</title>
+<title>NYANSATEK Employee Management System</title>
 <meta name="theme-color" content="#0E4142">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="PeopleDesk">
+<meta name="apple-mobile-web-app-title" content="NYANSATEK EMS">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230E4142'/%3E%3Cpath d='M7 11h7l2 2.4h9V24H7z' fill='%23F0B429'/%3E%3C/svg%3E">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -100,6 +101,7 @@ td.right,th.right{text-align:right}
 .side{background:var(--spruce);color:#D5E4E1;display:flex;flex-direction:column;padding:20px 16px 14px;position:sticky;top:0;height:100vh;overflow:hidden}
 .side :focus-visible{outline-color:var(--gold)}
 .brand{display:flex;align-items:center;gap:10px;color:#fff;font-family:var(--font-display);font-weight:700;font-size:20px;padding:0 8px 14px}
+.brand svg{flex:none}.brand-t{display:grid;line-height:1.15;min-width:0}.brand-t b{font-size:16px;letter-spacing:.09em}.brand-t small{font:600 11.5px/1.25 var(--font-body);color:#B9D1CC;letter-spacing:.01em}
 .orgbox{margin:0 0 6px;padding:10px 12px;border-radius:10px;background:var(--spruce-deep)}
 .orgbox .label{font-size:12px;color:#9DBBB6}
 .orgbox .oname{font-weight:600;color:#fff;overflow-wrap:anywhere}
@@ -177,6 +179,30 @@ td.right,th.right{text-align:right}
 .auth-links{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:18px;font-size:14px}
 .auth-links button{background:none;border:0;padding:0;color:var(--spruce-hi);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 .auth-card .btn.primary{width:100%;justify-content:center}
+/* how to use */
+.gd-intro{margin-bottom:12px}
+.gd-jump{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.gd-jump a{font-size:13px;font-weight:600;color:var(--spruce);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:5px 12px;background:#fff}
+.gd-jump a:hover{border-color:var(--gold)}
+.gd-reel{display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.gd-reel video{width:260px;max-width:100%;aspect-ratio:1;border-radius:14px;background:#092C2D;object-fit:cover}
+.gd-reel>div{flex:1 1 220px}.gd-reel h3{margin-bottom:4px}
+details.gd{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:8px;scroll-margin-top:70px}
+details.gd>summary{cursor:pointer;list-style:none;padding:14px 18px;font-family:var(--font-display);font-weight:700;font-size:16px;color:var(--spruce);display:flex;align-items:center;gap:10px}
+details.gd>summary::-webkit-details-marker{display:none}
+details.gd>summary::before{content:"";width:8px;height:8px;border-right:2px solid var(--gold);border-bottom:2px solid var(--gold);transform:rotate(-45deg);transition:transform .15s;flex:none}
+details.gd[open]>summary::before{transform:rotate(45deg)}
+.gd-b{padding:0 18px 18px 36px;line-height:1.6}
+.gd-b p{margin-bottom:8px}
+.gd-steps{padding-left:18px;margin:0;display:grid;gap:8px}
+.gd-steps li{padding-left:4px}.gd-steps li::marker{color:var(--warn);font-weight:700}
+.gd-steps .btn,.gd-b p .btn{margin-left:6px;vertical-align:middle}
+.gd-tabs{display:grid;gap:4px}
+.gd-tabs>div{display:grid;grid-template-columns:190px 1fr auto;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.gd-tabs>div:last-child{border-bottom:0}.gd-tabs span{color:var(--muted)}
+.gd-help{margin-top:12px}
+@media (max-width:700px){.gd-tabs>div{grid-template-columns:1fr auto}.gd-tabs>div span{grid-column:1/-1;grid-row:2}.gd-b{padding-left:18px}}
+@media (prefers-reduced-motion:reduce){.gd-reel video{display:none}}
 /* sign-in reel (made with Remotion): the art panel plays a short product tour */
 .sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .auth-art.has-reel{padding:0;background:#092C2D}
@@ -307,7 +333,7 @@ textarea.copybox{width:100%;min-height:170px;padding:12px;border:1px solid #C9D3
 /* NYANSATEK credit: logo + "by NYANSATEK" after the product name */
 .nt-by{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;letter-spacing:.02em;line-height:1.2;white-space:nowrap;opacity:.92;vertical-align:middle}.nt-by .nt-logo{width:18px;height:18px;flex:none;display:block}.nt-by b{font-weight:800;letter-spacing:.06em}.nt-by.nt-lg{font-size:13.5px;gap:7px}.nt-by.nt-lg .nt-logo{width:22px;height:22px}
 .brand .nt-by{margin-left:2px;opacity:.85}
-.side .brand{flex-wrap:wrap;row-gap:2px}.side .brand .nt-by{flex-basis:100%;padding-left:41px;margin-left:0}
+.side .brand{flex-wrap:nowrap}.side .brand .nt-by{flex-basis:100%;padding-left:41px;margin-left:0}
 </style>
 </head>
 <body>
@@ -324,7 +350,8 @@ textarea.copybox{width:100%;min-height:170px;padding:12px;border:1px solid #C9D3
    SETTINGS: the only lines you normally need to change
    ===================================================================== */
 const CONFIG = {
-  APP_NAME: 'PeopleDesk',                       // your product name
+  APP_NAME: 'NYANSATEK Employee Management System', // your product name
+  APP_SHORT: 'NYANSATEK EMS',                   // short form, used where space is tight
   SUPABASE_URL: 'https://cskcomkurpeyjqskkaxa.supabase.co',
   SUPABASE_KEY: 'sb_publishable_diJTB5pnIOyVE3lDPQG7tw__5XYZDvy', // publishable key: safe to be public
   SUPPORT_EMAIL: ''                             // shown on the "workspace locked" screen
@@ -449,10 +476,13 @@ const ICONS = {
   scan:'<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/>',
   briefcase:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
   banknote:'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>',
-  gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+  help:'<circle cx="12" cy="12" r="9"/><path d="M9.3 9.2a2.8 2.8 0 1 1 4.3 2.4c-.9.6-1.6 1.2-1.6 2.4"/><path d="M12 17.2h.01"/>'
 };
 const icon = (n, s = 18) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ''}</svg>`;
-const brandMark = `<svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#F0B429"/><path d="M7 11h7l2 2.4h9V24H7z" fill="#0E4142"/></svg>`;
+// The NYANSATEK mark, on a tile a shade darker than the sidebar so it reads on teal.
+const brandMark = `<svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#092C2D"/><g fill="none" stroke="#F0B429" stroke-width="6.2" stroke-linecap="round" stroke-linejoin="round"><path d="M32 32C32 21 24 15 18 20C12 25 15 34 24 34C29 34 32 31 32 32C32 40 40 47 46 43"/><path d="M32 32C32 21 40 15 46 20C52 25 49 34 40 34C36.4 34 33.6 32.6 32.4 30.8M30.2 33.6C27 39 20 45 18 43"/></g></svg>`;
+const brandName = `${brandMark}<span class="brand-t"><b>NYANSATEK</b><small>Employee Management System</small></span>`;
 
 const opts = (map, sel, blank) => (blank !== undefined ? `<option value="">${esc(blank)}</option>` : '') +
   Object.entries(map).map(([k, v]) => `<option value="${esc(k)}"${k === sel ? ' selected' : ''}>${esc(v)}</option>`).join('');
@@ -571,7 +601,7 @@ const artSvg = `<svg class="art" viewBox="0 0 360 280" aria-hidden="true">
 
 function authArt() {
   return `<aside class="auth-art has-reel"><video class="auth-reel" muted loop playsinline preload="metadata" aria-hidden="true" tabindex="-1"></video><div class="sr-only"><div>
-    <div class="brand" style="padding:0 0 28px">${brandMark}<span>${esc(CONFIG.APP_NAME)}</span><span class="nt-by"><svg class="nt-logo" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><g fill="none" stroke="#D9A833" stroke-width="6.2" stroke-linecap="round" stroke-linejoin="round"><path d="M32 32C32 21 24 15 18 20C12 25 15 34 24 34C29 34 32 31 32 32C32 40 40 47 46 43"/><path d="M32 32C32 21 40 15 46 20C52 25 49 34 40 34C36.4 34 33.6 32.6 32.4 30.8M30.2 33.6C27 39 20 45 18 43"/></g></svg><span>by <b>NYANSATEK</b></span></span></div>
+    <div class="brand" style="padding:0 0 28px">${brandName}</div>
     <h2>Every employee file, in order.</h2>
     <ul>
       <li>${icon('check', 20)}<span>Personal details and salaries stay private to HR and payroll. Managers see only their team.</span></li>
@@ -587,7 +617,7 @@ function mountReel() {
   const slot = document.querySelector('.auth-reel');
   if (!slot) return;
   if (reelEl && reelEl !== slot) slot.replaceWith(reelEl); else reelEl = slot;
-  const v = reelEl, b = 'assets/peopledesk-reel' + (reelWide.matches ? '-tall' : '');
+  const v = reelEl, b = 'assets/ems-reel' + (reelWide.matches ? '-tall' : '');
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (v.dataset.cut !== b) { v.dataset.cut = b; v.poster = b + '.jpg'; if (!still) v.src = b + '.mp4'; }
   if (!still) v.play().catch(() => {});
@@ -684,7 +714,7 @@ function renderOnboarding() {
 /* =====================================================================
    SHELL + NAVIGATION
    ===================================================================== */
-const NAV_GROUPS = ['Overview', 'Company', 'People', 'Time', 'Pay', 'Growth', 'My space', 'Organization'];
+const NAV_GROUPS = ['Overview', 'Company', 'People', 'Time', 'Pay', 'Growth', 'My space', 'Organization', 'Help'];
 function navItems() {
   const p = perms(), isEmp = state.role === 'employee';
   const pending = state.hasTime ? state.leaveRequests.filter(canDecide).length : 0;
@@ -711,7 +741,105 @@ function navItems() {
   if (state.hasPayroll && state.me) list.push(N('payslips', 'My payslips', 'banknote', 'My space'));
   if (state.hasRecruit && myInterviews().length) list.push(N('interviews', 'My interviews', 'calendar', 'My space', myInterviews().filter(i => i.status === 'scheduled').length));
   if (p.admin) list.push(N('team', 'Team & access', 'key', 'Organization'), N('audit', 'Activity log', 'history', 'Organization'), N('settings', 'Settings', 'gear', 'Organization'));
+  list.push(N('guide', 'How to use', 'help', 'Help'));
   return list;
+}
+/* =====================================================================
+   HOW TO USE
+   A plain-language guide, the same shape as the one in NYANSATEK POS and
+   School: a short tour, then sections that open on tap, with buttons that
+   jump to the right screen. Only screens this person can open are shown.
+   ===================================================================== */
+function viewGuide() {
+  const nav = navItems(), can = v => nav.some(i => i.view === v), p = perms(), isEmp = state.role === 'employee';
+  const btn = v => can(v) ? ` <button class="btn sm" data-action="nav" data-view="${v}">Open</button>` : '';
+  const ol = items => `<ol class="gd-steps">${items.filter(Boolean).map(i => `<li>${i}</li>`).join('')}</ol>`;
+  const made = [];
+  const sec = (id, title, body, open) => { made.push(id); return `<details class="gd" id="gd-${id}"${open ? ' open' : ''}><summary>${title}</summary><div class="gd-b">${body}</div></details>`; };
+  const reel = `<div class="panel pad gd-reel"><video muted loop playsinline autoplay preload="metadata" poster="assets/ems-reel.jpg" aria-label="A short tour of the app"><source src="assets/ems-reel.mp4" type="video/mp4"></video>
+    <div><h3>A short tour</h3><p class="muted">Employee files, leave approved in a tap, payroll and payslips, and scanning in at the gate.</p></div></div>`;
+  const help = `<div class="panel pad gd-help"><b>Something not working?</b> ${isEmp ? 'Ask your HR team, or call' : 'Call'} NYANSATEK support on <a href="tel:0536340578">0536 340 578</a>.</div>`;
+  const signin = () => sec('signin', 'Signing in', `<p>On the sign-in screen choose <b>Staff ID</b> and enter the organization code, staff ID and password HR gave you. If you were invited by email, choose <b>Email</b> and use that email address.</p>
+    <p class="muted">Forgotten your password? With a staff ID, ask HR to reset it. With an email, tap <b>Forgot your password?</b> on the sign-in screen.</p>`, true);
+  const leave = () => can('leave') ? sec('leave', isEmp ? 'Asking for leave' : 'Leave: requests and approvals', ol([
+    `Open <b>Leave</b>.${btn('leave')}`,
+    'Tap <b>Request leave</b>, choose the type of leave and the dates, and send it.',
+    isEmp ? 'Your request goes to the person who approves your leave. You will see it change to approved or declined on the same screen.' : 'Requests waiting for a decision show a number beside <b>Leave</b> in the menu. Open one to approve or decline it.',
+    'Your leave balance at the top of the screen goes down as leave is approved.',
+    !isEmp && can('timesettings') ? `Leave types, yearly allowances and working hours are set under <b>Leave &amp; work hours</b>.${btn('timesettings')}` : ''])) : '';
+  const attendance = () => can('attendance') ? sec('attendance', 'Clocking in and out', ol([
+    `Open <b>Attendance</b>.${btn('attendance')}`,
+    'Tap <b>Clock in</b> when you start work and <b>Clock out</b> when you finish.',
+    isEmp ? 'Your own attendance record appears on the same screen.' : 'The same screen shows who is in today.'])) : '';
+  const payslips = () => can('payslips') ? sec('payslips', 'Seeing your payslips', `<p>Open <b>My payslips</b>.${btn('payslips')} A payslip appears here once payroll for that period has been approved.</p>`) : '';
+  const company = () => (can('announcements') || can('meetings')) ? sec('company', 'Announcements, documents and calls', ol([
+    can('announcements') ? `<b>Announcements</b> holds news and notices from your organization. A number beside it means there is something you have not read.${btn('announcements')}` : '',
+    can('company') ? `<b>Company</b> holds company information and shared documents.${btn('company')}` : '',
+    can('meetings') ? `<b>Calls and meetings</b> is for video calls and scheduled meetings. A call rings while the other person has the app open.${btn('meetings')}` : ''])) : '';
+
+  let body;
+  if (isEmp) {
+    body = signin()
+      + sec('home', 'Your home screen and profile', ol([
+        `<b>Home</b> shows your leave, payslips and the latest announcements in one place.${btn('home')}`,
+        can('me') ? `<b>My profile</b> shows the details HR holds about you. If something is wrong, ask HR to correct it.${btn('me')}` : 'If you do not see your own details yet, ask HR to link your login to your employee record.']))
+      + leave() + attendance() + payslips() + company();
+  } else {
+    const about = { home:'Your own leave, payslips and the latest announcements.', dashboard:'Headcount and what needs attention across the organization.', analytics:'Reports on headcount, leave and payroll cost.',
+      meetings:'Video calls, conference calls and scheduled meetings.', announcements:'News and notices for everyone.', company:'Company information and shared documents.',
+      employees:'Every employee file: personal details, job, documents and pay.', reports:'The people who report to you.', recruitment:'Job postings, applicants and interviews, through to hiring.',
+      structure:'Departments and positions.', leave:'Leave requests, approvals and balances.', attendance:'Clocking in and out, and who is in today.',
+      timesettings:'Leave types, allowances and working hours.', advances:'Salary advances, rent advances and staff loans.', gate:'Gate scanning, ID cards and who is on site.',
+      payroll:'Prepare, approve and pay your team.', paysetup:'The rules payroll follows.', performance:'Goals and reviews.', training:'Courses, completions and certificate expiry.',
+      me:'Your own employee record.', payslips:'Your own pay statements.', interviews:'Interviews you have been asked to take part in.',
+      team:'Who can sign in, and what each person can do.', audit:'The 100 most recent changes, and who made them.', settings:'Your organization’s details.' };
+    body = sec('setup', 'Setting up your organization (do these in order)', ol([
+        can('settings') ? `Check your organization’s details.${btn('settings')}` : '',
+        can('structure') ? `Add your departments and positions.${btn('structure')}` : '',
+        can('employees') ? `Add your employees with <b>Add employee</b>.${btn('employees')}` : '',
+        can('timesettings') ? `Set leave types, allowances and working hours.${btn('timesettings')}` : '',
+        can('paysetup') ? `Set the rules payroll follows.${btn('paysetup')}` : '',
+        can('team') ? `Give people their logins with <b>Create logins</b>.${btn('team')}` : '']), true)
+      + sec('screens', 'What each screen does', `<div class="gd-tabs">${nav.filter(i => about[i.view]).map(i => `<div><b>${esc(i.label)}</b><span>${about[i.view]}</span>${btn(i.view)}</div>`).join('')}</div>`)
+      + (can('employees') ? sec('employees', 'Adding employees and keeping their files', ol([
+        `Open <b>Employees</b> and tap <b>Add employee</b>.${btn('employees')}`,
+        'Enter their personal details, department, position and hire date, then save.',
+        'Open an employee to see their whole file. Contracts and documents are kept there, with alerts before they expire.',
+        'Personal details and salaries stay private to HR and payroll. Managers see only their own team.'])) : '')
+      + (p.hr ? sec('logins', 'Giving people their logins', ol([
+        can('team') ? `Open <b>Team &amp; access</b> and tap <b>Create logins</b> to make a login for everyone who does not have one.${btn('team')}` : 'Open an employee’s file and tap <b>Create login</b>.',
+        'Tap <b>Print login slips</b> and hand each person their slip. It carries the organization code, their staff ID and a first password.',
+        'Staff sign in under <b>Staff ID</b> on the sign-in screen and choose their own password the first time.',
+        'To reset a forgotten password, open the employee’s file and tap <b>Reset password</b>.',
+        can('team') ? 'To give someone HR, payroll or admin rights, invite them with their email address under <b>Team &amp; access</b> and choose their access level.' : ''])) : '')
+      + leave() + attendance()
+      + (can('gate') ? sec('gate', 'Gate scanning and ID cards', ol([
+        `Open <b>Gate and cards</b>.${btn('gate')}`,
+        'Issue and print an ID card for each employee from this screen.',
+        'At the gate, scan the card to record the person coming in or going out. The screen shows who is on site.'])) : '')
+      + (can('payroll') ? sec('payroll', 'Running payroll', ol([
+        can('paysetup') ? `First time only: set the rules payroll follows under <b>Pay setup</b>.${btn('paysetup')}` : '',
+        `Open <b>Payroll</b> and tap <b>New payroll run</b>.${btn('payroll')}`,
+        'Tap <b>Calculate payroll</b> and check each person’s figures. Tap <b>Recalculate</b> if you change anything.',
+        'Tap <b>Approve payroll</b>. Payslips then appear for each employee under <b>My payslips</b>.',
+        'When the money has gone out, tap <b>Mark as paid</b>.',
+        can('advances') ? `Salary advances and staff loans are recorded under <b>Advances and loans</b> with <b>Give an advance or loan</b>.${btn('advances')}` : ''])) : '')
+      + (can('recruitment') ? sec('recruit', 'Hiring', ol([
+        `Open <b>Recruitment</b> and tap <b>New job posting</b>.${btn('recruitment')}`,
+        'Add each person who applies with <b>Add applicant</b>.',
+        'When you choose someone, tap <b>Hire</b> and they become an employee.'])) : '')
+      + ((can('performance') || can('training')) ? sec('growth', 'Performance and training', ol([
+        can('performance') ? `<b>Performance</b> holds goals and reviews.${btn('performance')}` : '',
+        can('training') ? `<b>Training</b> holds courses, who has completed them and when certificates expire. Add one with <b>Add course</b> and give it to people with <b>Assign training</b>.${btn('training')}` : ''])) : '')
+      + company()
+      + (can('audit') ? sec('audit', 'Seeing who changed what', `<p><b>Activity log</b> lists the 100 most recent changes and who made them.${btn('audit')}</p>`) : '')
+      + payslips();
+  }
+  const names = { signin:'Signing in', home:'Home', setup:'Setting up', screens:'What each screen does', employees:'Employees', logins:'Logins', leave:'Leave', attendance:'Attendance', gate:'Gate', payroll:'Payroll', recruit:'Hiring', growth:'Growth', company:'Company', audit:'Activity log', payslips:'Payslips' };
+  return pageHead('How to use', isEmp ? 'Everything you need for your own leave, attendance and pay' : 'Set up your organization and run it day to day')
+    + `<div class="panel pad gd-intro"><p class="muted">Tap a heading to open it. The buttons take you straight to the right screen.</p>
+      <div class="gd-jump">${made.map(k => `<a href="#gd-${k}" onclick="document.getElementById('gd-${k}').open=true">${names[k]}</a>`).join('')}</div></div>`
+    + reel + body + help;
 }
 function renderShell() {
   const active = state.view === 'employee' ? (state.role === 'employee' ? 'reports' : 'employees') : state.view === 'payrun' ? 'payroll' : state.view;
@@ -722,13 +850,13 @@ function renderShell() {
     ? `<select data-input="switch-org" aria-label="Switch organization">${state.memberships.map(m => `<option value="${esc(m.org_id)}"${m.org_id === state.org.id ? ' selected' : ''}>${esc(m.org.name)}</option>`).join('')}</select>` : '';
   const who = state.me?.full_name || state.user.user_metadata?.full_name || state.user.email || '';
   $('#app').innerHTML = `<div class="shell${state.menuOpen ? ' menu-open' : ''}">
-    <aside class="side"><div class="brand">${brandMark}<span>${esc(CONFIG.APP_NAME)}</span><span class="nt-by"><svg class="nt-logo" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><g fill="none" stroke="#D9A833" stroke-width="6.2" stroke-linecap="round" stroke-linejoin="round"><path d="M32 32C32 21 24 15 18 20C12 25 15 34 24 34C29 34 32 31 32 32C32 40 40 47 46 43"/><path d="M32 32C32 21 40 15 46 20C52 25 49 34 40 34C36.4 34 33.6 32.6 32.4 30.8M30.2 33.6C27 39 20 45 18 43"/></g></svg><span>by <b>NYANSATEK</b></span></span></div>
+    <aside class="side"><div class="brand">${brandName}</div>
       <div class="orgbox"><div class="label">Organization</div><div class="oname">${esc(state.org.name)}</div>${multi}</div>
       <nav class="nav" aria-label="Main">${nav}</nav>
       <div class="mecard">${avatar(who)}<div class="who-txt"><div class="em">${esc(state.user.email || who)}</div><div class="rl">${esc(ROLES[state.role] || state.role)}</div></div>
       <button class="icon-btn" data-action="signout" aria-label="Sign out" title="Sign out">${icon('logout')}</button></div>
     </aside>
-    <div class="main"><div class="mobilebar"><button class="icon-btn" data-action="menu" aria-label="Open menu">${icon('menu', 22)}</button><div class="brand">${brandMark}<span>${esc(CONFIG.APP_NAME)}</span><span class="nt-by"><svg class="nt-logo" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><g fill="none" stroke="#D9A833" stroke-width="6.2" stroke-linecap="round" stroke-linejoin="round"><path d="M32 32C32 21 24 15 18 20C12 25 15 34 24 34C29 34 32 31 32 32C32 40 40 47 46 43"/><path d="M32 32C32 21 40 15 46 20C52 25 49 34 40 34C36.4 34 33.6 32.6 32.4 30.8M30.2 33.6C27 39 20 45 18 43"/></g></svg><span>by <b>NYANSATEK</b></span></span></div></div>
+    <div class="main"><div class="mobilebar"><button class="icon-btn" data-action="menu" aria-label="Open menu">${icon('menu', 22)}</button><div class="brand">${brandName}</div></div>
     <div class="page" id="view"></div></div></div>`;
   renderView();
 }
@@ -739,7 +867,7 @@ function renderView() {
     payroll:viewPayroll, payrun:viewRun, paysetup:viewPaySetup, payslips:viewMyPayslips,
     recruitment:viewRecruitment, interviews:viewMyInterviews,
     performance:viewPerformance, training:viewTraining, analytics:viewReports,
-    home:viewHome, announcements:viewAnnouncements, company:viewCompany, gate:viewGate, meetings:viewMeetings, advances:viewAdvances };
+    guide:viewGuide, home:viewHome, announcements:viewAnnouncements, company:viewCompany, gate:viewGate, meetings:viewMeetings, advances:viewAdvances };
   v.innerHTML = (fns[state.view] || (() => ''))();
   hydratePhotos();
 }
@@ -3128,7 +3256,7 @@ function stopCallLoop() { clearInterval(CALL.tickTimer); CALL.tickTimer = null; 
 /* ---------- ringing ---------- */
 function ensureCallRoot() { let r = document.getElementById('call-root'); if (!r) { r = document.createElement('div'); r.id = 'call-root'; document.body.appendChild(r); } return r; }
 function ringOnce() { try { const C = window.AudioContext || window.webkitAudioContext, a = CALL.audio = CALL.audio || new C(); [0, 0.25].forEach(d => { const o = a.createOscillator(), g = a.createGain(); o.frequency.value = 660; g.gain.value = 0.07; o.connect(g); g.connect(a.destination); o.start(a.currentTime + d); o.stop(a.currentTime + d + 0.18); }); } catch {} }
-function hideIncoming() { clearInterval(CALL.ringTimer); CALL.ringTimer = null; CALL.incomingKey = ''; const b = document.getElementById('incoming-call'); if (b) b.remove(); if (document.title.startsWith('Incoming')) document.title = state.baseTitle || 'PeopleDesk'; }
+function hideIncoming() { clearInterval(CALL.ringTimer); CALL.ringTimer = null; CALL.incomingKey = ''; const b = document.getElementById('incoming-call'); if (b) b.remove(); if (document.title.startsWith('Incoming')) document.title = state.baseTitle || CONFIG.APP_NAME; }
 function showIncoming(list) {
   const key = list.map(x => x.call_id).join(',');
   if (key === CALL.incomingKey) return; hideIncoming(); if (!list.length) return; CALL.incomingKey = key;
@@ -3298,7 +3426,7 @@ function callPeople() {
     <td>${p.online ? chip('Online', 'ok') : '<span class="muted small">Offline</span>'}</td><td class="right">${staffCallsAllowed() ? `<button class="btn sm primary" data-action="call-user" data-id="${esc(p.user_id)}">Call</button>` : ''}</td></tr>`).join('');
   return `<div class="panel"><div class="toolbar"><input class="search" type="search" placeholder="Search people" value="${esc(state.callFilter || '')}" data-input="call-filter" aria-label="Search people">${staffConfAllowed() ? '<button class="btn sm" data-action="call-conference">Start a conference call with selected</button>' : ''}</div>
     ${!staffCallsAllowed() ? '<div class="panel-body muted small">Calls between staff are switched off by your administrator.</div>' : ''}<div id="call-people">${rows ? runTable('<th></th><th>Person</th><th>Status</th><th></th>', rows) : '<div class="empty"><p>No one else to call yet.</p></div>'}</div>
-    <div class="panel-body muted small">Calls ring while the other person has PeopleDesk open in their browser. A green "Online" tag means they can be reached right now.</div></div>`;
+    <div class="panel-body muted small">Calls ring while the other person has the app open in their browser. A green "Online" tag means they can be reached right now.</div></div>`;
 }
 function callHistory() {
   const rows = state.callHist.map(h => { const missed = h.my_state === 'missed' || h.my_state === 'declined'; const kind = h.is_host ? 'Outgoing' : missed ? 'Missed' : 'Received';
@@ -3878,7 +4006,7 @@ boot();
     if (standalone() || dismissed() || document.getElementById('install-pill')) return;
     const el = document.createElement('div'); el.id = 'install-pill';
     el.style.cssText = 'position:fixed;left:16px;bottom:16px;z-index:700;display:flex;align-items:center;gap:4px;background:#0E4142;color:#fff;border-radius:999px;box-shadow:0 8px 28px rgba(0,0,0,.28);padding:4px 6px 4px 4px;font:600 14px system-ui,sans-serif';
-    el.innerHTML = '<button id="install-go" style="border:0;background:#F0B429;color:#0E4142;border-radius:999px;padding:9px 16px;font:inherit;cursor:pointer">Install PeopleDesk</button><button id="install-x" aria-label="Hide" style="border:0;background:none;color:#fff;font-size:18px;padding:4px 10px;cursor:pointer">\u00d7</button>';
+    el.innerHTML = '<button id="install-go" style="border:0;background:#F0B429;color:#0E4142;border-radius:999px;padding:9px 16px;font:inherit;cursor:pointer">Install NYANSATEK EMS</button><button id="install-x" aria-label="Hide" style="border:0;background:none;color:#fff;font-size:18px;padding:4px 10px;cursor:pointer">\u00d7</button>';
     document.body.appendChild(el);
     el.querySelector('#install-go').onclick = install;
     el.querySelector('#install-x').onclick = () => { try { localStorage.setItem(KEY, '1'); } catch {} remove(); };
@@ -3887,7 +4015,7 @@ boot();
     if (document.getElementById('install-help')) return;
     const m = document.createElement('div'); m.id = 'install-help'; m.setAttribute('role', 'dialog');
     m.style.cssText = 'position:fixed;inset:0;z-index:950;background:rgba(0,0,0,.5);display:grid;place-items:center;padding:20px';
-    m.innerHTML = '<div style="background:#fff;color:#12302f;border-radius:16px;padding:22px;max-width:360px;font:15px/1.5 system-ui,sans-serif"><h3 style="margin:0 0 8px;font-size:18px">Install PeopleDesk</h3><ol style="padding-left:20px;margin:0 0 14px"><li>Tap the <b>Share</b> button in Safari.</li><li>Choose <b>Add to Home Screen</b>.</li><li>Tap <b>Add</b>.</li></ol><button id="install-close" style="border:0;background:#0E4142;color:#fff;border-radius:10px;padding:10px 18px;font:inherit;cursor:pointer">Got it</button></div>';
+    m.innerHTML = '<div style="background:#fff;color:#12302f;border-radius:16px;padding:22px;max-width:360px;font:15px/1.5 system-ui,sans-serif"><h3 style="margin:0 0 8px;font-size:18px">Install NYANSATEK EMS</h3><ol style="padding-left:20px;margin:0 0 14px"><li>Tap the <b>Share</b> button in Safari.</li><li>Choose <b>Add to Home Screen</b>.</li><li>Tap <b>Add</b>.</li></ol><button id="install-close" style="border:0;background:#0E4142;color:#fff;border-radius:10px;padding:10px 18px;font:inherit;cursor:pointer">Got it</button></div>';
     document.body.appendChild(m); m.querySelector('#install-close').onclick = () => m.remove();
   }
   async function install() {

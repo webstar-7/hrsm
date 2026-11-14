@@ -1,6 +1,6 @@
 {
-  "name": "PeopleDesk",
-  "short_name": "PeopleDesk",
+  "name": "NYANSATEK Employee Management System",
+  "short_name": "NYANSATEK EMS",
   "description": "HR, attendance, payroll, leave, gate scanning and team calls in one place.",
   "id": "./",
   "start_url": "./",
