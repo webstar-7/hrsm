@@ -2,7 +2,7 @@
    - lets the app be installed and start even when the internet is slow or down
    - the app page is fetched from the network first, so updates arrive straight away
    - it NEVER stores anything from your database, sign-in, storage or functions */
-const VERSION = 'peopledesk-v2';
+const VERSION = 'peopledesk-v3';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 const LIBS = /(^|\.)(cdn\.jsdelivr\.net|cdnjs\.cloudflare\.com|fonts\.googleapis\.com|fonts\.gstatic\.com)$/;
 const DATA = /\.supabase\.(co|in)$/;
@@ -15,6 +15,7 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
+  if (url.pathname.endsWith('.mp4')) return;                 // the sign-in reel streams in pieces: leave it to the browser
   if (DATA.test(url.hostname)) return;                       // database, sign-in, files, functions: always live
   if (url.origin === self.location.origin) {
     if (req.mode === 'navigate') {                            // the app itself: network first, cached copy if offline

@@ -177,6 +177,11 @@ td.right,th.right{text-align:right}
 .auth-links{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:18px;font-size:14px}
 .auth-links button{background:none;border:0;padding:0;color:var(--spruce-hi);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 .auth-card .btn.primary{width:100%;justify-content:center}
+/* sign-in reel (made with Remotion): the art panel plays a short product tour */
+.sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.auth-art.has-reel{padding:0;background:#092C2D}
+.auth-art.has-reel video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+@media (max-width:900px){.auth{grid-template-rows:auto 1fr}.auth-art.has-reel{padding:0;height:min(56vw,300px)}.auth-panel{align-items:start;padding-top:28px}}
 .center-screen{min-height:100vh;display:grid;place-content:center;gap:14px;justify-items:center;padding:24px;color:var(--muted);text-align:center}
 .center-screen .panel{max-width:520px;text-align:left;display:grid;gap:12px}
 .spinner{width:28px;height:28px;border-radius:50%;border:3px solid var(--sage);border-top-color:var(--spruce);animation:spin .8s linear infinite}
@@ -565,15 +570,30 @@ const artSvg = `<svg class="art" viewBox="0 0 360 280" aria-hidden="true">
 </svg>`;
 
 function authArt() {
-  return `<aside class="auth-art"><div>
+  return `<aside class="auth-art has-reel"><video class="auth-reel" muted loop playsinline preload="metadata" aria-hidden="true" tabindex="-1"></video><div class="sr-only"><div>
     <div class="brand" style="padding:0 0 28px">${brandMark}<span>${esc(CONFIG.APP_NAME)}</span><span class="nt-by"><svg class="nt-logo" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><g fill="none" stroke="#D9A833" stroke-width="6.2" stroke-linecap="round" stroke-linejoin="round"><path d="M32 32C32 21 24 15 18 20C12 25 15 34 24 34C29 34 32 31 32 32C32 40 40 47 46 43"/><path d="M32 32C32 21 40 15 46 20C52 25 49 34 40 34C36.4 34 33.6 32.6 32.4 30.8M30.2 33.6C27 39 20 45 18 43"/></g></svg><span>by <b>NYANSATEK</b></span></span></div>
     <h2>Every employee file, in order.</h2>
     <ul>
       <li>${icon('check', 20)}<span>Personal details and salaries stay private to HR and payroll. Managers see only their team.</span></li>
       <li>${icon('check', 20)}<span>Contracts and documents in one place, with alerts before they expire.</span></li>
       <li>${icon('check', 20)}<span>Invite colleagues with the right access, and see who changed what.</span></li>
-    </ul></div>${artSvg}</aside>`;
+    </ul></div>${artSvg}</div></aside>`;
 }
+// Sign-in reel (made with Remotion): tall cut for the side panel, square cut for the phone banner.
+// The same <video> is carried across re-renders so switching between sign-in screens doesn't restart it.
+const reelWide = matchMedia('(min-width: 901px)');
+let reelEl = null;
+function mountReel() {
+  const slot = document.querySelector('.auth-reel');
+  if (!slot) return;
+  if (reelEl && reelEl !== slot) slot.replaceWith(reelEl); else reelEl = slot;
+  const v = reelEl, b = 'assets/peopledesk-reel' + (reelWide.matches ? '-tall' : '');
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (v.dataset.cut !== b) { v.dataset.cut = b; v.poster = b + '.jpg'; if (!still) v.src = b + '.mp4'; }
+  if (!still) v.play().catch(() => {});
+}
+reelWide.addEventListener('change', mountReel);
+new MutationObserver(mountReel).observe(document.getElementById('app'), { childList: true });
 
 function renderAuth() {
   if (state.recovery) state.authMode = 'recovery';
