@@ -354,7 +354,14 @@ const CONFIG = {
   APP_SHORT: 'NYANSATEK EMS',                   // short form, used where space is tight
   SUPABASE_URL: 'https://cskcomkurpeyjqskkaxa.supabase.co',
   SUPABASE_KEY: 'sb_publishable_diJTB5pnIOyVE3lDPQG7tw__5XYZDvy', // publishable key: safe to be public
-  SUPPORT_EMAIL: ''                             // shown on the "workspace locked" screen
+  SUPPORT_EMAIL: '',                            // shown on the "workspace locked" screen
+  SUPPORT_PHONE: '0536 340 578',
+  // ---- the paid plan (sold at nyansatek.systems; keep prices in step with its catalog) ----
+  BUY_URL: 'https://nyansatek.systems/product-hrms.html',
+  BILLING_API: 'https://nyansatek.systems/.netlify/functions',
+  PAYSTACK_PUBLIC_KEY: 'pk_live_f06348c9521967084c78419c709c740c7d3b51d2', // public key: the same one the checkout uses
+  PLANS: { standard: { label:'Monthly', price:500, per:'month' }, yearly: { label:'Yearly', price:5000, per:'year' } },
+  GRACE_DAYS: 7                                 // a paid plan keeps working this many days past its paid-through date
 };
 
 if (!window.supabase) {
@@ -539,7 +546,12 @@ const perms = () => {
 const deptName = id => state.departments.find(d => d.id === id)?.name || '—';
 const posTitle = id => state.positions.find(p => p.id === id)?.title || '—';
 const findEmp = id => state.employees.find(e => e.id === id);
-const orgUsable = o => o.status === 'active' || o.status === 'trial';
+// Organizations created before HRMS was sold have plan_key 'open' and never lapse.
+const orgPlan = o => CONFIG.PLANS[o.plan_key] || null;
+const planLapsed = o => !!(orgPlan(o) && o.paid_through_date && TODAY() > addDays(o.paid_through_date, CONFIG.GRACE_DAYS));
+const orgUsable = o => (o.status === 'active' || o.status === 'trial') && !planLapsed(o);
+const canRenew = () => ['owner', 'admin'].includes(state.role) && !!orgPlan(state.org);
+const ghs = n => 'GH₵' + Number(n).toLocaleString('en-GH');
 const appUrl = () => location.href.split('#')[0].split('?')[0];
 const redirectUrl = () => /^https?:$/.test(location.protocol) ? location.origin + location.pathname : undefined;
 
@@ -639,10 +651,11 @@ function renderAuth() {
               : fld('Email', inp('email', { type:'email', required:true, extra:'autocomplete="username"' }))}
       ${fld('Password', inp('password', { type:'password', required:true, extra:'autocomplete="current-password"' }))}
       <button class="btn primary" type="submit">Sign in</button></form>
-    <div class="auth-links">${staff ? '<span class="muted">Forgot your password? Ask HR to reset it.</span>' : '<button data-action="auth-mode" data-mode="forgot">Forgot your password?</button><button data-action="auth-mode" data-mode="signup">Create an account</button>'}</div>`;
+    <div class="auth-links">${staff ? '<span class="muted">Forgot your password? Ask HR to reset it.</span>' : '<button data-action="auth-mode" data-mode="forgot">Forgot your password?</button><button data-action="auth-mode" data-mode="signup">Invited? Create your account</button>'}</div>
+    ${staff ? '' : `<div class="auth-links"><span class="muted">New organization?</span><a href="${CONFIG.BUY_URL}" target="_blank" rel="noopener">See plans and buy</a></div>`}`;
   }
   else if (m === 'signup') card = `
-    <h1>Create your account</h1><p class="sub">Free to use. You will set up your organization next.</p>
+    <h1>Create your account</h1><p class="sub">For people who have been invited to an organization. Use the email address your invitation was sent to.</p>
     <form data-form="signup"><div class="form-error" role="alert" hidden></div>
       ${fld('Your name', inp('full_name', { required:true, extra:'autocomplete="name"' }))}
       ${fld('Work email', inp('email', { type:'email', required:true, extra:'autocomplete="email"' }))}
@@ -681,32 +694,67 @@ function renderFatal(err) {
     <p class="muted small">If you have just set up the database, check that the <code>hrms</code> schema is listed under Project Settings > API > Exposed schemas.</p>
     <div class="row"><button class="btn primary" data-action="retry">Try again</button><button class="btn" data-action="signout">Sign out</button></div></div></div>`;
 }
+// ---- the plan: what it is, when it runs out, renewing it ----
+function planLine(o) {
+  const plan = orgPlan(o);
+  if (!plan) return '<p>Free and open to use</p>';
+  if (!o.paid_through_date) return `<p>${plan.label} plan · ${ghs(plan.price)} per ${plan.per}</p>`;
+  const left = Math.round((new Date(o.paid_through_date + 'T00:00:00') - new Date(TODAY() + 'T00:00:00')) / 864e5);
+  const when = left < 0 ? `<span class="chip bad">Ran out on ${fmtDate(o.paid_through_date)}</span>`
+    : left <= 7 ? `<span class="chip warn">Runs out ${left === 0 ? 'today' : left === 1 ? 'tomorrow' : 'in ' + left + ' days'}</span>`
+    : `Paid through ${fmtDate(o.paid_through_date)}`;
+  return `<p>${plan.label} plan · ${ghs(plan.price)} per ${plan.per} · ${when}</p>
+    ${left <= 7 && canRenew() ? `<div class="row" style="margin:8px 0 4px"><button class="btn primary sm" data-action="renew-plan">Renew now · ${ghs(plan.price)}</button></div>` : ''}`;
+}
+// The payment window is loaded only when someone renews, so the app never waits on it otherwise.
+let paystackLoading = null;
+function loadPaystack() {
+  if (window.PaystackPop) return Promise.resolve();
+  if (!paystackLoading) paystackLoading = new Promise((ok, fail) => {
+    const el = document.createElement('script'); el.src = 'https://js.paystack.co/v2/inline.js';
+    el.onload = ok; el.onerror = () => { paystackLoading = null; fail(new Error('The payment window could not load. Check your internet connection and try again.')); };
+    document.head.appendChild(el);
+  });
+  return paystackLoading;
+}
+async function renewPlan() {
+  const o = state.org, plan = orgPlan(o);
+  if (!plan || !canRenew()) return;
+  await loadPaystack();
+  PaystackPop.setup({
+    key: CONFIG.PAYSTACK_PUBLIC_KEY, email: state.user.email, amount: plan.price * 100, currency: 'GHS',
+    channels: ['mobile_money', 'card'], ref: `MAN-hrms-${o.id}-${Date.now()}`,
+    metadata: { product: 'hrms', tenantId: o.id, plan: o.plan_key },
+    // nyansatek.systems checks the payment with Paystack and moves the paid-through date on
+    callback: res => act(async () => {
+      const r = await fetch(CONFIG.BILLING_API + '/renew-subscription', { method:'POST', headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ reference: res.reference, tenantProduct: 'hrms', tenantId: o.id }) });
+      const out = await r.json().catch(() => ({}));
+      if (!r.ok || !out.ok) throw new Error(`We could not confirm that payment. If you were charged, call NYANSATEK on ${CONFIG.SUPPORT_PHONE} and quote ${res.reference}.`);
+      toast('Payment received. Thank you!'); scheduleBoot();
+    }),
+    onClose: () => {}
+  }).openIframe();
+}
 function renderLocked() {
-  const o = state.org;
-  const why = o.status === 'suspended' ? 'This workspace is suspended.' : 'This workspace has been cancelled.';
-  const contact = CONFIG.SUPPORT_EMAIL ? `Contact <a href="mailto:${esc(CONFIG.SUPPORT_EMAIL)}">${esc(CONFIG.SUPPORT_EMAIL)}</a> to activate a plan.` : 'Contact the product team to activate a plan.';
+  const o = state.org, plan = orgPlan(o);
+  const lapsed = planLapsed(o);
+  const why = lapsed ? `The ${plan.label.toLowerCase()} plan for this workspace ran out on ${fmtDate(o.paid_through_date)}.`
+    : o.status === 'suspended' ? 'This workspace is suspended.' : 'This workspace has been cancelled.';
+  const contact = `Call or WhatsApp NYANSATEK on <a href="tel:${CONFIG.SUPPORT_PHONE.replace(/\s/g, '')}">${CONFIG.SUPPORT_PHONE}</a>${CONFIG.SUPPORT_EMAIL ? ` or email <a href="mailto:${esc(CONFIG.SUPPORT_EMAIL)}">${esc(CONFIG.SUPPORT_EMAIL)}</a>` : ''}.`;
+  const renew = lapsed && canRenew() ? `<button class="btn primary" data-action="renew-plan">Renew now · ${ghs(plan.price)}</button>` : '';
   $('#app').innerHTML = `<div class="center-screen"><div class="panel pad"><h2>${esc(o.name)} is locked</h2>
-    <p>${esc(why)} Your data is safe and will be available again once a plan is active.</p><p class="muted">${contact}</p>
-    <div class="row">${state.memberships.length > 1 ? `<button class="btn" data-action="choose-org">Switch organization</button>` : ''}<button class="btn" data-action="signout">Sign out</button></div></div></div>`;
+    <p>${esc(why)} Your data is safe and will be available again once the plan is active.</p>
+    <p class="muted">${lapsed && !canRenew() ? 'Ask the owner of this workspace to renew it. ' : ''}${contact}</p>
+    <div class="row">${renew}${state.memberships.length > 1 ? `<button class="btn" data-action="choose-org">Switch organization</button>` : ''}<button class="btn" data-action="signout">Sign out</button></div></div></div>`;
 }
 function renderOnboarding() {
-  const name = state.user?.user_metadata?.full_name || '';
   $('#app').innerHTML = `<div class="auth">${authArt()}<main class="auth-panel"><div class="auth-card">
-    <h1>Set up your organization</h1><p class="sub">This creates your workspace and makes you its owner. You can invite your team afterwards.</p>
-    <form data-form="createOrg"><div class="form-error" role="alert" hidden></div>
-      ${fld('Organization name', inp('name', { required:true }))}
-      <div class="grid2">
-        ${fld('Industry', sel('industry', listOpts(INDUSTRIES.map(i => ({ v:i })), 'v', 'v', null, 'Select…')))}
-        ${fld('Country', inp('country'))}
-      </div>
-      <div class="grid2">
-        ${fld('Currency code', inp('currency', { required:true, placeholder:'USD', extra:'maxlength="3" minlength="3" pattern="[A-Za-z]{3}" list="cur-list" style="text-transform:uppercase"' }), 'Used for salaries.')}
-        ${fld('Time zone', sel('timezone', tzOptions(browserTZ())))}
-      </div>
-      <datalist id="cur-list">${['USD','EUR','GBP','GHS','NGN','KES','ZAR','XOF','CAD','AUD','INR','AED'].map(c => `<option value="${c}">`).join('')}</datalist>
-      ${fld('Your name', inp('owner_name', { value:name }))}
-      <button class="btn primary" type="submit">Create organization</button></form>
-    <div class="auth-links"><span class="muted">Were you invited? Sign in with the invited email.</span><button data-action="retry">Check again</button></div>
+    <h1>You are not in an organization yet</h1>
+    <p class="sub">You are signed in as <b>${esc(state.user?.email || '')}</b>, but no organization has added this email.</p>
+    <p><b>Were you invited?</b> Ask HR to check the email address on your invitation, then tap Check again.</p>
+    <p style="margin-top:10px"><b>Starting a new organization?</b> Organizations are set up when you buy ${esc(CONFIG.APP_NAME)}.</p>
+    <div class="row" style="margin-top:16px"><a class="btn primary" href="${CONFIG.BUY_URL}" target="_blank" rel="noopener">See plans and buy</a><button class="btn" data-action="retry">Check again</button></div>
     <div class="auth-links"><button data-action="signout">Sign out</button></div>
   </div></main></div>`;
 }
@@ -1023,7 +1071,7 @@ function viewDashboard() {
   const cap = o.max_employees;
   const used = current.length;
   const plan = p.admin ? `<div class="panel pad" style="margin-top:20px"><h3 style="margin-bottom:6px">Your plan</h3>
-    <p>Free and open to use</p>
+    ${planLine(o)}
     <div class="meter" role="img" aria-label="${used} of ${cap ?? 'unlimited'} employees"><i style="width:${cap ? Math.min(100, Math.round(used / cap * 100)) : 0}%"></i></div>
     <p class="muted small">${used} of ${cap ?? 'unlimited'} employees used</p></div>` : '';
 
@@ -1415,9 +1463,11 @@ function viewSettings() {
     ${fld('Time zone', sel('timezone', tzOptions(o.timezone), { extra: dis }))}
     ${p.owner ? '<button class="btn primary" type="submit">Save changes</button>' : ''}</form></section>
   <section class="panel pad"><h3 style="margin-bottom:12px">Plan</h3>${dl([
-    ['Plan', 'Free'], ['Status', chip(o.status === 'trial' ? 'Active' : o.status[0].toUpperCase() + o.status.slice(1), o.status === 'active' || o.status === 'trial' ? 'ok' : 'bad')],
+    ['Plan', orgPlan(o) ? `${orgPlan(o).label} · ${ghs(orgPlan(o).price)} per ${orgPlan(o).per}` : 'Free'],
+    ...(orgPlan(o) && o.paid_through_date ? [['Paid through', fmtDate(o.paid_through_date)]] : []), ['Status', chip(o.status === 'trial' ? 'Active' : o.status[0].toUpperCase() + o.status.slice(1), o.status === 'active' || o.status === 'trial' ? 'ok' : 'bad')],
     ['Employee limit', o.max_employees ?? 'Unlimited'], ['Currency', esc(o.currency)], ['Organization code', o.settings?.login_code ? `<b>${esc(o.settings.login_code)}</b>` : 'Created with the first staff login']])}
-    <p class="muted small" style="margin-top:14px">To change your currency, contact the product team.</p></section></div>`;
+    ${canRenew() ? `<div class="row" style="margin-top:14px"><button class="btn primary" data-action="renew-plan">Renew now · ${ghs(orgPlan(o).price)}</button></div>` : ''}
+    <p class="muted small" style="margin-top:14px">To change your currency or your plan, call NYANSATEK on ${CONFIG.SUPPORT_PHONE}.</p></section></div>`;
 }
 
 /* =====================================================================
@@ -3559,6 +3609,7 @@ const actions = {
   'menu': () => { state.menuOpen = !state.menuOpen; $('.shell')?.classList.toggle('menu-open', state.menuOpen); },
   'signout': async () => { try { await sb.auth.signOut(); } catch {} resetSession(); renderAuth(); },
   'retry': () => scheduleBoot(),
+  'renew-plan': () => act(renewPlan),
   'choose-org': () => { state.role = null; state.org = null; renderChooser(); },
   'auth-mode': el => { state.authMode = el.dataset.mode; renderAuth(); },
   'resend': () => act(async () => { const { error } = await sb.auth.resend({ type:'signup', email: state.pendingEmail, options: { emailRedirectTo: redirectUrl() } }); if (error) throw error; }, 'Confirmation email sent again.'),
@@ -3646,11 +3697,6 @@ const forms = {
     state.recovery = false; state.authMode = 'signin';
     try { history.replaceState(null, '', location.pathname); } catch {}
     toast('Password updated.'); scheduleBoot();
-  },
-  createOrg: async d => {
-    const { data, error } = await hr.rpc('create_organization', { p_name:d.name, p_currency:(d.currency || '').toUpperCase(), p_country:d.country, p_industry:d.industry, p_timezone:d.timezone, p_owner_name:d.owner_name });
-    if (error) throw error;
-    await loadMemberships(); await enterOrg(data);
   },
   settings: async d => {
     await q(hr.from('organizations').update({ name:d.name, industry:d.industry, country:d.country, timezone:d.timezone }).eq('id', state.org.id));
